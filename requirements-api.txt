@@ -1,0 +1,13 @@
+# Runtime dependencies of the API container (no torch / streamlit / plotly / pytest).
+numpy
+pandas==2.3.*
+scipy
+scikit-learn==1.8.*
+xgboost
+yfinance
+joblib
+fastapi
+uvicorn
+ollama
+requests
+tabulate

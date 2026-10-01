@@ -1,0 +1,15 @@
+numpy
+pandas
+scipy
+scikit-learn
+xgboost
+torch            # optional (GRU forecaster)
+yfinance
+plotly
+streamlit
+ollama
+joblib
+tabulate
+pytest
+fastapi
+uvicorn

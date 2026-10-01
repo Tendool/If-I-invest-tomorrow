@@ -1,0 +1,7 @@
+**
+!web/package.json
+!web/package-lock.json
+!web/
+web/node_modules
+web/.next
+web/**/*.log

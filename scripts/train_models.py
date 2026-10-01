@@ -1,0 +1,21 @@
+"""Train + walk-forward-validate the ML return models and write the reports.
+
+    python scripts/train_models.py            # Ridge / Random Forest / XGBoost
+    python scripts/train_models.py --gru      # also the optional GRU
+"""
+import sys, warnings
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+warnings.filterwarnings("ignore")
+import pandas as pd
+from ifit import data, ml
+
+if __name__ == "__main__":
+    md = data.load()
+    est = ml.train_return_model(md, include_gru="--gru" in sys.argv)
+    pd.set_option("display.width", 200)
+    print(est.metrics.round(4))
+    print(f"\nselected: {est.model_name}  skill weight (lambda) = {est.skill_weight:.2f}")
+    reg = ml.fit_regimes(md)
+    print("\nregimes:\n", reg.stats.round(3))
+    reg.stats.to_csv(data.C.REPORTS_DIR / "regime_stats.csv")

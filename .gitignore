@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local runtime state and logs
+data/demo_wallet.sqlite
+data/demo_wallet.sqlite-*
+data/processed/
+*.log
+.env
+
+# Editor / tooling
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Front end (also covered by web/.gitignore)
+web/node_modules/
+web/.next/

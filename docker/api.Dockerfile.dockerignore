@@ -1,0 +1,12 @@
+web
+data
+models
+reports
+tests
+.git
+.claude
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.log
+.env

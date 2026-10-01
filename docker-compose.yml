@@ -1,0 +1,66 @@
+# If I Invest Tomorrow - full stack
+#
+#   docker compose up --build                      # UI :3000, API :8000, uses the Ollama running on your machine
+#   docker compose --profile ollama up --build     # also runs Ollama in a container (pulls qwen3.5:4b once)
+#
+# Configuration: copy .env.example to .env
+name: ifit
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    image: ifit-api
+    environment:
+      # default: Ollama on the Docker host. With --profile ollama set OLLAMA_HOST=http://ollama:11434 in .env
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      IFIT_LLM_MODEL: ${IFIT_LLM_MODEL:-qwen3.5:4b}
+      IFIT_CORS_ORIGINS: ${IFIT_CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"   # makes host.docker.internal work on Linux too
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ifit-data:/app/data       # market data + demo wallet (SQLite)
+      - ifit-models:/app/models   # trained return models
+      - ifit-reports:/app/reports
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      args:
+        # must be reachable from your browser (not the compose-internal name)
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    image: ifit-web
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    restart: unless-stopped
+
+  # Optional: Ollama inside Docker (NVIDIA GPU via the NVIDIA Container Toolkit)
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull ${IFIT_LLM_MODEL:-qwen3.5:4b} && wait"]
+    restart: unless-stopped
+
+volumes:
+  ifit-data:
+  ifit-models:
+  ifit-reports:
+  ollama:
