@@ -17,7 +17,7 @@ if __name__ == "__main__":
     print(est.metrics.round(4))
     print(f"\nselected: {est.model_name}  skill weight (lambda) = {est.skill_weight:.2f}")
     print()
-    print("training the volatility forecaster (ensemble of Ridge, Random Forest, XGBoost) ...")
+    print("training the volatility forecaster (Ridge on realised + range-based features, 80/20 blend with last quarter) ...")
     fc = ml.train_vol_model(md)
     print(fc.round(3).sort_values(ascending=False).head(8).to_string())
     reg = ml.fit_regimes(md)

@@ -19,13 +19,13 @@ FIELDS = ["Open", "High", "Low", "Close", "Adj Close", "Volume"]
 # --------------------------------------------------------------------------- #
 # Download
 # --------------------------------------------------------------------------- #
-def _download_one(symbol: str, years: int, retries: int = 3) -> pd.DataFrame:
+def _download_one(symbol: str, years: int, retries: int = 3, period: str | None = None) -> pd.DataFrame:
     import yfinance as yf
 
     last_err: Exception | None = None
     for attempt in range(retries):
         try:
-            df = yf.Ticker(symbol).history(period=f"{years}y", interval="1d", auto_adjust=False)
+            df = yf.Ticker(symbol).history(period=period or f"{years}y", interval="1d", auto_adjust=False)
             if df is not None and len(df) > 20:
                 df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
                 df = df[~df.index.duplicated(keep="last")]
@@ -50,6 +50,15 @@ def download_all(years: int = C.HISTORY_YEARS, verbose: bool = True) -> dict[str
             status[s] = f"FAILED {e}"
         if verbose:
             print(f"{s:16s} {status[s]}")
+    for s in C.REGIME_LONG_SYMBOLS:                      # full history, for the regime model only
+        try:
+            df = _download_one(s, years, period="max")
+            df.to_csv(C.DATA_RAW / f"long_{_fname(s)}.csv")
+            status["long " + s] = f"ok rows={len(df)} {df.index[0].date()} -> {df.index[-1].date()}"
+        except Exception as e:
+            status["long " + s] = f"FAILED {e}"
+        if verbose:
+            print(f"{'long ' + s:16s} {status['long ' + s]}")
     return status
 
 
@@ -75,6 +84,7 @@ class MarketData:
     market: pd.Series             # NIFTY 50 level
     macro: pd.DataFrame           # vix, brent, usdinr, us10y, banknifty
     report: dict                  # cleaning statistics
+    regime_long: pd.DataFrame | None = None   # long NIFTY + VIX history (columns market, vix) for the regime model only
 
     @property
     def returns(self) -> pd.DataFrame:
@@ -156,8 +166,23 @@ def clean(years_min_history: float = 3.0) -> MarketData:
             macro[nm] = raw["Close"].reindex(cal).ffill(limit=5)
     macro = macro.ffill()
 
-    md = MarketData(prices=prices, volume=volume, market=market, macro=macro, report=report)
+    md = MarketData(prices=prices, volume=volume, market=market, macro=macro, report=report, regime_long=_regime_long(market))
     return md
+
+
+def _regime_long(market: pd.Series) -> pd.DataFrame | None:
+    """Long NIFTY / VIX history if downloaded and as recent as the main data; otherwise None (regime model falls back)."""
+    parts = {}
+    for sym, name in C.REGIME_LONG_SYMBOLS.items():
+        p = C.DATA_RAW / f"long_{_fname(sym)}.csv"
+        if not p.exists():
+            return None
+        parts[name] = pd.read_csv(p, index_col=0, parse_dates=True)["Close"]
+    cal = parts["market"].dropna().index
+    df = pd.DataFrame({k: v.reindex(cal).ffill(limit=5) for k, v in parts.items()})
+    if df.index[-1] < market.dropna().index[-1]:
+        return None
+    return df
 
 
 def build_dataset(save: bool = True) -> MarketData:

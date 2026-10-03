@@ -167,6 +167,7 @@ def run_vol():
 
     models = {
         "Ridge (production)": ("y", lambda: make_pipeline(StandardScaler(), Ridge(alpha=3000.0))),
+        "Ridge alone (no blend)": ("y", lambda: make_pipeline(StandardScaler(), Ridge(alpha=3000.0))),
         "Elastic Net": ("y", None),
         "Huber regression": ("y", lambda: make_pipeline(StandardScaler(), HuberRegressor(alpha=1000.0, epsilon=1.35, max_iter=200))),
         "Ridge, target = forward Parkinson vol": ("y_park", lambda: make_pipeline(StandardScaler(), Ridge(alpha=3000.0))),
@@ -192,7 +193,10 @@ def run_vol():
         parts = []
         for yr, trn, te in splits(d):
             m = mk().fit(trn[feats].values[::3], trn[tcol].values[::3])
-            parts.append(pd.DataFrame({"y": te["y"].values, "p": m.predict(te[feats].values)}, index=te.index))
+            p = m.predict(te[feats].values)
+            if name.startswith("Ridge (production"):
+                p = ml._blend(p, te["rv_63"].values)                  # production: 80/20 blend with trailing 63-day vol
+            parts.append(pd.DataFrame({"y": te["y"].values, "p": p}, index=te.index))
         df = pd.concat(parts)
         preds[name] = df
         g = df.groupby(level=1)

@@ -44,6 +44,10 @@ MACRO = {
     "^NSEBANK": "NIFTY Bank index",
 }
 
+# Long history (Yahoo "max", NIFTY from 2007, VIX from 2008) used ONLY by the regime model, so it learns the 2008 crash as
+# well as 2020. Calibration backtest: mean interval-coverage gap 0.051 -> 0.037 (scripts/extended_data.py mc).
+REGIME_LONG_SYMBOLS = {MARKET_SYMBOL: "market", "^INDIAVIX": "vix"}
+
 # symbol -> (display name, sector, asset class)
 # asset classes: stock | etf | gold | bond | cash
 UNIVERSE: dict[str, tuple[str, str, str]] = {
@@ -149,6 +153,7 @@ HISTORICAL_CRASHES = {
 # --------------------------------------------------------------------------- #
 MC_PATHS = 10_000
 MC_T_DOF = 5                        # Student-t degrees of freedom for fat tails
+MC_PARAM_UNCERTAINTY = True        # draw a per-path error in the expected return (standard error sigma/sqrt(lookback years))
 COV_LOOKBACK_YEARS = 5
 
 # --------------------------------------------------------------------------- #

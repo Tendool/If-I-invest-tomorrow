@@ -1,36 +1,36 @@
 {
  "daily_transition": {
   "Bull / Calm": {
-   "Bull / Calm": 0.9628,
-   "Neutral / Sideways": 0.0498,
+   "Bull / Calm": 0.9644,
+   "Neutral / Sideways": 0.0365,
    "Bear / Volatile": 0.0
   },
   "Neutral / Sideways": {
-   "Bull / Calm": 0.0372,
-   "Neutral / Sideways": 0.9494,
-   "Bear / Volatile": 0.0154
+   "Bull / Calm": 0.0356,
+   "Neutral / Sideways": 0.9553,
+   "Bear / Volatile": 0.0457
   },
   "Bear / Volatile": {
    "Bull / Calm": 0.0,
-   "Neutral / Sideways": 0.0008,
-   "Bear / Volatile": 0.9846
+   "Neutral / Sideways": 0.0083,
+   "Bear / Volatile": 0.9543
   }
  },
  "transition_21d": {
   "Bull / Calm": {
-   "Bull / Calm": 0.8167,
-   "Neutral / Sideways": 0.2496,
+   "Bull / Calm": 0.8294,
+   "Neutral / Sideways": 0.2986,
    "Bear / Volatile": 0.0
   },
   "Neutral / Sideways": {
-   "Bull / Calm": 0.1777,
-   "Neutral / Sideways": 0.7403,
-   "Bear / Volatile": 0.3231
+   "Bull / Calm": 0.1636,
+   "Neutral / Sideways": 0.6924,
+   "Bear / Volatile": 0.3607
   },
   "Bear / Volatile": {
-   "Bull / Calm": 0.0056,
-   "Neutral / Sideways": 0.0101,
-   "Bear / Volatile": 0.6769
+   "Bull / Calm": 0.007,
+   "Neutral / Sideways": 0.009,
+   "Bear / Volatile": 0.6393
   }
  },
  "conditional_pit": {
@@ -69,9 +69,9 @@
   }
  },
  "vol_with_regime": {
-  "r2_without_regime": 0.5826991406362666,
-  "r2_with_regime": 0.5792175940301698,
-  "err_without": 0.2522279653779692,
-  "err_with": 0.2539980498073525
+  "r2_without_regime": 0.5820058183441461,
+  "r2_with_regime": 0.5798537884919185,
+  "err_without": 0.25476922878481073,
+  "err_with": 0.2563832163497569
  }
 }

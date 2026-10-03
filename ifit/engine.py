@@ -90,7 +90,7 @@ class Engine:
         self.rm = risk.build_risk_model(self.md)
         self.mu_table = ml.expected_returns(self.rm, self.estimator)
         self.mu = self.mu_table["expected"]
-        # next-21-day volatility forecast per asset (walk-forward R2 ~0.58 vs ~0.50 for the best 'same as before' rule; see models/vol_model_meta.json)
+        # next-21-day volatility forecast per asset (walk-forward R2 ~0.59 vs ~0.50 for the best 'same as before' rule; see models/vol_model_meta.json)
         self.vol_fc = ml.load_vol_forecast(self.md).reindex(self.rm.symbols).fillna(self.rm.capm["vol"])
         self._board_cache: dict[tuple, dict[str, Evaluation]] = {}
 

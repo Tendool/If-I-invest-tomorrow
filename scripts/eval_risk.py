@@ -70,7 +70,7 @@ def run_calibration(n_paths=4000):
             rets = md.prices.pct_change().iloc[pos + 1: pos + 1 + HORIZON]
             real = float((1 + (rets * w.reindex(rets.columns).fillna(0.0)).sum(axis=1)).prod() - 1)
             sims = {
-                "Current (Student-t dof 5, regime switching)": MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths,
+                "Production (Student-t dof 5, regime switching, parameter uncertainty)": MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths,
                                                                                 steps_per_year=252, seed=11, dof=5)[:, -1].astype(float) - 1,
                 "Student-t dof 3 (fatter tails)": MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths,
                                                                    steps_per_year=252, seed=11, dof=3)[:, -1].astype(float) - 1,

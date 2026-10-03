@@ -104,15 +104,16 @@ tools.py -> agent.py (Qwen3.5-4B tool loop)  -> app.py (Streamlit)  viz.py (Plot
 3. **ML** - Gaussian-mixture *market regimes* (Bull/Calm, Neutral, Bear/Volatile), Isolation-Forest *anomaly detection*,
    *return estimation* and *volatility forecasting*, each with hyper-parameters tuned on 2019-20 only and scored on an untouched
    expanding-window walk-forward (2021-26, purged targets; `scripts/model_search.py`). **Volatility is forecastable**: a Ridge model on realised and
-   range-based (Parkinson / Garman-Klass / Rogers-Satchell from daily High-Low) features reaches walk-forward R2 0.58 on
-   log volatility (error 25 %) against 0.50 (29 %) for the best "same as the last quarter" rule and 0.39 (31 %) for "same as last month"; it feeds the
+   range-based (Parkinson / Garman-Klass / Rogers-Satchell from daily High-Low) and long-run-level features, blended 80/20 with the trailing
+   quarter's volatility, reaches walk-forward R2 0.59 on log volatility (error 25 %) against 0.50 (29 %) for the best "same as the last quarter" rule and 0.39 (31 %) for "same as last month"; it feeds the
    next-month risk figures. (An earlier 0.72 figure counted the near-constant liquid-fund series and was overstated; it is excluded now. Random
    Forest, XGBoost and LightGBM scored lower than Ridge.) **Returns are not**: even the relative-return target gives IC 0.02-0.03 with a top-minus-bottom
    quintile spread t-stat of 1.3 (not significant), so ML is only a small relative tilt weighted by measured IC (~14 %) on top of
    a CAPM + history prior. Random Forest, XGBoost and the GRU showed no skill and are reported but not used.
    The Monte Carlo itself is checked against reality (`scripts/calibration.py`: 104 one-year forecasts from quarterly dates 2019-25, information as of
-   each date): the 90 % band held the outcome 81 % of the time (100 % in 2021-23, but only 44 % across the 2020 crash), and realised returns beat
-   the expected return by 7 % on average. Reported as measured, not re-tuned.
+   each date): the 90 % band held the outcome 81 % of the time (88 % outside 2020, 50 % for forecasts made in the 2020 crash year), and realised returns beat
+   the expected return by 7 % on average. The simulator includes the estimation error of the expected return (sigma/sqrt(5 years), not tuned), and the regime
+   model learns from NIFTY/VIX history back to 2008 (both crashes, 2008 and 2020).
 4. **Risk** - CAPM (beta, expected return), Ledoit-Wolf covariance, Sharpe, historical VaR/CVaR, max drawdown, stress tests:
    market -2/-5/-10 %, sector crash (-25 %), +100 bp rate shock, +25 % oil shock (data-driven oil betas), and replays of
    COVID-2020, 2018 and 2021-22.
@@ -131,12 +132,13 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
 
 - **Return signal** - IC 0.027 (t 1.4 Newey-West); positive in 5 of 6 years but never significant alone. Relative-strength features lift it to
   0.041 (t 2.2, 1.6 on independent windows) - a candidate, not adopted because the validation window did not confirm it.
-- **Volatility** - R2 0.58 vs 0.50 for the best naive rule; Elastic Net and Huber are tied with Ridge, a 63-day target is worse.
-- **Monte Carlo** - 50/75/90/95/99% intervals hold 44/69/81/84/93%; fatter tails or a block bootstrap do not change that (the miss is the 2020 crash).
+- **Volatility** - R2 0.589 vs 0.503 for the best naive rule (within-asset 0.189); GARCH features, Elastic Net, Huber, trees and a 63-day target do not beat it.
+- **Monte Carlo** - 50/75/90/95/99% intervals hold 53/74/81/88/96% (44/69/81/84/93% before adding parameter uncertainty and the 2008- regime history); fatter tails or a block
+  bootstrap do not fix the outer tails (the miss is the 2020 crash).
 - **Regimes / anomalies** - both act as risk labels: after a Neutral regime a 5% market drawdown within 21 days is 35% likely vs 13% after Calm;
   anomaly flags precede much higher volatility (21-23% vs 13%) but not lower returns.
-- **Portfolio (walk-forward, monthly, 0.10% costs)** - the volatility model and regime overlay improve risk-adjusted return (Sharpe 0.60 -> 0.80
-  in the max-Sharpe family, drawdown -16.5% -> -13.6%); the return tilt adds little. Every variant beats the NIFTY ETF on Sharpe, but an
+- **Portfolio (walk-forward, monthly, 0.10% costs)** - the volatility model and regime overlay improve risk-adjusted return (Sharpe 0.60 -> 0.77
+  in the max-Sharpe family, drawdown -16.9% -> -13.9%); the return tilt adds little. Half-step rebalancing halves turnover but lowers Sharpe. Every variant beats the NIFTY ETF on Sharpe, but an
   equal-weight basket of the 26 stocks matches the full system in this one bull-market sample.
 
 ## Assumptions & limitations (all in `ifit/config.py`)

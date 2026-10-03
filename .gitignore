@@ -22,3 +22,6 @@ Thumbs.db
 # Front end (also covered by web/.gitignore)
 web/node_modules/
 web/.next/
+
+# experiment-only extended dataset (scripts/extended_data.py)
+data/raw_ext/

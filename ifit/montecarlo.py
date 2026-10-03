@@ -62,6 +62,13 @@ def simulate_paths(mu_p: float, sigma_p: float, beta_p: float, regime: RegimeMod
         cum = np.ones((1, 1))
 
     eps = rng.standard_t(dof, size=(n_paths, steps)).astype(np.float32) / np.sqrt(dof / (dof - 2.0))
+    # Parameter uncertainty: the expected return is estimated from ~COV_LOOKBACK_YEARS of history, so its standard
+    # error is sigma / sqrt(years). Each path draws its own drift error (mean-preserving); widens long horizons honestly.
+    # Calibration backtest (scripts/model_search_v4.py mc): mean coverage gap 0.078 -> 0.051.
+    drift_err = np.zeros(n_paths, dtype=np.float32)
+    if C.MC_PARAM_UNCERTAINTY:
+        se = sigma_p / np.sqrt(C.COV_LOOKBACK_YEARS)
+        drift_err = rng.normal(-0.5 * se ** 2 * years, se, n_paths).astype(np.float32)
     logv = np.zeros((n_paths, steps + 1), dtype=np.float32)
     u = rng.random((n_paths, steps)).astype(np.float32)
     sig_step = sigma_p * np.sqrt(dt)
@@ -69,7 +76,7 @@ def simulate_paths(mu_p: float, sigma_p: float, beta_p: float, regime: RegimeMod
         sig = sig_step * mult[reg]
         # ln(1+mu): mu is an *annual effective* expected return, so E[V_T] = (1+mu)^T
         drift = np.log1p(np.clip(mu_p + tilt_ann[reg], -0.9, None)) * dt - 0.5 * sig ** 2
-        logv[:, t + 1] = logv[:, t] + drift + sig * eps[:, t]
+        logv[:, t + 1] = logv[:, t] + drift + drift_err * dt + sig * eps[:, t]
         if cum.shape[0] > 1:
             reg = (u[:, t][:, None] > cum[reg]).sum(axis=1).clip(max=cum.shape[0] - 1)
     v = np.exp(logv)

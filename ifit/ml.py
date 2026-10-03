@@ -53,8 +53,19 @@ class RegimeModel:
         return self.names[self.current]
 
 
+def _regime_inputs(md: MarketData) -> tuple[pd.DataFrame, pd.Series]:
+    """Regime-model inputs and market level. Uses the long NIFTY/VIX history (2007-, incl. the 2008 crash) when it is
+    available, cut at md's last date so that point-in-time backtests stay point-in-time."""
+    long = getattr(md, "regime_long", None)
+    if long is not None:
+        long = long.loc[:md.market.index[-1]]
+        if len(long) > 0 and long.index[0] <= md.market.index[0]:
+            return F.regime_state(long["market"], long["vix"]).dropna(), long["market"]
+    return F.market_features(md)[F.REGIME_COLS].dropna(), md.market
+
+
 def fit_regimes(md: MarketData, k: int = 3, seed: int = 7) -> RegimeModel:
-    mf = F.market_features(md)[F.REGIME_COLS].dropna()
+    mf, mkt = _regime_inputs(md)
     scaler = StandardScaler().fit(mf.values)
     Z = scaler.transform(mf.values)
     gmm = GaussianMixture(n_components=k, covariance_type="full", n_init=5, random_state=seed).fit(Z)
@@ -62,7 +73,7 @@ def fit_regimes(md: MarketData, k: int = 3, seed: int = 7) -> RegimeModel:
     post = gmm.predict_proba(Z)
 
     # order clusters: bear = highest vol & lowest return, bull = best return / lowest vol
-    mret = md.market.pct_change().reindex(mf.index).fillna(0.0)
+    mret = mkt.pct_change().reindex(mf.index).fillna(0.0)
     score = []
     for c in range(k):
         m = raw == c
@@ -89,7 +100,9 @@ def fit_regimes(md: MarketData, k: int = 3, seed: int = 7) -> RegimeModel:
         ))
     st = pd.DataFrame(rows).set_index("regime")
     cur = int(labels.iloc[-1])
-    return RegimeModel(labels=labels, probs=probs, stats=st, transition=T, current=cur,
+    # statistics and transitions use the whole history; the label/probability series are reported on md's own calendar
+    on_cal = labels.index.isin(md.market.index)
+    return RegimeModel(labels=labels[on_cal], probs=probs[on_cal], stats=st, transition=T, current=cur,
                        current_probs=probs.iloc[-1].values,
                        mkt_mean_daily=np.array([mret[labels == c].mean() for c in range(k)]),
                        mkt_vol_daily=np.array([mret[labels == c].std() for c in range(k)]))
@@ -303,6 +316,7 @@ def expected_returns(rm, est: ReturnEstimator | None) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 _ANN = np.sqrt(C.TRADING_DAYS)
 VOL_ALPHA = 3000.0
+VOL_NAIVE_WEIGHT = 0.20       # forecast = 0.8 x Ridge + 0.2 x trailing 63-day vol (weight chosen on 2017-20 walk-forward validation)
 VOL_TEST_YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
 
 
@@ -374,6 +388,10 @@ def vol_panel(md: MarketData) -> pd.DataFrame:
     # cross-sectional context: average log vol of the whole universe today
     panel["cs_mean_rv21"] = panel.groupby(level=0)["rv_21"].transform("mean")
     panel["rv21_vs_cs"] = panel["rv_21"] - panel["cs_mean_rv21"]
+    # each asset's own long-run (3-year) level of log volatility: volatility mean-reverts towards it
+    lr = np.log((r.rolling(21).std() * _ANN).clip(lower=0.01)).rolling(756, min_periods=252).mean()
+    panel["lr_level"] = lr.stack().reindex(panel.index)
+    panel["rv21_vs_lr"] = panel["rv_21"] - panel["lr_level"]
 
     fvol = r.rolling(21).std().shift(-21) * _ANN
     panel["y"] = np.log(fvol.stack().rename("y").clip(lower=0.01)).reindex(panel.index)
@@ -382,6 +400,10 @@ def vol_panel(md: MarketData) -> pd.DataFrame:
 
 def _is_cash(sym: str) -> bool:
     return C.UNIVERSE[sym][2] == "cash"
+
+
+def _blend(model_pred, log_rv63):
+    return (1 - VOL_NAIVE_WEIGHT) * model_pred + VOL_NAIVE_WEIGHT * log_rv63
 
 
 def _vol_model():
@@ -407,7 +429,8 @@ def vol_walk_forward(panel: pd.DataFrame) -> dict:
         if len(trn) < 2000 or te.empty:
             continue
         m = _vol_model().fit(trn[feats].values, trn["y"].values)
-        parts.append(pd.DataFrame({"y": te["y"], "p": m.predict(te[feats].values), "n21": te["rv_21"], "n63": te["rv_63"]}))
+        parts.append(pd.DataFrame({"y": te["y"], "p": _blend(m.predict(te[feats].values), te["rv_63"].values),
+                                   "n21": te["rv_21"], "n63": te["rv_63"]}))
     df = pd.concat(parts)
 
     def r2(y, p):
@@ -438,15 +461,15 @@ def train_vol_model(md: MarketData, save: bool = True) -> pd.Series:
     last = panel.index.get_level_values(0).max()
     X = panel.xs(last, level=0)[feats]
     X = X.fillna(X.median())
-    pred = pd.Series(np.exp(model.predict(X.values)), index=X.index, name="vol_forecast_21d")
+    pred = pd.Series(np.exp(_blend(model.predict(X.values), X["rv_63"].values)), index=X.index, name="vol_forecast_21d")
     fc = pd.Series(index=md.prices.columns, dtype=float, name="vol_forecast_21d")
     fc.update(pred)
     trailing = md.returns.iloc[-63:].std() * _ANN
     fc = fc.fillna(trailing).clip(lower=0.01)
     if save:
-        joblib.dump(dict(model=model, features=feats), C.MODELS_DIR / "vol_model.joblib")
+        joblib.dump(dict(model=model, features=feats, naive_weight=VOL_NAIVE_WEIGHT), C.MODELS_DIR / "vol_model.joblib")
         fc.to_csv(C.MODELS_DIR / "latest_vol_forecast.csv")
-        json.dump(dict(asof=str(last.date()), version=2, model="Ridge (alpha 3000) on realised + range-based volatility features",
+        json.dump(dict(asof=str(last.date()), version=3, model="Ridge on realised + range-based volatility features, blended 80/20 with last quarter",
                        features=len(feats), **metrics), open(C.MODELS_DIR / "vol_model_meta.json", "w"), indent=2)
     return fc
 

@@ -1,0 +1,61 @@
+{
+ "results": {
+  "A production": {
+   "val_r2": 0.5041885178743905,
+   "test_r2": 0.5826991406362666,
+   "test_within": 0.17733536369514202,
+   "test_err": 0.2522279653779692,
+   "test_rows": 40423
+  },
+  "A production + combine with last quarter (w=0.20)": {
+   "val_r2": 0.5167088257080288,
+   "test_r2": 0.5890937194301537,
+   "test_within": 0.1880863901881641,
+   "test_err": 0.2515445011524091,
+   "test_rows": 40423
+  },
+  "B + GARCH(1,1) forecast": {
+   "val_r2": 0.47648073570376726,
+   "test_r2": 0.5850438730533969,
+   "test_within": 0.18378304904714227,
+   "test_err": 0.2536820023175591,
+   "test_rows": 40423
+  },
+  "B + GARCH(1,1) forecast + combine with last quarter (w=0.20)": {
+   "val_r2": 0.4894314317209175,
+   "test_r2": 0.592122331644565,
+   "test_within": 0.1961719980417077,
+   "test_err": 0.25232927304158326,
+   "test_rows": 40423
+  },
+  "C + long-run level": {
+   "val_r2": 0.5218278713870541,
+   "test_r2": 0.5820058183441461,
+   "test_within": 0.17493614875640284,
+   "test_err": 0.25476922878481073,
+   "test_rows": 40423
+  },
+  "C + long-run level + combine with last quarter (w=0.20)": {
+   "val_r2": 0.5330730357481804,
+   "test_r2": 0.5891493287719308,
+   "test_within": 0.18902776106326113,
+   "test_err": 0.2532752963237988,
+   "test_rows": 40423
+  },
+  "D + GARCH + long-run level": {
+   "val_r2": 0.4881887811492045,
+   "test_r2": 0.5833773327064006,
+   "test_within": 0.18015938810655407,
+   "test_err": 0.2553845748762561,
+   "test_rows": 40423
+  },
+  "D + GARCH + long-run level + combine with last quarter (w=0.20)": {
+   "val_r2": 0.49998471947467127,
+   "test_r2": 0.5912368878936949,
+   "test_within": 0.19503075170069895,
+   "test_err": 0.25341491380172965,
+   "test_rows": 40423
+  }
+ },
+ "chosen": "C + long-run level + combine with last quarter (w=0.20)"
+}

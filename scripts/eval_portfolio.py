@@ -73,7 +73,7 @@ def pit_predictions(md, dates):
             ret_fc[t] = pd.Series(mr.predict(x.values), index=x.index)
             z = vpanel.xs(t, level=0)[vfeats]
             z = z.fillna(z.median())
-            vol_fc[t] = pd.Series(np.exp(mv.predict(z.values)), index=z.index)
+            vol_fc[t] = pd.Series(np.exp(ml._blend(mv.predict(z.values), z["rv_63"].values)), index=z.index)
             reg[t] = pr.loc[t].values if t in pr.index else np.array([1.0, 0.0, 0.0])
         print("models trained for", yr, flush=True)
     return ret_fc, vol_fc, reg
@@ -134,14 +134,16 @@ def run():
     day_idx = idx[(idx >= dates[0]) & (idx <= idx[-1])]
     curves, turnover, costs = {}, {}, {}
     cols = md.prices.columns
-    sim_names = names + ["NIFTY 50 ETF (benchmark)", "Equal-weight stocks (monthly)"]
+    HALF = " (half-step rebalancing)"
+    sim_names = names + [names[1] + HALF, names[6] + HALF, "NIFTY 50 ETF (benchmark)", "Equal-weight stocks (monthly)"]
     stock_cols = [c for c in cols if C.UNIVERSE[c][2] == "stock"]
     eqw = pd.Series(0.0, index=cols)
     eqw[stock_cols] = 1 / len(stock_cols)
     nb = pd.Series(0.0, index=cols)
     nb["NIFTYBEES.NS"] = 1.0
     for n in sim_names:
-        tw = target_w.get(n)
+        half = n.endswith(HALF)
+        tw = target_w.get(n.replace(HALF, ""))
         if tw is None:
             tw = {t: (nb if n.startswith("NIFTY") else eqw) for t in dates}
         val, hold, out, turn, cost_paid = 1.0, pd.Series(0.0, index=cols), [], 0.0, 0.0
@@ -150,6 +152,8 @@ def run():
             if d in tw:
                 tgt = tw[d]
                 cur_w = hold / hold.sum() if hold.sum() > 0 else pd.Series(0.0, index=cols)
+                if half and not first:                       # trade only halfway to the new target (a-priori rule, halves turnover)
+                    tgt = 0.5 * cur_w + 0.5 * tgt
                 trade = float((tgt - cur_w).abs().sum()) if not first else float(tgt.abs().sum())
                 if n.startswith("NIFTY") and not first:
                     trade = 0.0

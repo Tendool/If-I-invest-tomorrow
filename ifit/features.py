@@ -65,6 +65,14 @@ def market_features(md: MarketData) -> pd.DataFrame:
 
 
 REGIME_COLS = ["mkt_ret_21d", "mkt_ret_63d", "mkt_vol_21d", "mkt_dd", "vix"]
+
+
+def regime_state(market: pd.Series, vix: pd.Series) -> pd.DataFrame:
+    """The regime-model inputs (same definitions as in market_features) from a market level and a VIX series."""
+    r = market.pct_change()
+    return pd.DataFrame({"mkt_ret_21d": market.pct_change(21), "mkt_ret_63d": market.pct_change(63),
+                         "mkt_vol_21d": r.rolling(21).std() * np.sqrt(C.TRADING_DAYS), "mkt_dd": market / market.cummax() - 1,
+                         "vix": vix}, index=market.index)
 MARKET_ML_COLS = ["mkt_ret_21d", "mkt_vol_21d", "mkt_dd", "vix", "vix_chg_21d",
                   "brent_ret_21d", "usdinr_ret_21d", "us10y_chg_21d"]
 

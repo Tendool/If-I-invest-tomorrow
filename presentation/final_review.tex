@@ -310,17 +310,18 @@
 \end{frame}
 
 \begin{frame}{Market regimes}
-  \framesubtitle{Gaussian mixture on NIFTY return, volatility, drawdown and India VIX}
+  \framesubtitle{Gaussian mixture on NIFTY return, volatility, drawdown and India VIX, 2008--2026 (includes the 2008 and 2020 crashes)}
   \vspace{0.05cm}
   \centering\includegraphics[width=\textwidth]{regimes.pdf}\par\vspace{0.1cm}\raggedright
   \footnotesize
   \begin{tabularx}{\textwidth}{@{}Lrrrrr@{}}
     \toprl
     \thd{Regime} & \thd{Share of days} & \thd{Return p.a.} & \thd{Volatility} & \thd{Avg VIX} & \thd{Persistence}\\ \tabrule
-    \swatch{cC}\; Bull / Calm & 56\% & \up{+13.0\%} & 10.8\% & 13.6 & 96.3\%\\
-    \swatch{cD}\; Neutral / Sideways \;\faint{(today)} & 42\% & \up{+6.5\%} & 17.6\% & 19.0 & 94.9\%\\
-    \swatch{neg}\; Bear / Volatile & 2\% & +1.1\% & 54.5\% & 44.2 & 98.5\%\\ \botrl
+    \swatch{cC}\; Bull / Calm & 46\% & \up{+13.0\%} & 11.6\% & 14.1 & 96.4\%\\
+    \swatch{cD}\; Neutral / Sideways \;\faint{(today)} & 45\% & \up{+5.7\%} & 18.5\% & 21.0 & 95.5\%\\
+    \swatch{neg}\; Bear / Volatile & 9\% & +17.2\%$^{*}$ & 45.5\% & 42.5 & 95.4\%\\ \botrl
   \end{tabularx}
+  {\scriptsize\muted{$^{*}$Crisis periods contain both the crash and the violent rebound (2009, 2020); the state is defined by 45\% volatility, VIX 42 and a $-$35\% average drawdown. The regime model now learns from 2008 as well as 2020 (before: 65 Bear days); calibration of the Monte Carlo improved as a result.}}
 \end{frame}
 
 \begin{frame}{Forecasting returns, honestly}
@@ -357,19 +358,19 @@
       \begin{tabularx}{\linewidth}{@{}Lrr@{}}
         \toprl
         \thd{Model} & \thd{R$^2$} & \thd{Error}\\ \tabrule
-        Ridge on range-based features \;\textcolor{brand}{\footnotesize in use} & 0.58 & 25\%\\
+        Ridge, range-based features, 80/20 blend \;\textcolor{brand}{\footnotesize in use} & 0.59 & 25\%\\
         \muted{Same as last quarter} & \muted{0.50} & \muted{29\%}\\
         \muted{Same as last month} & \muted{0.39} & \muted{31\%}\\ \botrl
       \end{tabularx}\par\vspace{0.2cm}
-      {\footnotesize\muted{40{,}423 forecasts, settings chosen on 2019--20 only. Trees and ensembles scored lower. Liquid fund excluded.}}
+      {\footnotesize\muted{40{,}423 forecasts, settings chosen on 2017--20 validation. Trees, GARCH and ensembles scored lower. Liquid fund excluded.}}
     \column{0.46\textwidth}
       \eyebrow{Monte Carlo calibration, 1-year horizon}\par\vspace{3pt}\hair\par\vspace{2pt}
       \small
       \begin{itemize}\setlength{\itemsep}{4pt}
         \item 104 forecasts from quarterly dates 2019--25, information as of each date
-        \item 90\% band held the outcome 81\% of the time (100\% in 2021--23, 44\% in 2020)
+        \item 50 / 75 / 90 / 95 / 99\% bands held 53 / 74 / 81 / 88 / 96\% (88\% at 90\% outside 2020)
         \item The miss is the COVID crash and the rebound; realised returns beat expected by 7\% on average
-        \item Reported as measured, not re-tuned to fit
+        \item Adds estimation error of the expected return ($\sigma/\sqrt{5}$) and regimes learned from 2008, nothing tuned
       \end{itemize}
   \end{columns}
 \end{frame}
@@ -384,9 +385,9 @@
         \thd{Strategy} & \thd{CAGR} & \thd{Vol} & \thd{Sharpe} & \thd{Max DD} & \thd{Turn./yr}\\ \tabrule
         Min-variance & 11.5\% & 5.7\% & 0.96 & $-$6.1\% & 0.8$\times$\\
         Max-Sharpe, prior & 12.8\% & 11.4\% & 0.60 & $-$16.1\% & 3.3$\times$\\
-        \quad + volatility model & 14.5\% & 11.3\% & 0.75 & $-$15.2\% & 4.6$\times$\\
-        \quad + 13.5\% return tilt & 15.3\% & 12.1\% & 0.77 & $-$16.5\% & 4.7$\times$\\
-        \quad + regime overlay (full) & 14.1\% & 10.1\% & 0.80 & $-$13.6\% & 5.0$\times$\\ \tabrule
+        \quad + volatility model & 14.3\% & 11.2\% & 0.74 & $-$15.2\% & 4.5$\times$\\
+        \quad + 13.5\% return tilt & 14.9\% & 12.0\% & 0.75 & $-$16.9\% & 4.6$\times$\\
+        \quad + regime overlay (full) & 13.8\% & 10.1\% & 0.77 & $-$13.9\% & 4.9$\times$\\ \tabrule
         \muted{NIFTY 50 ETF} & \muted{10.4\%} & \muted{12.8\%} & \muted{0.34} & \muted{$-$16.1\%} & \muted{0.2$\times$}\\
         \muted{Equal-weight stocks} & \muted{16.6\%} & \muted{13.0\%} & \muted{0.82} & \muted{$-$15.0\%} & \muted{0.7$\times$}\\ \botrl
       \end{tabularx}\par\vspace{0.12cm}
@@ -404,14 +405,14 @@
   \begin{columns}[T]
     \column{0.5\textwidth}
       \includegraphics[width=\linewidth]{eval_by_year.pdf}\par\vspace{0.1cm}
-      {\footnotesize\muted{Return signal: IC positive in 5 of 6 years, never significant on its own. Volatility model: ahead of the baseline in 5 of 6 years, tied in 2023.}}
+      {\footnotesize\muted{Return signal: IC positive in 5 of 6 years, never significant on its own. Volatility model: ahead of the baseline every year (2023 narrowly).}}
     \column{0.46\textwidth}
       \small
       \begin{itemize}\setlength{\itemsep}{5pt}
-        \item \textbf{Calibration.} Intervals of 50 / 75 / 90 / 95 / 99\% held 44 / 69 / 81 / 84 / 93\%. Fatter tails or a block bootstrap do not fix it: the miss is the 2020 crash.
-        \item \textbf{Regimes.} Calm $\to$ Neutral in a month 18\% of the time. After Neutral, 35\% of months saw a $\ge$5\% market drawdown against 13\% after Calm. They do not improve the volatility forecast (VIX already carries it).
+        \item \textbf{Calibration.} Intervals of 50 / 75 / 90 / 95 / 99\% held 53 / 74 / 81 / 88 / 96\% (was 44 / 69 / 81 / 84 / 93). Remaining miss: the 2020 crash.
+        \item \textbf{Regimes.} Calm $\to$ Neutral in a month 18\% of the time. After Neutral, 35\% of months saw a $\ge$5\% market drawdown against 13\% after Calm. VIX alone flags drawdowns as well.
         \item \textbf{Anomalies.} Flagged days are followed by 21--23\% volatility vs 13\% and a 5\% drawdown 60--65\% of the time vs 21\%, but not by lower returns: a risk warning, not a sell signal.
-        \item \textbf{Return signal.} Relative-strength features lift IC to 0.04 (not significant on independent windows): a candidate, not adopted.
+        \item \textbf{Return signal.} No feature set or target showed skill on 2017--20 validation; kept as a small tilt.
       \end{itemize}
   \end{columns}
 \end{frame}
