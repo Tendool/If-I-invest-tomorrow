@@ -40,6 +40,8 @@ check("market", g("/market"), lambda j: "overview" in j and len(j["timeline"]) >
 check("correlation", g("/correlation"), lambda j: len(j["matrix"]) == len(j["labels"]))
 check("assets", g("/assets"), lambda j: len(j) >= 30)
 check("assets/TCS", g("/assets/TCS"), lambda j: len(j["series"]) > 100)
+check("simulate presets", g("/simulate/presets"), lambda j: len(j) >= 5)
+check("simulate", p("/simulate", dict(amount=100000, monthly=5000, years=5, holdings=[dict(asset="TCS", weight=50), dict(asset="GOLDBEES", weight=50)])), lambda j: len(j["table"]) == 5 and j["summary"]["total_invested"] == 400000)
 check("models", g("/models"), lambda j: len(j["metrics"]) >= 4)
 
 p("/wallet/reset")

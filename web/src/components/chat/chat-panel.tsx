@@ -125,7 +125,7 @@ function Message({ m }: { m: ChatMessage }) {
       {m.text ? (
         <div
           className={cn(
-            "prose prose-neutral max-w-none text-[14.5px] leading-[1.7] dark:prose-invert",
+            "prose prose-neutral max-w-[78ch] text-[14.5px] leading-[1.7] dark:prose-invert",
             "prose-p:my-2 prose-ul:my-2 prose-li:my-0.5 prose-strong:font-semibold prose-headings:font-semibold prose-headings:text-[15px]",
             "prose-table:text-[13px] prose-th:font-medium prose-th:text-muted-foreground",
             m.error && "text-negative",

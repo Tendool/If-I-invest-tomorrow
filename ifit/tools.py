@@ -6,6 +6,7 @@ as ``*_pct``, money in rupees) so a 4B model can narrate them without unit mista
 """
 from __future__ import annotations
 
+import json
 import re
 import traceback
 
@@ -122,7 +123,7 @@ def analyze_asset(s: Session, asset: str) -> dict:
         historical_return_5y_pct=_pct(rep["hist_return_5y"]), volatility_pct=_pct(rep["volatility"]),
         max_drawdown_5y_pct=_pct(rep["max_drawdown"]), daily_var95_pct=_pct(rep["var95_1d"], 2),
         daily_cvar95_pct=_pct(rep["cvar95_1d"], 2), sharpe_5y=_r(rep["sharpe_hist"]),
-        ml_forecast_next_21d_pct=_pct(rep["ml_forecast_21d"]), model_expected_return_pct=_pct(rep["final_expected_return"]),
+        ml_forecast_next_21d_pct=_pct(rep["ml_forecast_21d"]), forecast_volatility_next_month_pct=_pct(rep["forecast_vol_21d"]), model_expected_return_pct=_pct(rep["final_expected_return"]),
         rsi14=_r(rep["rsi14"], 0), above_200_day_average=rep["above_200dma"],
     )
     s.emit("asset", f"{out['ticker']} analysis", rep)
@@ -200,6 +201,7 @@ def get_investment_plan(s: Session, strategy: str | None = None) -> dict:
         cash_left_rs=_inr(plan.attrs["cash_left"]),
         expected_return_pct=_pct(e.stats["exp_return"]), expected_volatility_pct=_pct(e.stats["volatility"]),
         sharpe=_r(e.stats["sharpe"]), portfolio_beta=_r(e.stats["beta"]),
+        next_month_volatility_pct=_pct(e.stats.get("near_term_vol")),
         prob_positive_return_pct=_pct(m["prob_positive"], 0), prob_achieving_target_pct=_pct(m["prob_target"], 0),
         expected_max_drawdown_pct=_pct(m["exp_max_drawdown"]), p95_max_drawdown_pct=_pct(m["p95_max_drawdown"]),
         median_final_value_rs=_inr(m["median_final"]), worst_case_5pct_rs=_inr(m["worst_case_p5"]),
@@ -283,6 +285,17 @@ def run_backtest(s: Session, years: int = 3) -> dict:
                 note="Past performance does not guarantee future results.")
 
 
+def _vol_model_summary() -> dict | None:
+    """Measured walk-forward accuracy of the volatility model (models/vol_model_meta.json)."""
+    p = C.MODELS_DIR / "vol_model_meta.json"
+    if not p.exists():
+        return None
+    m = json.loads(p.read_text(encoding="utf-8"))
+    return dict(model=m["model"], test_period=m["years"], r2=_r(m["r2"], 3), avg_error_pct=_pct(m["err"], 1),
+                best_naive_r2=_r(max(m["naive_21d_r2"], m["naive_63d_r2"]), 3), naive_last_month_r2=_r(m["naive_21d_r2"], 3),
+                within_asset_r2=_r(m["within_asset_r2"], 3))
+
+
 def get_model_report(s: Session) -> dict:
     """How the ML models were validated (walk-forward) and what the market-regime model found."""
     est, reg = s.engine.estimator, s.engine.regime
@@ -295,7 +308,9 @@ def get_model_report(s: Session) -> dict:
         regimes=[dict(regime=i, share_of_days_pct=_pct(r.share, 0), annual_return_pct=_pct(r.ann_return),
                       annual_vol_pct=_pct(r.ann_vol)) for i, r in reg.stats.iterrows()],
         current_regime=reg.current_name,
-        note="IC near 0.02-0.05 is typical for monthly return prediction: the ML view is used only as a small tilt.",
+        volatility_model=_vol_model_summary(),
+        note="IC near 0.02-0.05 is typical for monthly return prediction: the ML view is used only as a small tilt. "
+             "Volatility is the forecast with real skill. Report these measured numbers only; do not round them up.",
     )
 
 

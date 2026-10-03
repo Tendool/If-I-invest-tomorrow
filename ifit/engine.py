@@ -90,6 +90,8 @@ class Engine:
         self.rm = risk.build_risk_model(self.md)
         self.mu_table = ml.expected_returns(self.rm, self.estimator)
         self.mu = self.mu_table["expected"]
+        # next-21-day volatility forecast per asset (walk-forward R2 ~0.58 vs ~0.50 for the best 'same as before' rule; see models/vol_model_meta.json)
+        self.vol_fc = ml.load_vol_forecast(self.md).reindex(self.rm.symbols).fillna(self.rm.capm["vol"])
         self._board_cache: dict[tuple, dict[str, Evaluation]] = {}
 
     # ------------------------------------------------------------------ market
@@ -140,6 +142,7 @@ class Engine:
             hist_return_5y=float(c.hist_return), volatility=float(c.vol), max_drawdown=float(c.mdd),
             var95_1d=float(c.var95_1d), cvar95_1d=float(c.cvar95_1d), sharpe_hist=float(c.sharpe_hist),
             ml_forecast_21d=float(self.estimator.ml_forecast_21d.get(sym, np.nan)),
+            forecast_vol_21d=float(self.vol_fc.get(sym, np.nan)),
             final_expected_return=float(self.mu[sym]),
             rsi14=float(__import__("ifit.features", fromlist=["rsi"]).rsi(px).iloc[-1]),
             above_200dma=bool(px.iloc[-1] > px.rolling(200).mean().iloc[-1]),
@@ -205,9 +208,21 @@ class Engine:
         return O.min_cvar(R, b, self.mu, min_return=C.RISK_FREE + 0.01)
 
     # -------------------------------------------------------------- evaluation
+    @staticmethod
+    def profile_default() -> "UserProfile":
+        return UserProfile(100_000, 3, "medium", 0.12, [])
+
+    def near_term_vol(self, w: pd.Series) -> float:
+        """Portfolio volatility over the next month: forecast asset vols combined with the 5y correlations."""
+        wv = w.reindex(self.rm.symbols).fillna(0.0).values
+        d = self.vol_fc.reindex(self.rm.symbols).values
+        cov = self.rm.corr.values * np.outer(d, d)
+        return float(np.sqrt(wv @ cov @ wv))
+
     def evaluate(self, name: str, w: pd.Series, p: UserProfile, n_paths: int = C.MC_PATHS) -> Evaluation:
         p = p.normalised()
         st = risk.portfolio_stats(w, self.mu, self.rm.cov, self.rm.beta)
+        st["near_term_vol"] = self.near_term_vol(w)
         mc = MC.run_mc(st["exp_return"], st["volatility"], st["beta"], self.regime, p.horizon_years,
                        p.amount, p.target_return, n_paths=n_paths)
         prof = C.RISK_PROFILES[p.risk]

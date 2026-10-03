@@ -48,6 +48,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  // keep the market tape current: poll the lightweight state endpoint
+  React.useEffect(() => {
+    const id = setInterval(() => {
+      if (document.hidden) return;
+      api.state().then(setState).catch(() => undefined);
+    }, 30_000);
+    return () => clearInterval(id);
+  }, []);
+
   const apply = React.useCallback((r: { wallet?: WalletData; state?: AppState }) => {
     if (r.wallet) setWallet(r.wallet);
     if (r.state) setState(r.state);

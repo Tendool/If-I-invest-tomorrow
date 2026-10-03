@@ -8,6 +8,7 @@
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import warnings
 from dataclasses import dataclass, field
@@ -23,6 +24,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from . import config as C
+from . import data as _data
 from . import features as F
 from .data import MarketData
 
@@ -124,15 +126,25 @@ def detect_anomalies(md: MarketData, contamination: float = 0.02, seed: int = 7)
 # Return estimation - walk-forward model comparison
 # --------------------------------------------------------------------------- #
 def _models() -> dict:
+    """Return-model candidates; settings selected on 2019-2020 only (scripts/model_search.py)."""
     import xgboost as xgb
     return {
-        "Ridge (Linear)": make_pipeline(StandardScaler(), Ridge(alpha=50.0)),
-        "Random Forest": RandomForestRegressor(n_estimators=150, max_depth=6, min_samples_leaf=200,
+        "Ridge (Linear)": make_pipeline(StandardScaler(), Ridge(alpha=3000.0)),
+        "Random Forest": RandomForestRegressor(n_estimators=150, max_depth=6, min_samples_leaf=100,
                                                max_features=0.5, n_jobs=-1, random_state=7),
-        "XGBoost": xgb.XGBRegressor(n_estimators=250, max_depth=3, learning_rate=0.04, subsample=0.7,
-                                    colsample_bytree=0.7, min_child_weight=100, reg_lambda=10.0,
+        "XGBoost": xgb.XGBRegressor(n_estimators=400, max_depth=4, learning_rate=0.03, subsample=0.7,
+                                    colsample_bytree=0.7, min_child_weight=50, reg_lambda=10.0,
                                     n_jobs=-1, random_state=7, verbosity=0),
     }
+
+
+def relative_panel(md: MarketData) -> pd.DataFrame:
+    """Feature panel whose target is the *relative* 21d return (minus the cross-sectional mean).
+
+    The market's common move is noise for stock selection; what can be ranked is who beats the rest."""
+    panel = F.build_panel(md)
+    panel["target"] = panel["target"] - panel.groupby(level=0)["target"].transform("mean")
+    return panel
 
 
 def _metrics(df: pd.DataFrame) -> dict:
@@ -153,7 +165,7 @@ def _metrics(df: pd.DataFrame) -> dict:
 def walk_forward(md: MarketData, test_years: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025, 2026),
                  include_gru: bool = False, verbose: bool = False) -> tuple[pd.DataFrame, dict]:
     """Expanding-window walk-forward evaluation. Returns (metrics table, out-of-sample predictions)."""
-    panel = F.build_panel(md).dropna()
+    panel = relative_panel(md).dropna()
     feats = F.feature_columns(panel)
     dates = panel.index.get_level_values(0)
     models = _models()
@@ -222,7 +234,7 @@ def train_return_model(md: MarketData, include_gru: bool = False, save: bool = T
     # Skill weight: zero when the model shows no cross-sectional skill, capped at 0.5.
     lam = float(np.clip(5.0 * ic, 0.0, 0.5))
 
-    panel = F.build_panel(md)
+    panel = relative_panel(md)
     feats = F.feature_columns(panel)
     train = panel.dropna()
     train = train.iloc[::3]
@@ -284,3 +296,164 @@ def expected_returns(rm, est: ReturnEstimator | None) -> pd.DataFrame:
             out.loc[s, ["capm", "prior", "expected"]] = C.RISK_FREE - 0.005
             out.loc[s, "ml_tilt"] = 0.0
     return out
+
+
+# --------------------------------------------------------------------------- #
+# Volatility forecasting (the one forecast with large, validated skill)
+# --------------------------------------------------------------------------- #
+_ANN = np.sqrt(C.TRADING_DAYS)
+VOL_ALPHA = 3000.0
+VOL_TEST_YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
+
+
+def _load_ohlc(md):
+    """High/Low/Open aligned to the cleaned calendar (raw files; ratios within a day are split-proof)."""
+    out = {k: {} for k in ("open", "high", "low", "close")}
+    for sym in md.prices.columns:
+        raw = _data._read_raw(sym)
+        if raw is None:
+            continue
+        raw = raw.reindex(md.prices.index)
+        for k, col in (("open", "Open"), ("high", "High"), ("low", "Low"), ("close", "Close")):
+            out[k][sym] = raw[col]
+    return {k: pd.DataFrame(v) for k, v in out.items()}
+
+
+def vol_panel(md: MarketData) -> pd.DataFrame:
+    """(date, symbol) panel of range-based + realised-volatility features and the log forward-21d realised volatility."""
+    r = md.returns
+    o = _load_ohlc(md)
+    hl = np.log(o["high"] / o["low"]).clip(0, 0.25)                       # ln(H/L); NSE circuit limits keep this small
+    co = np.log(o["close"] / o["open"]).clip(-0.25, 0.25)
+    ho = np.log(o["high"] / o["open"]).clip(0, 0.25)
+    lo = np.log(o["low"] / o["open"]).clip(-0.25, 0)
+    gk = (0.5 * hl ** 2 - (2 * np.log(2) - 1) * co ** 2).clip(lower=0)    # Garman-Klass variance
+    rs = (ho * (ho - co) + lo * (lo - co)).clip(lower=0)                  # Rogers-Satchell variance
+    park = hl ** 2 / (4 * np.log(2))                                      # Parkinson variance
+    gap = np.log(o["open"] / o["close"].shift(1)).clip(-0.25, 0.25)
+    vol = md.volume.replace(0, np.nan)
+
+    feats: dict[str, pd.DataFrame] = {}
+    for k in (1, 5, 10, 21, 63, 126, 252):
+        feats[f"rv_{k}"] = np.log((r.rolling(k, min_periods=max(2, k // 2)).std() * _ANN).clip(lower=0.01)) if k > 1 else np.log((r.abs() * _ANN).clip(lower=0.01))
+    for k in (5, 21, 63):
+        feats[f"park_{k}"] = np.log(np.sqrt(park.rolling(k).mean() * C.TRADING_DAYS).clip(lower=0.01))
+    feats["gk_21"] = np.log(np.sqrt(gk.rolling(21).mean() * C.TRADING_DAYS).clip(lower=0.01))
+    feats["gk_5"] = np.log(np.sqrt(gk.rolling(5).mean() * C.TRADING_DAYS).clip(lower=0.01))
+    feats["rs_21"] = np.log(np.sqrt(rs.rolling(21).mean() * C.TRADING_DAYS).clip(lower=0.01))
+    for lam in (0.94, 0.985):
+        feats[f"ewma_{lam}"] = np.log(np.sqrt((r ** 2).ewm(alpha=1 - lam, adjust=False).mean() * C.TRADING_DAYS).clip(lower=0.01))
+    feats["semi_dn_21"] = np.log((np.sqrt((r.clip(upper=0) ** 2).rolling(21).mean()) * _ANN).clip(lower=0.01))
+    feats["semi_up_21"] = np.log((np.sqrt((r.clip(lower=0) ** 2).rolling(21).mean()) * _ANN).clip(lower=0.01))
+    feats["maxabs_21"] = r.abs().rolling(21).max()
+    feats["gap_21"] = gap.abs().rolling(21).mean()
+    feats["volofvol_63"] = (r.rolling(5).std() * _ANN).rolling(63).std() / (r.rolling(63).std() * _ANN)
+    feats["ret_1"] = r
+    feats["ret_21"] = md.prices.pct_change(21)
+    feats["ret_63"] = md.prices.pct_change(63)
+    feats["dd_252"] = md.prices / md.prices.rolling(252, min_periods=60).max() - 1
+    feats["vlm_ratio"] = np.log(vol.rolling(5).mean() / vol.rolling(63).mean())
+    feats["rv5_over_63"] = feats["rv_5"] - feats["rv_63"]
+    feats["rv21_over_252"] = feats["rv_21"] - feats["rv_252"]
+
+    frames = {k: v.stack().rename(k) for k, v in feats.items()}
+    panel = pd.concat(frames.values(), axis=1)
+    panel.index.names = ["date", "symbol"]
+
+    mf = F.market_features(md)
+    mr = md.market.pct_change()
+    mk = pd.DataFrame({
+        "m_rv_5": np.log((mr.rolling(5).std() * _ANN).clip(lower=0.01)),
+        "m_rv_21": np.log((mr.rolling(21).std() * _ANN).clip(lower=0.01)),
+        "m_rv_63": np.log((mr.rolling(63).std() * _ANN).clip(lower=0.01)),
+        "vix": md.macro["vix"] / 100, "vix_chg_5": md.macro["vix"].pct_change(5), "vix_chg_21": md.macro["vix"].pct_change(21),
+        "vix_rv_gap": np.log(md.macro["vix"] / 100) - np.log((mr.rolling(21).std() * _ANN).clip(lower=0.01)),
+        "m_dd": mf["mkt_dd"], "usdinr_21": mf["usdinr_ret_21d"], "brent_21": mf["brent_ret_21d"],
+    })
+    panel = panel.join(mk, on="date")
+    # cross-sectional context: average log vol of the whole universe today
+    panel["cs_mean_rv21"] = panel.groupby(level=0)["rv_21"].transform("mean")
+    panel["rv21_vs_cs"] = panel["rv_21"] - panel["cs_mean_rv21"]
+
+    fvol = r.rolling(21).std().shift(-21) * _ANN
+    panel["y"] = np.log(fvol.stack().rename("y").clip(lower=0.01)).reindex(panel.index)
+    return panel.replace([np.inf, -np.inf], np.nan)
+
+
+def _is_cash(sym: str) -> bool:
+    return C.UNIVERSE[sym][2] == "cash"
+
+
+def _vol_model():
+    return make_pipeline(StandardScaler(), Ridge(alpha=VOL_ALPHA))
+
+
+def vol_features(panel: pd.DataFrame) -> list[str]:
+    return [c for c in panel.columns if c != "y"]
+
+
+def vol_walk_forward(panel: pd.DataFrame) -> dict:
+    """Expanding-window walk-forward (test years 2021-26, 1.5x-horizon purge) of the volatility model on the non-cash
+    assets, scored against 'same as the last month / quarter'. R2 is on log volatility; 'within-asset' removes each
+    asset's own average so it measures month-to-month timing rather than just which assets are riskier."""
+    feats = vol_features(panel)
+    dates = panel.index.get_level_values(0)
+    purge = pd.Timedelta(days=int(F.FWD_DAYS * 1.5))
+    parts = []
+    for yr in VOL_TEST_YEARS:
+        a, b = pd.Timestamp(f"{yr}-01-01"), pd.Timestamp(f"{yr}-12-31")
+        trn = panel[dates < a - purge].dropna(subset=feats + ["y"]).iloc[::3]
+        te = panel[(dates >= a) & (dates <= b)].dropna(subset=feats + ["y"])
+        if len(trn) < 2000 or te.empty:
+            continue
+        m = _vol_model().fit(trn[feats].values, trn["y"].values)
+        parts.append(pd.DataFrame({"y": te["y"], "p": m.predict(te[feats].values), "n21": te["rv_21"], "n63": te["rv_63"]}))
+    df = pd.concat(parts)
+
+    def r2(y, p):
+        return float(1 - ((y - p) ** 2).sum() / ((y - y.mean()) ** 2).sum())
+
+    err = lambda col: float(np.mean(np.abs(np.exp(df[col] - df["y"]) - 1)))
+    g = df.groupby(level=1)
+    dm = lambda s: s - g[s.name].transform("mean")
+    wy = dm(df["y"]); wp = dm(df["p"])
+    return dict(rows=int(len(df)), years=f"{VOL_TEST_YEARS[0]}-{VOL_TEST_YEARS[-1]}", r2=r2(df["y"], df["p"]),
+                naive_21d_r2=r2(df["y"], df["n21"]), naive_63d_r2=r2(df["y"], df["n63"]),
+                err=err("p"), naive_21d_err=err("n21"), naive_63d_err=err("n63"),
+                within_asset_r2=float(1 - ((wy - wp) ** 2).sum() / (wy ** 2).sum()),
+                corr=float(np.corrcoef(df["y"], df["p"])[0, 1]))
+
+
+def train_vol_model(md: MarketData, save: bool = True) -> pd.Series:
+    """Fit the volatility model (Ridge on HAR-style realised + range-based features, selected on 2019-20 validation) on all
+    history and forecast next-21-day annualised volatility for every asset (as of the last date). The liquid fund (a flat
+    accrual) is not modelled: its trailing volatility is used. Honest walk-forward numbers are written to the meta file."""
+    risky = [c for c in md.prices.columns if not _is_cash(c)]
+    sub = dataclasses.replace(md, prices=md.prices[risky], volume=md.volume[risky])
+    panel = vol_panel(sub)
+    feats = vol_features(panel)
+    metrics = vol_walk_forward(panel)
+    train = panel.dropna(subset=feats + ["y"]).iloc[::3]
+    model = _vol_model().fit(train[feats].values, train["y"].values)
+    last = panel.index.get_level_values(0).max()
+    X = panel.xs(last, level=0)[feats]
+    X = X.fillna(X.median())
+    pred = pd.Series(np.exp(model.predict(X.values)), index=X.index, name="vol_forecast_21d")
+    fc = pd.Series(index=md.prices.columns, dtype=float, name="vol_forecast_21d")
+    fc.update(pred)
+    trailing = md.returns.iloc[-63:].std() * _ANN
+    fc = fc.fillna(trailing).clip(lower=0.01)
+    if save:
+        joblib.dump(dict(model=model, features=feats), C.MODELS_DIR / "vol_model.joblib")
+        fc.to_csv(C.MODELS_DIR / "latest_vol_forecast.csv")
+        json.dump(dict(asof=str(last.date()), version=2, model="Ridge (alpha 3000) on realised + range-based volatility features",
+                       features=len(feats), **metrics), open(C.MODELS_DIR / "vol_model_meta.json", "w"), indent=2)
+    return fc
+
+
+def load_vol_forecast(md: MarketData) -> pd.Series:
+    """Cached next-month volatility forecast per asset (trains the model if nothing is cached)."""
+    p = C.MODELS_DIR / "latest_vol_forecast.csv"
+    if p.exists() and (C.MODELS_DIR / "vol_model_meta.json").exists():
+        return pd.read_csv(p, index_col=0).iloc[:, 0]
+    return train_vol_model(md)

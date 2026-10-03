@@ -188,3 +188,72 @@ def test_intent_router():
     assert required_tools("stress test it") == ["stress_test"]
     assert required_tools("yes, confirm") == []
     assert required_tools("Stage the plan in my demo wallet") == ["invest_plan"]   # a stage-only request
+
+
+# ------------------------------------------------------------ volatility forecaster
+def test_vol_forecast_beats_naive_out_of_sample():
+    import json
+    from ifit import config as C
+    m = json.loads((C.MODELS_DIR / "vol_model_meta.json").read_text(encoding="utf-8"))
+    assert m["r2"] > max(m["naive_21d_r2"], m["naive_63d_r2"]) + 0.03
+    assert m["err"] < min(m["naive_21d_err"], m["naive_63d_err"])
+    assert m["within_asset_r2"] > 0.05                       # real month-to-month timing skill, not just "which assets are riskier"
+
+
+def test_near_term_vol_on_every_strategy(engine):
+    p = UserProfile(100000, 3, "medium", 0.12, [])
+    for name, ev in engine.run_all(p).items():
+        nt = ev.stats["near_term_vol"]
+        assert 0.5 * ev.stats["volatility"] < nt < 2.0 * ev.stats["volatility"], name
+    assert (engine.vol_fc > 0.005).all() and (engine.vol_fc < 2.0).all()
+
+
+# ------------------------------------------------------------------------ simulator
+def test_simulator_lump_sum_and_sip_accounting(engine):
+    from ifit import simulator as SM
+    r = SM.simulate(engine, [{"asset": "NIFTYBEES", "weight": 1}], 100000, 3, 0, n_paths=2000)
+    assert r["summary"]["total_invested"] == 100000
+    assert [x["year"] for x in r["table"]] == [1, 2, 3]
+    assert r["table"][-1]["p5"] < r["table"][-1]["median"] < r["table"][-1]["p95"]
+    r2 = SM.simulate(engine, [{"asset": "NIFTYBEES", "weight": 1}], 100000, 3, 5000, n_paths=2000)
+    assert r2["summary"]["total_invested"] == 100000 + 5000 * 36
+    assert r2["table"][0]["invested"] == 100000 + 5000 * 12
+    assert r2["summary"]["median_final"] > r["summary"]["median_final"]            # more money in
+    # cash earns about the risk-free rate, so its median is close to the deterministic FD path
+    c = SM.simulate(engine, [{"asset": "LIQUIDBEES", "weight": 1}], 100000, 3, 0, n_paths=2000)
+    assert abs(c["summary"]["median_final"] / c["summary"]["fd_final"] - 1) < 0.04
+
+
+def test_simulator_weights_and_validation(engine):
+    from ifit import simulator as SM
+    w = SM.resolve_holdings(engine, [{"asset": "TCS", "weight": 30}, {"asset": "gold", "weight": 10}, {"asset": "TCS", "weight": 10}])
+    assert w.sum() == pytest.approx(1.0) and w["TCS.NS"] == pytest.approx(0.8)
+    for bad in ([], [{"asset": "NOPE", "weight": 1}], [{"asset": "TCS", "weight": 0}], [{"asset": "TCS", "weight": -5}]):
+        with pytest.raises(SM.SimulationError):
+            SM.resolve_holdings(engine, bad)
+    with pytest.raises(SM.SimulationError):
+        SM.simulate(engine, [{"asset": "TCS", "weight": 1}], 0, 3, 0)
+    with pytest.raises(SM.SimulationError):
+        SM.simulate(engine, [{"asset": "TCS", "weight": 1}], 1000, 30, 0)
+
+
+def test_model_report_includes_measured_volatility_accuracy(engine, tmp_path):
+    from ifit import tools
+    from ifit.session import Session
+    from ifit.wallet import Wallet
+    s = Session(engine=engine, wallet=Wallet(tmp_path / "m.sqlite", 100000))
+    v = tools.get_model_report(s)["volatility_model"]
+    assert v is not None and 0.4 < v["r2"] < 0.8              # measured, not a marketing number
+    assert v["r2"] > v["best_naive_r2"]
+
+
+def test_models_artifact_carries_skill_weight_and_volatility(engine, tmp_path):
+    from ifit import serialize as Z, tools
+    from ifit.session import Session
+    from ifit.wallet import Wallet
+    s = Session(engine=engine, wallet=Wallet(tmp_path / "a.sqlite", 100000))
+    tools.get_model_report(s)
+    art = Z.artifact(s.take_artifacts()[0], s)
+    assert art["kind"] == "models"
+    assert 0 < art["data"]["skill_weight"] < 0.5                 # the card must not fall back to "0%"
+    assert art["data"]["volatility"]["r2"] > art["data"]["volatility"]["naive_63d_r2"]

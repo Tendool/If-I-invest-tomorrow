@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+from pathlib import Path
 import warnings
 
 import numpy as np
@@ -20,6 +21,7 @@ warnings.filterwarnings("ignore")
 from . import config as C           # noqa: E402
 from . import data as D             # noqa: E402
 from . import serialize as Z        # noqa: E402
+from . import simulator             # noqa: E402
 from . import trading               # noqa: E402
 from .agent import Agent            # noqa: E402
 from .engine import STRATEGIES, UserProfile  # noqa: E402
@@ -66,6 +68,29 @@ def wallet_state(s: Session) -> dict:
                 autonomy=s.autonomy, autopilot=s.autopilot)
 
 
+def tape(s: Session) -> list[dict]:
+    """Scrolling-tape items: indices / macro first, then every investable asset with its 1-day change."""
+    md = s.engine.md
+    out = []
+
+    def add(label, series, kind, fmt="num"):
+        x = series.dropna()
+        if len(x) >= 2:
+            out.append(dict(label=label, value=float(x.iloc[-1]), change=float(x.iloc[-1] / x.iloc[-2] - 1), kind=kind, fmt=fmt))
+
+    add("NIFTY 50", md.market, "index")
+    if "banknifty" in md.macro:
+        add("BANK NIFTY", md.macro["banknifty"], "index")
+    add("INDIA VIX", md.macro["vix"], "macro")
+    add("USD/INR", md.macro["usdinr"], "macro")
+    add("BRENT", md.macro["brent"], "macro", "usd")
+    for sym in md.prices.columns:
+        if C.UNIVERSE[sym][2] == "cash":      # the liquid fund is a flat accrual series; not interesting on a tape
+            continue
+        add(D.short(sym), md.prices[sym], C.UNIVERSE[sym][2])
+    return out
+
+
 def state(s: Session) -> dict:
     md = s.engine.md
     v = s.wallet.valuation(md.last_prices(), asof=str(md.last_date.date()), record=False)
@@ -74,7 +99,7 @@ def state(s: Session) -> dict:
                   usdinr=mac["usdinr"].iloc[-1], brent=mac["brent"].iloc[-1],
                   banknifty=mac["banknifty"].iloc[-1] if "banknifty" in mac else None)
     return Z.clean(dict(
-        as_of=str(md.last_date.date()), profile=Z.profile(s.profile), profile_set=s.profile_confirmed, ticker=ticker,
+        as_of=str(md.last_date.date()), profile=Z.profile(s.profile), profile_set=s.profile_confirmed, ticker=ticker, tape=tape(s),
         autonomy=s.autonomy, autopilot=s.autopilot, strategies=STRATEGIES,
         regime=s.engine.regime.current_name, llm=C.LLM_MODEL,
         sectors=C.SECTORS + ["Gold", "Bonds"], recommended=s.recommended,
@@ -199,7 +224,7 @@ def models():
     with LOCK:
         s = S()
         est = s.engine.estimator
-        return Z.clean(dict(selected=est.model_name, skill_weight=est.skill_weight, metrics=Z.metrics_table(est.metrics),
+        return Z.clean(dict(metrics=Z.metrics_table(est.metrics), **Z.model_extras(est),
                             importance=[dict(feature=k, value=float(v)) for k, v in est.feature_importance.head(12).items()]
                             if est.feature_importance is not None else []))
 
@@ -280,6 +305,25 @@ def frontier():
             cloud=[dict(vol=r.vol, ret=r.ret) for r in cloud.itertuples()],
             assets=[dict(ticker=D.short(i), vol=r.vol, ret=r.ret) for i, r in fr["assets"].iterrows()],
             strategies=[dict(strategy=n, vol=e.stats["volatility"], ret=e.stats["exp_return"]) for n, e in s.board.items()]))
+
+
+# ------------------------------------------------------------------ simulator
+@app.get("/api/simulate/presets")
+def simulate_presets():
+    with LOCK:
+        return Z.clean(simulator.presets(S().engine))
+
+
+@app.post("/api/simulate")
+def simulate(body: dict = Body(...)):
+    """Project a custom investment: {amount, monthly, years, holdings:[{asset, weight}]}."""
+    with LOCK:
+        try:
+            out = simulator.simulate(S().engine, body.get("holdings") or [], body.get("amount", 0), body.get("years", 5),
+                                     body.get("monthly", 0) or 0)
+        except simulator.SimulationError as e:
+            raise HTTPException(400, str(e))
+        return Z.clean(out)
 
 
 # ------------------------------------------------------------------ wallet

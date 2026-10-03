@@ -27,9 +27,18 @@ export interface Ticker {
   banknifty: number | null;
 }
 
+export interface TapeItem {
+  label: string;
+  value: number;
+  change: number;
+  kind: string;
+  fmt: "num" | "usd";
+}
+
 export interface AppState {
   as_of: string;
   ticker?: Ticker;
+  tape?: TapeItem[];
   profile: Profile;
   profile_set: boolean;
   autonomy: Autonomy;
@@ -109,7 +118,7 @@ export interface Evaluation {
   blurb: string;
   recommended: boolean;
   weights: WeightRow[];
-  stats: { exp_return: number; volatility: number; sharpe: number; beta: number };
+  stats: { exp_return: number; volatility: number; sharpe: number; beta: number; near_term_vol?: number };
   mc: MC;
   stress: StressRow[];
   breaches: string[];
@@ -293,7 +302,41 @@ export interface AssetDetail {
   series: { date: string; asset: number; nifty: number }[];
 }
 
+export interface SearchRow {
+  ic?: number;
+  icir?: number;
+  ic_pos?: number;
+  hit?: number;
+  top_hit?: number;
+  spread_21d?: number;
+  spread_t?: number;
+  r2?: number;
+  corr?: number;
+  mape?: number;
+}
+
+export interface ModelSearch {
+  relative_return: { results: Record<string, SearchRow> };
+}
+
+export interface VolMeta {
+  asof: string;
+  model: string;
+  rows: number;
+  years: string;
+  r2: number;
+  naive_21d_r2: number;
+  naive_63d_r2: number;
+  err: number;
+  naive_21d_err: number;
+  naive_63d_err: number;
+  within_asset_r2: number;
+  corr: number;
+}
+
 export interface ModelsData {
+  search?: ModelSearch | null;
+  volatility?: VolMeta | null;
   metrics: Record<string, number | string | null>[];
   regimes?: RegimeStat[];
   importance: { feature: string; value: number }[];
@@ -425,4 +468,90 @@ export interface FrontierData {
   cloud: { vol: number; ret: number }[];
   assets: { ticker: string; vol: number; ret: number }[];
   strategies: { strategy: string; vol: number; ret: number }[];
+}
+
+export interface SimHolding {
+  asset: string;
+  weight: number;
+}
+
+export interface SimPreset {
+  id: string;
+  label: string;
+  description: string;
+  holdings: { symbol: string; ticker: string; name: string; weight: number }[];
+}
+
+export interface SimFanPoint {
+  month: number;
+  year: number;
+  invested: number;
+  p5: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p95: number;
+  fd: number;
+  nifty: number;
+}
+
+export interface SimYearRow {
+  year: number;
+  invested: number;
+  p5: number;
+  p25: number;
+  median: number;
+  p75: number;
+  p95: number;
+  expected: number;
+  median_gain: number;
+  median_return: number;
+  prob_profit: number;
+  fd: number;
+  nifty: number;
+  beats_fd: number;
+}
+
+export interface SimBreakdown {
+  symbol: string;
+  ticker: string;
+  name: string;
+  sector: string;
+  asset_class: string;
+  weight: number;
+  amount: number;
+  monthly: number;
+  price: number;
+  expected_return: number;
+  volatility: number;
+  contribution: number;
+  beta: number;
+  projected: number;
+}
+
+export interface SimResult {
+  inputs: { amount: number; monthly: number; years: number; n_paths: number };
+  portfolio: { expected_return: number; volatility: number; next_month_volatility: number; beta: number; sharpe: number; regime: string };
+  summary: {
+    total_invested: number;
+    expected_final: number;
+    median_final: number;
+    p5_final: number;
+    p95_final: number;
+    expected_gain: number;
+    median_gain: number;
+    median_annual_return: number;
+    prob_profit: number;
+    prob_beat_fd: number;
+    prob_beat_nifty: number;
+    prob_loss_10: number;
+    fd_final: number;
+    nifty_final: number;
+    fd_rate: number;
+    nifty_rate: number;
+  };
+  fan: SimFanPoint[];
+  table: SimYearRow[];
+  hist: { x: number; pct: number }[];
+  breakdown: SimBreakdown[];
 }

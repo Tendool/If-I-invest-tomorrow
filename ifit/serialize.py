@@ -1,7 +1,9 @@
 """Convert engine / tool artifacts into plain JSON for the Next.js front end."""
 from __future__ import annotations
 
+import json
 import math
+from pathlib import Path
 from datetime import date, datetime
 
 import numpy as np
@@ -124,6 +126,18 @@ def metrics_table(t: pd.DataFrame) -> list[dict]:
 
 
 # ------------------------------------------------------------------ artifacts
+def model_extras(est) -> dict:
+    """Fields the Models view needs beyond the walk-forward table: selected model, skill weight, the measured volatility
+    model accuracy and the stored model-search results (same payload for /api/models and the chat artifact)."""
+    search_p = C.REPORTS_DIR / "model_search.json"
+    if not search_p.exists():                       # fresh container: use the copy shipped with the package
+        search_p = Path(__file__).parent / "assets" / "model_search.json"
+    vol_p = C.MODELS_DIR / "vol_model_meta.json"
+    return dict(selected=est.model_name, skill_weight=est.skill_weight,
+                search=json.loads(search_p.read_text(encoding="utf-8")) if search_p.exists() else None,
+                volatility=json.loads(vol_p.read_text(encoding="utf-8")) if vol_p.exists() else None)
+
+
 def artifact(a: dict, session) -> dict:
     """Serialise a ``Session.emit`` artifact for the UI."""
     kind, pl = a["kind"], a["payload"]
@@ -151,7 +165,7 @@ def artifact(a: dict, session) -> dict:
     elif kind == "market":
         data = pl
     elif kind == "models":
-        data = dict(metrics=metrics_table(pl["metrics"]),
+        data = dict(metrics=metrics_table(pl["metrics"]), **model_extras(session.engine.estimator),
                     regimes=[dict(regime=i, **r.to_dict()) for i, r in pl["regimes"].iterrows()],
                     importance=([dict(feature=k, value=float(v)) for k, v in pl["importance"].head(12).items()]
                                 if pl["importance"] is not None else []))

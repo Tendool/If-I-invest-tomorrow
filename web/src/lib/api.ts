@@ -12,6 +12,9 @@ import type {
   ModelsData,
   PlanData,
   Profile,
+  SimHolding,
+  SimPreset,
+  SimResult,
   StrategiesData,
   StressData,
   TimingData,
@@ -88,6 +91,9 @@ export const api = {
   resetWallet: () => post<{ wallet: WalletData; state: AppState }>("/api/wallet/reset"),
   autopilotRun: () => post<ActionResponse>("/api/autopilot/run"),
   refreshData: () => post<ActionResponse>("/api/data/refresh"),
+  simPresets: () => req<SimPreset[]>("/api/simulate/presets"),
+  simulate: (b: { amount: number; monthly: number; years: number; holdings: SimHolding[] }) =>
+    post<SimResult>("/api/simulate", b),
   chatReset: () => post<{ ok: boolean }>("/api/chat/reset"),
 };
 

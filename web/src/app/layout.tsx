@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { ApiBanner } from "@/components/api-banner";
-import { SiteHeader } from "@/components/site-header";
+import { AppBackground } from "@/components/app-background";
+import { DockHeader } from "@/components/dock-header";
+import { MarketStrip } from "@/components/market-strip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,12 +28,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <TooltipProvider delay={250}>
             <AppProvider>
               <ChatProvider>
-                <div className="flex min-h-screen flex-col">
-                  <SiteHeader />
+                <div className="relative flex min-h-screen flex-col">
+                  <AppBackground />
+                  <DockHeader />
+                  <div className="h-[66px]" aria-hidden />
+                  <MarketStrip />
                   <ApiBanner />
-                  <main className="mx-auto w-full max-w-[1320px] flex-1 px-5 pt-10 pb-20 lg:px-8">{children}</main>
+                  <main className="page-x mx-auto w-full flex-1 pt-10 pb-20">{children}</main>
                   <footer className="border-t border-border">
-                    <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-2 px-5 py-5 text-[12px] text-faint lg:px-8">
+                    <div className="page-x mx-auto flex flex-wrap items-center justify-between gap-2 py-5 text-[12px] text-faint">
                       <span>Model-based simulations on historical data. Demo money only; not investment advice.</span>
                       <span>23CSE322 Financial Engineering · Team 01</span>
                     </div>

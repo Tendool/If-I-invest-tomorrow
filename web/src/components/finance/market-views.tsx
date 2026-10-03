@@ -279,6 +279,80 @@ const MODEL_COLS: [string, string, (v: number) => string][] = [
   ["ic_pooled", "IC pooled", (v) => v.toFixed(3)],
 ];
 
+
+function VolatilityTable({ v }: { v: NonNullable<ModelsData["volatility"]> }) {
+  const rows: [string, number, number, boolean][] = [
+    [v.model, v.r2, v.err, true],
+    ["Same as the last quarter (63-day volatility)", v.naive_63d_r2, v.naive_63d_err, false],
+    ["Same as last month (21-day volatility)", v.naive_21d_r2, v.naive_21d_err, false],
+  ];
+  return (
+    <Section
+      title="Volatility forecast: the model that works"
+      description={`Next-21-day realised volatility of each stock and ETF, walk-forward ${v.years} (${v.rows.toLocaleString("en-IN")} forecasts), settings tuned on 2019–2020 only. This feeds the next-month risk figures.`}
+    >
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Model</TableHead>
+            <TableHead className="text-right">R²</TableHead>
+            <TableHead className="text-right">Avg. error</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map(([n, r2, e, use]) => (
+            <TableRow key={n} className={cn(!use && "text-muted-foreground")}>
+              <TableCell className={cn(use && "font-semibold")}>
+                {n}
+                {use ? <span className="ml-2 text-[10.5px] font-medium tracking-[0.06em] text-brand uppercase">In use</span> : null}
+              </TableCell>
+              <TableCell className="text-right">{r2.toFixed(3)}</TableCell>
+              <TableCell className="text-right">{pct(e, 1)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
+        Unlike returns, volatility is persistent and forecastable. Much of the R² comes from knowing which assets are riskier; judged on
+        month-to-month changes within each asset the model explains {pct(v.within_asset_r2, 0)}. Tree models and ensembles scored lower than this simple linear model in the search.
+      </p>
+    </Section>
+  );
+}
+
+function SearchTables({ search }: { search: NonNullable<ModelsData["search"]> }) {
+  const rel = Object.entries(search.relative_return.results);
+  const naive = (n: string) => n.includes("naive") || n.includes("baseline");
+  return (
+    <div className="space-y-10">
+      <Section title="Relative-return search, in full" description="Rank correlation (IC) of the forecast with the realised 21-day return relative to the average asset">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Model</TableHead>
+              <TableHead className="text-right">IC</TableHead>
+              <TableHead className="text-right">Days IC &gt; 0</TableHead>
+              <TableHead className="text-right">Top − bottom quintile</TableHead>
+              <TableHead className="text-right">t-stat</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rel.map(([n, m]) => (
+              <TableRow key={n} className={cn(naive(n) && "text-muted-foreground")}>
+                <TableCell>{n}</TableCell>
+                <TableCell className="text-right">{m.ic?.toFixed(3)}</TableCell>
+                <TableCell className="text-right">{pct(m.ic_pos, 0)}</TableCell>
+                <TableCell className="text-right">{m.spread_21d != null ? `${(m.spread_21d * 100).toFixed(2)}%` : "—"}</TableCell>
+                <TableCell className="text-right">{m.spread_t?.toFixed(1)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Section>
+    </div>
+  );
+}
+
 export function ModelsView({ data, regimes, market }: { data: ModelsData; regimes?: MarketData["regimes"]; market?: MarketData | null }) {
   const imp = data.importance;
   const maxImp = Math.max(...imp.map((i) => i.value), 1e-9);
@@ -320,11 +394,16 @@ export function ModelsView({ data, regimes, market }: { data: ModelsData; regime
           </TableBody>
         </Table>
         <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
-          Monthly stock returns are close to unpredictable: no model beats the naive baseline on error, and the information coefficient is small but
-          positive. The forecast is therefore only a relative tilt on top of the CAPM and history prior, weighted at{" "}
-          <span className="font-medium text-foreground">{pct(data.skill_weight ?? 0, 0)}</span> according to the measured skill.
+          The target is each asset&apos;s return <em>relative to the others</em>. Even so, no model ranks assets with statistically significant skill
+          (top-minus-bottom quintile spread t-stat below 2), and a simple one-month reversal rule scores about as well. The forecast is therefore only a
+          small relative tilt on top of the CAPM and history prior, weighted at{" "}
+          <span className="font-medium text-foreground">{pct(data.skill_weight ?? 0, 0)}</span> according to the measured information coefficient.
         </p>
       </Section>
+
+
+      {data.volatility ? <VolatilityTable v={data.volatility} /> : null}
+      {data.search ? <SearchTables search={data.search} /> : null}
 
       <div className="grid gap-10 xl:grid-cols-2">
         {imp.length ? (

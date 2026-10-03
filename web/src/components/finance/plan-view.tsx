@@ -35,7 +35,7 @@ export function PlanView({ data, actions, compact }: { data: PlanData; actions?:
 
       <Figures cols={6}>
         <Figure label="Expected return" value={pct(e.stats.exp_return)} sub="per year" />
-        <Figure label="Volatility" value={pct(e.stats.volatility)} sub="per year" />
+        <Figure label="Volatility" value={pct(e.stats.volatility)} sub={e.stats.near_term_vol != null ? `next month ${pct(e.stats.near_term_vol)}` : "per year"} />
         <Figure label="Chance of gain" value={pct(m.prob_positive, 0)} sub={`over ${p.horizon_years} yr`} />
         <Figure label={`${p.target_return_pct}% target`} value={pct(m.prob_target, 0)} sub="10,000 simulations" tone={m.prob_target != null && m.prob_target < 0.4 ? "caution" : null} />
         <Figure label="Drawdown" value={pct(m.exp_max_drawdown)} sub={`1 in 20: ${pct(m.p95_max_drawdown, 0)}`} />

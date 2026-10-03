@@ -11,8 +11,8 @@ export default function AgentPage() {
   const { state } = useApp();
   const p = state?.profile;
   return (
-    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_260px]">
-      <div className="min-w-0 max-w-[820px]">
+    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="min-w-0">
         <div className="label mb-6">Agent · {state?.llm ?? "qwen3.5:4b"} running locally</div>
         <ChatPanel />
       </div>

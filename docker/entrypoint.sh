@@ -12,7 +12,7 @@ if [ ! -f data/processed/prices.csv ]; then
   python -c "from ifit import data; data.build_dataset()"
 fi
 
-if [ ! -f models/return_model_meta.json ]; then
+if [ ! -f models/return_model_meta.json ] || [ ! -f models/vol_model_meta.json ] \n   || ! grep -q '"version": 2' models/vol_model_meta.json; then
   echo "[ifit] training and validating the ML models (about 2 min)..."
   python scripts/train_models.py
 fi

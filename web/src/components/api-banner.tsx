@@ -7,7 +7,7 @@ export function ApiBanner() {
   if (!error) return null;
   return (
     <div className="border-b border-negative/30 bg-negative/[0.06]">
-      <div className="mx-auto flex max-w-[1320px] flex-wrap items-center gap-x-4 gap-y-1 px-5 py-2.5 text-[13px] lg:px-8">
+      <div className="page-x mx-auto flex flex-wrap items-center gap-x-4 gap-y-1 py-2.5 text-[13px]">
         <span className="font-medium text-negative">The analytics service is not reachable.</span>
         <span className="text-muted-foreground">
           Start it with <code className="font-mono text-[12px]">docker compose up</code> or{" "}

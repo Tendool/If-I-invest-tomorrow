@@ -34,7 +34,7 @@ docker compose down                   # stop (volumes, wallet and models are kep
   browser; changing it needs `--build`. Ports: `WEB_PORT` / `API_PORT`.
 
 Other entry points: `python scripts/chat_cli.py` (agent in the terminal), `streamlit run app.py` (legacy Streamlit UI),
-`python scripts/generate_report.py` (sample report), `pytest tests -q` (55 tests),
+`python scripts/generate_report.py` (sample report), `pytest tests -q` (59 tests),
 `python scripts/test_agent.py` (23-turn end-to-end agent test, needs Ollama), `python scripts/test_api.py` (REST smoke test).
 
 ### Web UI (`web/`: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + Recharts)
@@ -43,6 +43,7 @@ Other entry points: `python scripts/chat_cli.py` (agent in the terminal), `strea
 |---|---|
 | Dashboard | market snapshot, current plan, wallet, portfolio alerts |
 | AI Agent | streaming chat with Qwen3.5-4B; tool chips; plans, charts and executed orders render inline |
+| Simulator | put in an amount (plus an optional monthly SIP), choose any mix of assets, and get the projection graph, a year-by-year table (worst / median / best, chance of profit, vs fixed deposit and NIFTY) and a per-asset breakdown |
 | Investment Planner | profile form -> Plan / Strategies / Monte Carlo / Stress / Now-vs-wait-vs-SIP / Backtest, "Invest this plan" |
 | Market & Models | regimes, anomalies, correlation heatmap, asset analytics, ML validation |
 | Demo Wallet | holdings, buy/sell, auto-manage, rebalance, health check, staged orders, trades, equity curve |
@@ -101,9 +102,17 @@ tools.py -> agent.py (Qwen3.5-4B tool loop)  -> app.py (Streamlit)  viz.py (Plot
    (found & fixed a wrong-scale print on 19-20 Dec 2019 in 3 ETFs), common-history check.
 2. **Features** - returns (1d-252d), volatility, SMA ratios, RSI, MACD, drawdown, rolling beta/corr/skew, market state.
 3. **ML** - Gaussian-mixture *market regimes* (Bull/Calm, Neutral, Bear/Volatile), Isolation-Forest *anomaly detection*,
-   *return estimation* with Ridge / Random Forest / XGBoost / GRU compared by expanding-window walk-forward (2021-26,
-   purged). Honest result: monthly return prediction is hard (cross-sectional IC ~0.02-0.03, none beats the naive RMSE
-   baseline), so the ML view is used only as a *relative tilt weighted by measured IC* (~12 %) on top of a CAPM + history prior.
+   *return estimation* and *volatility forecasting*, each with hyper-parameters tuned on 2019-20 only and scored on an untouched
+   expanding-window walk-forward (2021-26, purged targets; `scripts/model_search.py`). **Volatility is forecastable**: a Ridge model on realised and
+   range-based (Parkinson / Garman-Klass / Rogers-Satchell from daily High-Low) features reaches walk-forward R2 0.58 on
+   log volatility (error 25 %) against 0.50 (29 %) for the best "same as the last quarter" rule and 0.39 (31 %) for "same as last month"; it feeds the
+   next-month risk figures. (An earlier 0.72 figure counted the near-constant liquid-fund series and was overstated; it is excluded now. Random
+   Forest, XGBoost and LightGBM scored lower than Ridge.) **Returns are not**: even the relative-return target gives IC 0.02-0.03 with a top-minus-bottom
+   quintile spread t-stat of 1.3 (not significant), so ML is only a small relative tilt weighted by measured IC (~14 %) on top of
+   a CAPM + history prior. Random Forest, XGBoost and the GRU showed no skill and are reported but not used.
+   The Monte Carlo itself is checked against reality (`scripts/calibration.py`: 104 one-year forecasts from quarterly dates 2019-25, information as of
+   each date): the 90 % band held the outcome 81 % of the time (100 % in 2021-23, but only 44 % across the 2020 crash), and realised returns beat
+   the expected return by 7 % on average. Reported as measured, not re-tuned.
 4. **Risk** - CAPM (beta, expected return), Ledoit-Wolf covariance, Sharpe, historical VaR/CVaR, max drawdown, stress tests:
    market -2/-5/-10 %, sector crash (-25 %), +100 bp rate shock, +25 % oil shock (data-driven oil betas), and replays of
    COVID-2020, 2018 and 2021-22.
@@ -114,6 +123,21 @@ tools.py -> agent.py (Qwen3.5-4B tool loop)  -> app.py (Streamlit)  viz.py (Plot
    **Crash-Resistant** (min-CVaR over history *plus* all stress scenarios). Recommendation rule: best P(target) among
    strategies inside the user's risk limits (vol, worst stress loss, 1-y VaR).
 8. **Dashboard** - 8 views (chat, plan, strategies, Monte Carlo, stress, timing/backtest, market & models, wallet).
+
+## Evaluation
+
+Full, reproducible out-of-sample evaluation of every layer is in [`reports/evaluation.md`](reports/evaluation.md)
+(`scripts/eval_models.py`, `eval_risk.py`, `eval_portfolio.py`, `eval_report.py`; settings chosen on 2019-20, scored on 2021-26):
+
+- **Return signal** - IC 0.027 (t 1.4 Newey-West); positive in 5 of 6 years but never significant alone. Relative-strength features lift it to
+  0.041 (t 2.2, 1.6 on independent windows) - a candidate, not adopted because the validation window did not confirm it.
+- **Volatility** - R2 0.58 vs 0.50 for the best naive rule; Elastic Net and Huber are tied with Ridge, a 63-day target is worse.
+- **Monte Carlo** - 50/75/90/95/99% intervals hold 44/69/81/84/93%; fatter tails or a block bootstrap do not change that (the miss is the 2020 crash).
+- **Regimes / anomalies** - both act as risk labels: after a Neutral regime a 5% market drawdown within 21 days is 35% likely vs 13% after Calm;
+  anomaly flags precede much higher volatility (21-23% vs 13%) but not lower returns.
+- **Portfolio (walk-forward, monthly, 0.10% costs)** - the volatility model and regime overlay improve risk-adjusted return (Sharpe 0.60 -> 0.80
+  in the max-Sharpe family, drawdown -16.5% -> -13.6%); the return tilt adds little. Every variant beats the NIFTY ETF on Sharpe, but an
+  equal-weight basket of the 26 stocks matches the full system in this one bull-market sample.
 
 ## Assumptions & limitations (all in `ifit/config.py`)
 
