@@ -204,6 +204,32 @@ def test_strategy_and_horizon_come_from_the_users_words():
     assert a == {"amount_rs": 10000.0, "horizon_years": 0.25, "strategy": "Max Return"}
 
 
+@pytest.mark.parametrize("text, expected", [
+    ("Now stress test the plan against market crashes.", None),       # a crash scenario, not the strategy
+    ("What is the probability I reach my goal?", None),
+    ("Show me the crash-resistant plan", "Crash-Resistant"),
+    ("stress test the crash proof strategy", "Crash-Resistant"),
+    ("switch to the goal-based strategy", "Goal-Based"),
+])
+def test_only_a_strategy_name_selects_a_strategy(text, expected):
+    assert forced_args("stress_test", text).get("strategy") == expected
+
+
+@pytest.mark.parametrize("text, mode", [
+    ("Switch to ask-first mode.", "ask"),
+    ("Switch back to autonomous mode.", "auto"),
+    ("turn off auto-trade", "ask"),
+    ("what is autonomous mode?", None),
+])
+def test_mode_switch_forces_the_tool(text, mode):
+    """The model once claimed 'switched to AUTO' without calling set_autonomy; the router must force the call."""
+    if mode is None:
+        assert "set_autonomy" not in required_tools(text)
+    else:
+        assert required_tools(text) == ["set_autonomy"]
+        assert forced_args("set_autonomy", text) == {"mode": mode}
+
+
 def test_short_horizon_is_explained_not_ignored(sess):
     sess.last_user_text = "plan for 10000 for maximum returns in 3 months"
     r = call_tool(sess, "get_investment_plan", {"amount_rs": 10000, "horizon_years": 0.25, "strategy": "Max Return"})

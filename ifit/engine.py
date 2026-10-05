@@ -256,8 +256,15 @@ class Engine:
             top = max(e.mc.stats["prob_target"] for e in ok.values())
             near = {n: e for n, e in ok.items() if e.mc.stats["prob_target"] >= top - 0.02}
             name = max(near, key=lambda n: near[n].stats["sharpe"])
-            why = (f"{name} stays within your {p.normalised().risk}-risk limits and has the best chance "
-                   f"({board[name].mc.stats['prob_target']:.0%}) of reaching the {p.normalised().target_return:.0%} target.")
+            pt, goal = board[name].mc.stats["prob_target"], f"{p.normalised().target_return:.0%} target"
+            best = max(ok, key=lambda n: ok[n].mc.stats["prob_target"])
+            if pt >= top - 1e-9 or len(near) == 1:
+                why = (f"{name} stays within your {p.normalised().risk}-risk limits and has the best chance "
+                       f"({pt:.0%}) of reaching the {goal}.")
+            else:   # tie-break: say so, instead of claiming the best chance
+                why = (f"{name} stays within your {p.normalised().risk}-risk limits; its chance of reaching the {goal} "
+                       f"({pt:.0%}) is within 2 points of the best ({best}, {top:.0%}), and it has the higher Sharpe ratio "
+                       f"({board[name].stats['sharpe']:.3f} vs {board[best].stats['sharpe']:.3f}).")
         else:
             name = min(board, key=lambda n: board[n].stats["volatility"])
             why = (f"No strategy fully fits your {p.normalised().risk}-risk limits; {name} is the closest "

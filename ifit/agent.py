@@ -192,6 +192,8 @@ def fix_user_args(tool: str, args: dict, text: str) -> dict:
         mo = parse_months(text)
         if mo is not None:
             args["years"] = max(1, round(mo / 12))
+    elif tool == "set_autonomy" and autonomy_mode(text):
+        args["mode"] = autonomy_mode(text)
     if tool in STRATEGY_TOOLS:
         st = named_strategy(text)
         if st:
@@ -202,7 +204,22 @@ def fix_user_args(tool: str, args: dict, text: str) -> dict:
 fix_amount_args = fix_user_args          # backwards-compatible name
 
 
+def autonomy_mode(text: str) -> str | None:
+    """'ask' / 'auto' when the user's message asks to switch the autonomy mode, else None."""
+    t = text or ""
+    if not re.search(r"\b(switch|turn|set|go|change|put|move|enable|disable|activate|use|back to|stop)\b", t, re.I) \
+            or re.search(r"\b(what|explain|how does|difference)\b", t, re.I):
+        return None
+    if re.search(r"ask[- ]?(first|mode)|manual|confirm (each|every|before)|\b(disable|turn off|stop)\b.{0,25}\b(auto|autonom)", t, re.I):
+        return "ask"
+    if re.search(r"autonom(ous|y)|\bauto\b|auto[- ]?(mode|trad\w*|execut\w*)", t, re.I):
+        return "auto"
+    return None
+
+
 def forced_args(tool: str, text: str) -> dict:
+    if tool == "set_autonomy":
+        return {"mode": autonomy_mode(text) or "ask"}
     if tool == "trade":
         return trade_args(text) or {}
     if tool == "list_assets" and re.search(r"mutual|\bmfs?\b|index fund|\bfunds?\b|\betfs?\b|nifty|sensex|index|bees", text or "", re.I):
@@ -230,6 +247,8 @@ def required_tools(text: str) -> list[str]:
         return ["list_assets"]
     if re.search(r"\b(navi|sbi|hdfc|uti|icici pru\w*|axis|parag parikh|ppfas|kotak|motilal|mirae|zerodha|groww|dsp|quant|edelweiss|bandhan|franklin|aditya birla|hsbc|invesco)\b.{0,25}\b(nifty|sensex|index|fund|etf|bees|gold|liquid)", t, re.I):
         return ["list_assets"]
+    if autonomy_mode(t):
+        return ["set_autonomy"]                          # the mode must really change, not just be claimed in prose
     if re.search(r"\b(confirm|cancel|reset)\b|\badd\b.*\b(funds?|money|cash)\b|autonomy|ask[- ]first", t, re.I):
         return []
     if has_action_intent(t):

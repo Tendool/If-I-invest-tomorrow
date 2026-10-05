@@ -41,7 +41,9 @@ def _inr(x):
 
 
 _MENTION = {"Max Return": r"max(imum)?[ -]?return|aggressive", "Min Risk": r"min(imum)?[ -]?risk|min(imum)?[ -]?var|safest|defensive",
-            "Max Sharpe": r"sharpe", "Goal-Based": r"goal", "Crash-Resistant": r"crash|resistant|proof"}
+            "Max Sharpe": r"sharpe", "Goal-Based": r"goal[- ]?based|goal strategy",
+            # only the strategy's name: "stress test against market crashes" or "reach my goal" must not switch the plan
+            "Crash-Resistant": r"crash[- ]?(resistant|proof)|resistant"}
 
 
 def _resolve_strategy(s: Session, name: str | None) -> str:

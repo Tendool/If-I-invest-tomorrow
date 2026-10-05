@@ -97,8 +97,10 @@ def portfolio_health(s) -> dict:
     caps = dict(zip(b.symbols, b.ub))
     over = [x for x in w.index if w[x] > caps.get(x, 1) + DRIFT_TOLERANCE and x not in stop_syms]
     for x in over:
+        # a zero cap means the stock is outside the preferred sectors, not that the cap is "0 %"
+        why = ("outside your preferred sectors" if caps[x] <= 0 else f"cap {caps[x]:.0%}")
         issues.append(dict(code="DRIFT", severity="medium", symbol=D.short(x),
-                           message=f"{D.short(x)} is {w[x]:.0%} of the portfolio (cap {caps[x]:.0%}) - trim."))
+                           message=f"{D.short(x)} is {w[x]:.0%} of the portfolio ({why}) - trim."))
     breach = st["volatility"] > prof["max_annual_vol"] * 1.10
     if breach:
         issues.append(dict(code="RISK_BREACH", severity="high",
