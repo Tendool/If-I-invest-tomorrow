@@ -6,7 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Section, Swatch } from "@/components/kit";
 import { cn } from "@/lib/utils";
-import { compactInr, inr, num, pct, STRATEGY_COLOR } from "@/lib/format";
+import { compactInr, inr, num, pct, STRATEGY_COLOR, years } from "@/lib/format";
 import type { FrontierData, StrategiesData } from "@/lib/types";
 
 export function StrategiesView({
@@ -24,8 +24,8 @@ export function StrategiesView({
   const best = Math.max(...data.strategies.map((s) => s.mc.stats.prob_target ?? 0));
 
   const lineData = React.useMemo(() => {
-    const years = data.strategies[0]?.mc.fan.map((f) => f.year) ?? [];
-    return years.map((y, i) => {
+    const fanYears = data.strategies[0]?.mc.fan.map((f) => f.year) ?? [];
+    return fanYears.map((y, i) => {
       const row: Record<string, number> = { year: y };
       data.strategies.forEach((s) => (row[s.strategy] = s.mc.fan[i]?.p50));
       return row;
@@ -43,7 +43,7 @@ export function StrategiesView({
   }, [data.strategies]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <div className="border-l-2 border-brand pl-4">
         <div className="label text-brand">Recommendation</div>
         <p className="mt-1 max-w-3xl text-[14px] leading-relaxed">
@@ -53,7 +53,7 @@ export function StrategiesView({
 
       <Section
         title="Five strategies, one profile"
-        description={`${inr(data.profile.amount)} over ${data.profile.horizon_years} years, ${data.profile.risk} risk, ${data.profile.target_return_pct}% target${onSelect ? " · select a row to open its plan" : ""}`}
+        description={`${inr(data.profile.amount)} over ${years(data.profile.horizon_years)}, ${data.profile.risk} risk, ${data.profile.target_return_pct}% target${onSelect ? " · select a row to open its plan" : ""}`}
       >
         <Table>
           <TableHeader>
@@ -107,7 +107,7 @@ export function StrategiesView({
         </Table>
       </Section>
 
-      <div className="grid gap-10 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Section title="Risk and return" description={frontier ? "Efficient frontier, random portfolios and single assets" : "Expected return against volatility"}>
           <RiskReturnChart data={data} frontier={frontier} />
         </Section>

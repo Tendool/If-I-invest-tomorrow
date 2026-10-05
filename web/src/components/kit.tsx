@@ -22,12 +22,12 @@ export function PageHeader({
         <h1 className="display text-[2.15rem] leading-[1.05] text-foreground sm:text-[2.6rem]">{title}</h1>
         {description ? <p className="mt-2.5 text-[14px] leading-relaxed text-muted-foreground">{description}</p> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="page-actions flex flex-wrap items-center gap-2">{actions}</div> : null}
     </header>
   );
 }
 
-/** Unboxed section: a title row on a hairline rule, then content. */
+/** A card: title row, then content. `plain` drops the card (for sections nested inside another card). */
 export function Section({
   title,
   description,
@@ -35,6 +35,7 @@ export function Section({
   children,
   className,
   bodyClassName,
+  plain,
 }: {
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -42,14 +43,15 @@ export function Section({
   children: React.ReactNode;
   className?: string;
   bodyClassName?: string;
+  plain?: boolean;
 }) {
   return (
-    <section className={cn("min-w-0", className)}>
+    <section className={cn("min-w-0", !plain && "card-x p-5 sm:p-6", className)}>
       {title || actions ? (
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-rule pb-2.5">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            {title ? <h2 className="text-[13px] font-semibold tracking-[-0.005em]">{title}</h2> : null}
-            {description ? <p className="mt-0.5 text-[12.5px] text-muted-foreground">{description}</p> : null}
+            {title ? <h2 className="text-[14.5px] font-semibold tracking-[-0.01em]">{title}</h2> : null}
+            {description ? <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">{description}</p> : null}
           </div>
           {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
         </div>
@@ -59,7 +61,7 @@ export function Section({
   );
 }
 
-/** Raised surface with an optional header. */
+/** Raised surface with an optional header (same card as Section, with a divided header). */
 export function Panel({
   title,
   description,
@@ -76,11 +78,11 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <div className={cn("min-w-0 rounded-lg border border-border bg-surface", className)}>
+    <div className={cn("card-x min-w-0", className)}>
       {title || actions ? (
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 pt-4 pb-3">
           <div className="min-w-0">
-            {title ? <h3 className="text-[13px] font-semibold tracking-[-0.005em]">{title}</h3> : null}
+            {title ? <h3 className="text-[13.5px] font-semibold tracking-[-0.005em]">{title}</h3> : null}
             {description ? <p className="mt-0.5 text-[12.5px] leading-snug text-muted-foreground">{description}</p> : null}
           </div>
           {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
@@ -91,13 +93,15 @@ export function Panel({
   );
 }
 
-/** A row of key figures separated by vertical hairlines (wraps to a grid on small screens). */
+/** Key figures as a group of tiles divided by hairlines (2 / 3 / n columns as the screen grows). */
 export function Figures({ children, className, cols, open }: { children: React.ReactNode; className?: string; cols?: number; open?: boolean }) {
   const n = cols ?? React.Children.count(children);
-  const lg = { 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5", 6: "lg:grid-cols-6" }[n] ?? "lg:grid-cols-6";
+  const lg = { 2: "lg:grid-cols-2", 3: "lg:grid-cols-3", 4: "lg:grid-cols-4", 5: "lg:grid-cols-5", 6: "lg:grid-cols-3 2xl:grid-cols-6" }[n] ?? "lg:grid-cols-3 2xl:grid-cols-6";
   return (
-    <div className={cn("grid grid-cols-2 gap-y-5 py-4 sm:grid-cols-3", open ? "border-b border-rule pt-1" : "border-y border-rule", lg, className)}>
-      {children}
+    // `open`: the group sits inside another card, so it is an inset outline rather than a second raised card
+    <div className={cn(open ? "overflow-hidden rounded-xl border border-border" : "card-x overflow-hidden", className)}>
+      {/* tiles draw their right/bottom hairlines; the negative margin tucks the outermost ones under the card edge */}
+      <div className={cn("-mr-px -mb-px grid grid-cols-2 sm:grid-cols-3", lg)}>{children}</div>
     </div>
   );
 }
@@ -118,12 +122,12 @@ export function Figure({
   className?: string;
 }) {
   return (
-    <div className={cn("min-w-0 border-rule pr-4 lg:border-l lg:px-4 lg:first:border-l-0 lg:first:pl-0", className)}>
+    <div className={cn("min-w-0 border-r border-b border-border px-4 py-4 sm:px-5", className)}>
       <div className="label truncate">{label}</div>
       <div
         className={cn(
-          "num mt-1.5 truncate leading-none font-medium tracking-[-0.02em]",
-          size === "lg" ? "text-[1.7rem]" : "text-[1.3rem]",
+          "num mt-2 truncate leading-none font-medium tracking-[-0.02em]",
+          size === "lg" ? "text-[1.75rem]" : "text-[1.35rem]",
           tone === "positive" && "text-positive",
           tone === "negative" && "text-negative",
           tone === "caution" && "text-caution",
@@ -131,7 +135,7 @@ export function Figure({
       >
         {value}
       </div>
-      {sub ? <div className="mt-1.5 truncate text-[12px] text-muted-foreground">{sub}</div> : null}
+      {sub ? <div className="mt-2 truncate text-[12px] text-muted-foreground">{sub}</div> : null}
     </div>
   );
 }
@@ -164,7 +168,7 @@ export function Swatch({ color, className }: { color: string; className?: string
 
 export function Empty({ title, children, action }: { title?: React.ReactNode; children?: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <div className="flex min-h-40 flex-col items-center justify-center rounded-lg border border-dashed border-rule px-6 py-10 text-center">
+    <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-rule bg-card/50 px-6 py-10 text-center">
       {title ? <div className="text-[14px] font-medium">{title}</div> : null}
       {children ? <div className="mt-1 max-w-md text-[13px] text-muted-foreground">{children}</div> : null}
       {action ? <div className="mt-4">{action}</div> : null}
@@ -172,14 +176,28 @@ export function Empty({ title, children, action }: { title?: React.ReactNode; ch
   );
 }
 
+/** The brand mark in motion: history runs up to "tomorrow", then simulated futures fan out one by one. */
+const FAN = ["M30 35 Q41 30 54 12", "M30 35 Q41 31 54 18", "M30 35 Q41 33 54 31", "M30 35 Q41 35 54 39", "M30 35 Q41 37 54 47"];
+
+export function FanLoader({ className }: { className?: string }) {
+  return (
+    <svg viewBox="4 6 56 46" aria-hidden className={cn("fan-loader", className)}>
+      <path className="fan-cone" d="M30 35 Q41 30 54 12 L54 47 Q41 37 30 35Z" />
+      {FAN.map((d, i) => (
+        <path key={d} d={d} pathLength={1} className="fan-path" style={{ animationDelay: `${i * 0.16}s` }} />
+      ))}
+      <path d="M30 35 Q41 32 54 25" pathLength={1} className="fan-path fan-median" style={{ animationDelay: "0.4s" }} />
+      <path d="M9 44 L16 37 L21 40 L30 35" className="fan-history" />
+      <circle cx="30" cy="35" r="3.6" className="fan-dot" />
+    </svg>
+  );
+}
+
 export function Loading({ label = "Loading", className }: { label?: string; className?: string }) {
   return (
-    <div className={cn("flex min-h-48 items-center justify-center gap-3 text-[13px] text-muted-foreground", className)}>
-      <span className="relative flex size-2">
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand/60" />
-        <span className="relative inline-flex size-2 rounded-full bg-brand" />
-      </span>
-      {label}
+    <div role="status" className={cn("flex min-h-48 flex-col items-center justify-center gap-3 text-[13px] text-muted-foreground", className)}>
+      <FanLoader className="h-11 w-auto" />
+      <span className="loading-label">{label}</span>
     </div>
   );
 }
@@ -209,7 +227,7 @@ export function Segmented<T extends string>({
   size?: "sm" | "md";
 }) {
   return (
-    <div role="radiogroup" className={cn("inline-flex rounded-md border border-rule bg-surface p-0.5", className)}>
+    <div role="radiogroup" className={cn("inline-flex rounded-xl border border-border bg-muted/70 p-1", className)}>
       {options.map((o) => (
         <button
           key={o.value}
@@ -218,9 +236,9 @@ export function Segmented<T extends string>({
           aria-checked={o.value === value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "flex-1 rounded-[5px] font-medium whitespace-nowrap transition-colors",
-            size === "sm" ? "h-6 px-2 text-[12px]" : "h-7 px-3 text-[12.5px]",
-            o.value === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+            "flex-1 rounded-lg font-medium whitespace-nowrap transition-all",
+            size === "sm" ? "h-6 px-2 text-[12px]" : "h-8 px-3 text-[12.5px]",
+            o.value === value ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {o.label}
@@ -230,24 +248,27 @@ export function Segmented<T extends string>({
   );
 }
 
-/** Underline tab strip. */
+/** Pill tabs on a soft track. */
 export function TabStrip<T extends string>({ tabs, value, onChange, className }: { tabs: { value: T; label: string }[]; value: T; onChange: (v: T) => void; className?: string }) {
   return (
-    <div className={cn("no-scrollbar flex gap-6 overflow-x-auto overflow-y-hidden border-b border-rule", className)}>
-      {tabs.map((t) => (
-        <button
-          key={t.value}
-          type="button"
-          onClick={() => onChange(t.value)}
-          className={cn(
-            "relative -mb-px py-2.5 text-[13px] whitespace-nowrap transition-colors",
-            t.value === value ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {t.label}
-          {t.value === value ? <span className="absolute inset-x-0 bottom-0 h-[2px] bg-foreground" /> : null}
-        </button>
-      ))}
+    <div className={cn("no-scrollbar flex max-w-full overflow-x-auto", className)}>
+      <div role="tablist" className="inline-flex gap-1 rounded-xl border border-border bg-muted/70 p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.value}
+            type="button"
+            role="tab"
+            aria-selected={t.value === value}
+            onClick={() => onChange(t.value)}
+            className={cn(
+              "h-8 rounded-lg px-3.5 text-[13px] whitespace-nowrap transition-all",
+              t.value === value ? "bg-card font-medium text-foreground shadow-[0_1px_2px_rgba(0,0,0,0.08),0_0_0_1px_var(--border)]" : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

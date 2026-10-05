@@ -58,3 +58,8 @@ export const STRATEGY_COLOR: Record<string, string> = {
 };
 
 export const REGIME_COLORS = ["var(--chart-3)", "var(--chart-4)", "var(--chart-8)"];
+
+/** "1 year", "3 years" */
+export function years(n: number): string {
+  return `${n} year${n === 1 ? "" : "s"}`;
+}

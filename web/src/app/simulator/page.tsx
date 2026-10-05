@@ -34,7 +34,7 @@ function Field({ label, hint, children }: { label: string; hint?: React.ReactNod
 function MoneyInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   const n = Number(value) || 0;
   return (
-    <div className="flex items-center rounded-md border border-rule bg-surface focus-within:border-foreground/40">
+    <div className="flex items-center rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 focus-within:border-foreground/40">
       <span className="pl-3 text-[15px] text-faint">₹</span>
       <input
         inputMode="numeric"
@@ -63,7 +63,7 @@ function AssetPicker({ assets, taken, onAdd }: { assets: AssetRow[]; taken: Set<
     .slice(0, q ? 9 : 7);
   return (
     <div ref={ref} className="relative">
-      <div className="flex items-center rounded-md border border-rule bg-surface px-2.5 focus-within:border-foreground/40">
+      <div className="flex items-center rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 px-2.5 focus-within:border-foreground/40">
         <Search className="size-3.5 text-faint" />
         <input
           value={q}
@@ -174,9 +174,9 @@ export default function SimulatorPage() {
         description="Put in an amount, choose where it goes, and see the range of outcomes year by year: simulated ten thousand ways, with fat tails and market regimes."
       />
 
-      <div className="grid gap-12 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="space-y-5">
+          <div className="card-x space-y-5 p-5">
             <Field label="Invest now">
               <MoneyInput value={amount} onChange={setAmount} />
               <div className="flex gap-3 text-[12px]">
@@ -248,7 +248,7 @@ export default function SimulatorPage() {
                           {a ? `${a.name} · exp. ${pct(a.expected_return, 1)}` : ""}
                         </div>
                       </div>
-                      <div className="flex items-center rounded-md border border-rule focus-within:border-foreground/40">
+                      <div className="flex items-center rounded-lg border border-border bg-background/70 focus-within:border-foreground/40">
                         <input
                           inputMode="decimal"
                           value={r.weight}
@@ -281,7 +281,7 @@ export default function SimulatorPage() {
           </div>
         </aside>
 
-        <div className="min-w-0 space-y-12">
+        <div className="min-w-0 space-y-6">
           {!sim ? (
             error ? (
               <Empty title="Could not simulate">{error}</Empty>
@@ -289,7 +289,7 @@ export default function SimulatorPage() {
               <Loading label="Simulating thousands of futures" className="min-h-96" />
             )
           ) : (
-            <div className={cn("space-y-12 transition-opacity", busy && "opacity-60")}>
+            <div className={cn("space-y-6 transition-opacity", busy && "opacity-60")}>
               <SimFigures sim={sim} />
               <Section
                 title={`Projection over ${yearsLabel}`}
@@ -298,7 +298,7 @@ export default function SimulatorPage() {
                 <ProjectionChart sim={sim} />
               </Section>
               <ProjectionTable sim={sim} />
-              <div className="grid gap-12 xl:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
                 <BreakdownTable sim={sim} />
                 <Section title="Spread of final outcomes" description={`After ${yearsLabel}. Green beats a fixed deposit; grey gains less; red is a loss.`}>
                   <EndDistribution sim={sim} />

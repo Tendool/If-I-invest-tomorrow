@@ -6,7 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Delta, Figure, Figures, Section, Swatch } from "@/components/kit";
 import { cn } from "@/lib/utils";
-import { compactInr, inr, inrSigned, num, pct, pctSigned, shortDate, STRATEGY_COLOR, toneOf } from "@/lib/format";
+import { compactInr, inr, inrSigned, num, pct, pctSigned, shortDate, STRATEGY_COLOR, toneOf, years } from "@/lib/format";
 import type { BacktestData, StressData, TimingData } from "@/lib/types";
 import { DivergingBar, RangeBar } from "./shared";
 
@@ -15,7 +15,7 @@ export function StressView({ data }: { data: StressData }) {
   const worst = data.stress.reduce((a, b) => (b.portfolio_return < a.portfolio_return ? b : a), data.stress[0]);
   const maxAbs = Math.max(data.loss_limit, ...data.stress.map((s) => Math.abs(s.portfolio_return)));
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <div>
         <div className="label">Stress tests · {data.strategy}</div>
         <p className="mt-1.5 max-w-3xl text-[13.5px] text-muted-foreground">
@@ -65,7 +65,7 @@ export function StressView({ data }: { data: StressData }) {
         </Table>
       </Section>
 
-      <Section title="After the shock" description={`The shock hits tomorrow, then ${data.profile.horizon_years} years of simulated markets follow from a bear regime`}>
+      <Section title="After the shock" description={`The shock hits tomorrow, then ${years(data.profile.horizon_years)} of simulated markets follow from a bear regime`}>
         <Table>
           <TableHeader>
             <TableRow>

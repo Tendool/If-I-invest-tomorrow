@@ -12,17 +12,17 @@ import { CLASS_LABEL, inr, num, pct, pctSigned, REGIME_COLORS, shortDate, toneNa
 import type { AssetDetail, AssetRow, MarketData, MarketOverview, ModelsData } from "@/lib/types";
 import { ClassTag } from "./shared";
 
-export function MarketOverviewCards({ o, open }: { o: MarketOverview; open?: boolean }) {
+export function MarketOverviewCards({ o, open, cols = 6 }: { o: MarketOverview; open?: boolean; cols?: number }) {
   const probs = Object.entries(o.regime_probabilities);
   return (
     <div className="space-y-4">
-      <Figures cols={6} open={open}>
+      <Figures cols={cols} open={open}>
         <Figure label="NIFTY 50" value={o.nifty_close.toLocaleString("en-IN", { maximumFractionDigits: 0 })} sub={<Delta value={o.nifty_1d}>{pctSigned(o.nifty_1d, 2)} today</Delta>} />
         <Figure label="One month" value={pctSigned(o.nifty_1m)} tone={toneName(o.nifty_1m)} />
         <Figure label="One year" value={pctSigned(o.nifty_1y)} tone={toneName(o.nifty_1y)} />
         <Figure label="Off the high" value={pct(o.nifty_drawdown_from_peak)} tone={o.nifty_drawdown_from_peak < -0.1 ? "negative" : null} />
         <Figure label="India VIX" value={o.india_vix.toFixed(1)} sub={`1-month vol ${pct(o.nifty_vol_1m, 0)}`} />
-        <Figure label="Regime" value={<span className="text-[1.05rem]">{o.regime}</span>} sub={`${pct(Math.max(...probs.map(([, p]) => p)), 0)} confidence`} />
+        <Figure label="Regime" value={<span className="text-[1.05rem] leading-tight whitespace-normal">{o.regime}</span>} sub={`${pct(Math.max(...probs.map(([, p]) => p)), 0)} confidence`} />
       </Figures>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-1.5 text-[12.5px] text-muted-foreground">
         <span className="flex items-center gap-1.5">
@@ -324,7 +324,7 @@ function SearchTables({ search }: { search: NonNullable<ModelsData["search"]> })
   const rel = Object.entries(search.relative_return.results);
   const naive = (n: string) => n.includes("naive") || n.includes("baseline");
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <Section title="Relative-return search, in full" description="Rank correlation (IC) of the forecast with the realised 21-day return relative to the average asset">
         <Table>
           <TableHeader>
@@ -358,7 +358,7 @@ export function ModelsView({ data, regimes, market }: { data: ModelsData; regime
   const maxImp = Math.max(...imp.map((i) => i.value), 1e-9);
   const rg = regimes ?? data.regimes;
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <Section
         title="Return models, validated walk-forward"
         description="Expanding window from 2021 to 2026 with purged targets: every forecast uses only the past"
@@ -405,7 +405,7 @@ export function ModelsView({ data, regimes, market }: { data: ModelsData; regime
       {data.volatility ? <VolatilityTable v={data.volatility} /> : null}
       {data.search ? <SearchTables search={data.search} /> : null}
 
-      <div className="grid gap-10 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         {imp.length ? (
           <Section title="What the model looks at" description="Feature importance of the model in use">
             <div className="space-y-2">

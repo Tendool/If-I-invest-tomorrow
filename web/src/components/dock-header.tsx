@@ -37,10 +37,14 @@ const DOCK = { variant: "sable", proximity: 122, spring: 0.19, damping: 0.7, wid
 
 function LogoMark() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className="size-full">
-      <rect width="24" height="24" fill="#E8E8E3" />
-      <path d="M5.5 16.5 10 11.8l3 3 5.5-6.6" fill="none" stroke="#111" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14.6 8.2h3.9v3.9" fill="none" stroke="#111" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    // brand mark (public/brand/): history up to today, a point for tomorrow, then the fan of simulated futures
+    <svg viewBox="0 0 64 64" aria-hidden className="size-full">
+      <rect width="64" height="64" fill="#E8E8E3" />
+      <path d="M30 35 Q41 30 54 12 L54 47 Q41 37 30 35Z" fill="#0e5a43" fillOpacity="0.12" />
+      <path d="M30 35 Q41 30 54 12M30 35 Q41 37 54 47" fill="none" stroke="#111" strokeOpacity="0.4" strokeWidth="3.2" strokeLinecap="round" />
+      <path d="M30 35 Q41 32 54 25" fill="none" stroke="#0e5a43" strokeWidth="4.6" strokeLinecap="round" />
+      <path d="M9 44 L16 37 L21 40 L30 35" fill="none" stroke="#111" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="30" cy="35" r="5" fill="#E8E8E3" stroke="#111" strokeWidth="3.2" />
     </svg>
   );
 }

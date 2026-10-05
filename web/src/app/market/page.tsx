@@ -31,7 +31,7 @@ export default function MarketPage() {
   const detail = useData(() => api.asset(picked), [picked], !!picked);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
       <PageHeader
         eyebrow="Markets"
         title="The market, read by the models"
@@ -49,7 +49,7 @@ export default function MarketPage() {
         ) : null}
 
         {tab === "assets" ? (
-          <div className="grid gap-12 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
             <Section title="Investable universe" description="26 NSE stocks, index ETFs, gold, government bonds and a liquid fund · select a row">
               <Wait d={assets} label="Loading assets">{assets.data ? <AssetsTable rows={assets.data} onSelect={setPicked} selected={picked} /> : null}</Wait>
             </Section>

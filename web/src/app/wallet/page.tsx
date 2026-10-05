@@ -18,8 +18,8 @@ function Action({ title, body, onClick, disabled, busy, primary }: { title: stri
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group flex flex-col items-start rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-45",
-        primary ? "border-foreground bg-foreground text-background" : "border-border bg-surface hover:border-foreground/40",
+        "group flex flex-col items-start rounded-xl border p-4 text-left transition-all hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0",
+        primary ? "cta-glow border-foreground bg-foreground text-background" : "border-border bg-background/60 hover:border-foreground/30 hover:bg-background",
       )}
     >
       <span className="text-[13.5px] font-semibold">{busy ? "Working…" : title}</span>
@@ -89,7 +89,7 @@ export default function WalletPage() {
   const has = v.positions.length > 0;
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6">
       <PageHeader
         eyebrow="Portfolio · demo money"
         title="Your portfolio"
@@ -170,7 +170,7 @@ export default function WalletPage() {
         <SipsTable sips={wallet.sips ?? []} busy={busy} onStop={(id) => void act("sip-stop", () => api.stopSip(id))} />
       </Section>
 
-      <div className="grid gap-12 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Section title="Value over time">
           <EquityChart w={wallet} />
         </Section>
@@ -194,7 +194,7 @@ export default function WalletPage() {
                 value={asset}
                 onChange={(e) => setAsset(e.target.value.toUpperCase())}
                 placeholder="TCS, GOLDBEES, NIFTYBEES…"
-                className="h-10 w-full rounded-md border border-rule bg-surface px-3 text-[14px] outline-none placeholder:text-faint focus:border-foreground/40"
+                className="h-10 w-full rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 px-3 text-[14px] outline-none placeholder:text-faint focus:border-foreground/40"
               />
               <datalist id="tickers">
                 {tickers.map((t) => (
@@ -212,7 +212,7 @@ export default function WalletPage() {
                 value={val}
                 onChange={(e) => setVal(e.target.value.replace(/[^\d]/g, ""))}
                 placeholder={by === "amt" ? "25,000" : "10"}
-                className="num h-10 w-full rounded-md border border-rule bg-surface px-3 text-[14px] outline-none placeholder:text-faint focus:border-foreground/40"
+                className="num h-10 w-full rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 px-3 text-[14px] outline-none placeholder:text-faint focus:border-foreground/40"
               />
               {side === "SELL" ? <p className="text-[12px] text-faint">To sell a whole position, use Sell in the holdings table.</p> : null}
             </div>
@@ -237,14 +237,14 @@ export default function WalletPage() {
           <div className="space-y-4 py-1">
             <div className="space-y-1.5">
               <div className="label">Every month</div>
-              <div className="flex items-center rounded-md border border-rule bg-surface focus-within:border-foreground/40">
+              <div className="flex items-center rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 focus-within:border-foreground/40">
                 <span className="pl-3 text-faint">₹</span>
                 <input inputMode="numeric" value={sipAmt ? Number(sipAmt).toLocaleString("en-IN") : ""} onChange={(e) => setSipAmt(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full bg-transparent px-2 text-[14px] outline-none" />
               </div>
             </div>
             <div className="space-y-1.5">
               <div className="label">Months</div>
-              <input inputMode="numeric" value={sipMonths} onChange={(e) => setSipMonths(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full rounded-md border border-rule bg-surface px-3 text-[14px] outline-none focus:border-foreground/40" />
+              <input inputMode="numeric" value={sipMonths} onChange={(e) => setSipMonths(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 px-3 text-[14px] outline-none focus:border-foreground/40" />
             </div>
           </div>
           <DialogFooter>
@@ -267,7 +267,7 @@ export default function WalletPage() {
             <DialogTitle>Add demo funds</DialogTitle>
             <DialogDescription>Top up the virtual cash balance.</DialogDescription>
           </DialogHeader>
-          <div className="flex items-center rounded-md border border-rule bg-surface focus-within:border-foreground/40">
+          <div className="flex items-center rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 focus-within:border-foreground/40">
             <span className="pl-3 text-faint">₹</span>
             <input inputMode="numeric" value={funds ? Number(funds).toLocaleString("en-IN") : ""} onChange={(e) => setFunds(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full bg-transparent px-2 text-[14px] outline-none" />
           </div>

@@ -88,12 +88,14 @@ export default function PlannerPage() {
 
   const sel = strategy || board?.recommended || "";
   const on = (t: Tab) => !!board && tab === t;
-  const plan = useData(() => api.planFor(sel), [sel, board?.recommended, state?.profile.amount], on("plan"));
-  const mc = useData(() => api.monteCarlo(sel), [sel, board?.recommended], on("montecarlo"));
-  const stress = useData(() => api.stress(sel), [sel, board?.recommended], on("stress"));
-  const timing = useData(() => api.timing(sel), [sel, board?.recommended], on("timing"));
-  const backtest = useData(() => api.backtest(Number(years)), [years, board?.recommended], on("backtest"));
-  const frontier = useData(() => api.frontier(), [board?.recommended, state?.profile.risk], on("strategies"));
+  // `board` is a new object after every build, so every view re-fetches for the new inputs even when the
+  // recommended strategy keeps its name (changing only the horizon, risk, target or sectors)
+  const plan = useData(() => api.planFor(sel), [sel, board, state?.profile.amount], on("plan"));
+  const mc = useData(() => api.monteCarlo(sel), [sel, board], on("montecarlo"));
+  const stress = useData(() => api.stress(sel), [sel, board], on("stress"));
+  const timing = useData(() => api.timing(sel), [sel, board], on("timing"));
+  const backtest = useData(() => api.backtest(Number(years)), [years, board], on("backtest"));
+  const frontier = useData(() => api.frontier(), [board, state?.profile.risk], on("strategies"));
 
   async function invest() {
     setInvesting(true);
@@ -116,11 +118,11 @@ export default function PlannerPage() {
         description="Five optimised strategies for your profile, each simulated ten thousand times and stress-tested against shocks and past crashes."
       />
 
-      <div className="grid gap-12 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-32 lg:self-start">
-          <div className="space-y-5">
+          <div className="card-x space-y-5 p-5">
             <Field label="Amount">
-              <div className="flex items-center rounded-md border border-rule bg-surface focus-within:border-foreground/40">
+              <div className="flex items-center rounded-xl border border-border bg-background/70 focus-within:ring-3 focus-within:ring-brand/15 focus-within:border-foreground/40">
                 <span className="pl-3 text-[15px] text-faint">₹</span>
                 <input
                   inputMode="numeric"
@@ -167,7 +169,7 @@ export default function PlannerPage() {
                 ))}
               </div>
             </Field>
-            <Button className="h-10 w-full text-[13.5px]" onClick={() => void build(true)} disabled={building}>
+            <Button className="cta-glow h-10 w-full text-[13.5px]" onClick={() => void build(true)} disabled={building}>
               {building ? "Optimising and simulating…" : board ? "Update plan" : "Build plan"}
             </Button>
           </div>
@@ -181,7 +183,15 @@ export default function PlannerPage() {
               <Empty title="Your plan will appear here">Set the amount, horizon, risk and target on the left, then build the plan.</Empty>
             )
           ) : (
-            <div className="space-y-8">
+            <div className="relative space-y-8" aria-busy={building}>
+              {building ? (
+                // the shown plan is for the previous inputs while a new one is computed: veil it so it is not read or invested
+                <div className="absolute -inset-2 z-20 bg-background/75 backdrop-blur-[2px]">
+                  <div className="sticky top-1/3">
+                    <Loading label="Re-optimising for your new inputs" />
+                  </div>
+                </div>
+              ) : null}
               <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
                 {board.strategies.map((s) => (
                   <button
@@ -210,7 +220,7 @@ export default function PlannerPage() {
                         <PlanView
                           data={plan.data}
                           actions={
-                            <Button className="h-9 px-4" onClick={() => setConfirmOpen(true)}>
+                            <Button className="cta-glow h-9 px-4" onClick={() => setConfirmOpen(true)} disabled={building}>
                               Invest this plan
                             </Button>
                           }

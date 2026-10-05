@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Figure, Figures, Meter, Section, Swatch } from "@/components/kit";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CLASS_COLOR, CLASS_LABEL, inr, num, pct, shortDate } from "@/lib/format";
+import { CLASS_COLOR, CLASS_LABEL, inr, num, pct, shortDate, years } from "@/lib/format";
 import type { PlanData } from "@/lib/types";
 import { Composition, LimitNote, OutcomeRange } from "./shared";
 
@@ -44,7 +44,7 @@ export function PlanView({ data, actions, compact }: { data: PlanData; actions?:
 
       <LimitNote ok={e.within_limits} breaches={e.breaches} risk={p.risk} />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <Section title="Allocation" description={`Whole shares at the close of ${shortDate(data.data_as_of)}, after 0.1% trading costs`}>
           <Table>
             <TableHeader>
@@ -74,7 +74,8 @@ export function PlanView({ data, actions, compact }: { data: PlanData; actions?:
                       <span className="w-12">{pct(r.weight)}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">{inr(r.target_amount)}</TableCell>
+                  {/* what the whole shares cost, so the rows add up to the total below */}
+                  <TableCell className="text-right">{inr(r.invested)}</TableCell>
                   <TableCell className="hidden text-right text-muted-foreground 2xl:table-cell">{inr(r.price, 2)}</TableCell>
                   <TableCell className="text-right font-medium">{r.shares}</TableCell>
                 </TableRow>
@@ -92,11 +93,11 @@ export function PlanView({ data, actions, compact }: { data: PlanData; actions?:
           </Table>
         </Section>
 
-        <div className="space-y-10">
+        <div className="grid gap-6 md:grid-cols-2 2xl:grid-cols-1 2xl:content-start">
           <Section title="Composition">
             <Composition rows={data.plan} />
           </Section>
-          <Section title={`Value after ${p.horizon_years} years`} description="Simulated range of outcomes">
+          <Section title={`Value after ${years(p.horizon_years)}`} description="Simulated range of outcomes">
             <OutcomeRange low={m.worst_case_p5} median={m.median_final} high={m.best_case_p95} invested={p.amount} target={target} />
           </Section>
         </div>

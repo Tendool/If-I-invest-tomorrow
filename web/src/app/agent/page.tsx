@@ -11,13 +11,13 @@ export default function AgentPage() {
   const { state } = useApp();
   const p = state?.profile;
   return (
-    <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
       <div className="min-w-0">
         <div className="label mb-6">Agent · {state?.llm ?? "qwen3.5:4b"} running locally</div>
         <ChatPanel />
       </div>
 
-      <aside className="hidden lg:block">
+      <aside className="agent-rail hidden lg:block">
         <div className="sticky top-32 space-y-8 text-[13px]">
           <div>
             <div className="label mb-2 border-b border-rule pb-2">Trading mode</div>

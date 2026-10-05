@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 410 64" role="img" aria-label="If I Invest Tomorrow">
+    <rect width="64" height="64" rx="14" fill="#17160f"/>
+    <path d="M30 35 Q41 30 54 12 L54 47 Q41 37 30 35Z" fill="#5fbf96" fill-opacity="0.16"/>
+    <path d="M30 35 Q41 30 54 12" fill="none" stroke="#ebe9e2" stroke-opacity="0.45" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M30 35 Q41 37 54 47" fill="none" stroke="#ebe9e2" stroke-opacity="0.45" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M30 35 Q41 32 54 25" fill="none" stroke="#5fbf96" stroke-width="4" stroke-linecap="round"/>
+    <path d="M9 44 L16 37 L21 40 L30 35" fill="none" stroke="#ebe9e2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="30" cy="35" r="4.8" fill="#17160f" stroke="#ebe9e2" stroke-width="2.8"/>
+    <text x="82" y="44" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif" font-size="36" fill="#17160f">If I invest <tspan font-style="italic" fill="#0e5a43">tomorrow</tspan></text>
+</svg>

@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowUp, ChevronRight, Square } from "lucide-react";
 import { ArtifactView } from "@/components/finance/artifact";
+import { FanLoader } from "@/components/kit";
 import { useApp } from "@/lib/app-context";
 import { useChat, type ChatMessage, type ToolRun } from "@/lib/chat-context";
 import { cn } from "@/lib/utils";
@@ -97,7 +98,7 @@ function Trace({ tools }: { tools: ToolRun[] }) {
 function Attachment({ a }: { a: ChatMessage["artifacts"][number] }) {
   const [open, setOpen] = React.useState(true);
   return (
-    <div className="rounded-lg border border-border bg-surface">
+    <div className="card-x">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left">
         <span className="label">{a.title}</span>
         <ChevronRight className={cn("size-3.5 text-faint transition-transform", open && "rotate-90")} />
@@ -136,7 +137,7 @@ function Message({ m }: { m: ChatMessage }) {
         </div>
       ) : m.streaming ? (
         <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-[13px] text-muted-foreground" role="status" aria-live="polite">
-          <span className="loading loading-infinity loading-xl w-16 text-brand" aria-hidden="true" />
+          <FanLoader className="h-11 w-auto" />
           {m.tools.some((t) => t.status === "running") ? "Running the numbers…" : "Thinking…"}
         </div>
       ) : null}
@@ -190,14 +191,14 @@ export function ChatPanel() {
               Describe your amount, horizon, risk and goal. The agent builds a plan, simulates it, stress-tests it and, when you tell it to, invests,
               sells or rebalances with demo money. {state ? (state.autonomy === "auto" ? "Auto-trade is on." : "Auto-trade is off, so it will ask before every order.") : null}
             </p>
-            <div className="mt-10 grid gap-8 md:grid-cols-3">
+            <div className="mt-10 grid gap-4 md:grid-cols-3">
               {PROMPTS.map((g) => (
-                <div key={g.group}>
-                  <div className="label mb-2 border-b border-rule pb-2">{g.group}</div>
+                <div key={g.group} className="card-x p-2">
+                  <div className="label px-3 pt-2 pb-1.5">{g.group}</div>
                   <ul>
                     {g.items.map((p) => (
                       <li key={p}>
-                        <button onClick={() => submit(p)} className="group flex w-full items-start justify-between gap-3 border-b border-border py-2.5 text-left text-[13.5px] leading-snug transition-colors hover:text-foreground">
+                        <button onClick={() => submit(p)} className="group flex w-full items-start justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-[13.5px] leading-snug transition-colors hover:bg-muted hover:text-foreground">
                           <span className="text-muted-foreground group-hover:text-foreground">{p}</span>
                           <ChevronRight className="mt-0.5 size-3.5 shrink-0 text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
                         </button>
@@ -230,7 +231,7 @@ export function ChatPanel() {
             </button>
           </div>
         ) : null}
-        <div className="flex items-end gap-2 rounded-lg border border-rule bg-surface p-2 pl-4 shadow-[0_1px_0_rgba(0,0,0,0.02)] focus-within:border-foreground/40">
+        <div className="card-x flex items-end gap-2 p-2 pl-4 focus-within:border-foreground/30 focus-within:ring-3 focus-within:ring-brand/15">
           <textarea
             ref={taRef}
             value={input}

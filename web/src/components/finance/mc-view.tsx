@@ -4,7 +4,7 @@ import * as React from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, ReferenceLine, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@/components/ui/chart";
 import { Figure, Figures, Section, Swatch } from "@/components/kit";
-import { compactInr, inr, pct } from "@/lib/format";
+import { compactInr, inr, pct, years } from "@/lib/format";
 import type { MCData } from "@/lib/types";
 import { OutcomeRange } from "./shared";
 
@@ -147,14 +147,14 @@ export function MonteCarloView({ data }: { data: MCData }) {
         <Figure label="1-yr CVaR 95%" value={pct(m.cvar95_1y)} sub="average of the worst 5%" />
       </Figures>
 
-      <Section title={`Value after ${p.horizon_years} years`} description="5th to 95th percentile of simulated outcomes">
+      <Section title={`Value after ${years(p.horizon_years)}`} description="5th to 95th percentile of simulated outcomes">
         <OutcomeRange low={m.worst_case_p5} median={m.median_final} high={m.best_case_p95} invested={p.amount} target={target} />
         <p className="mt-2 text-[12px] text-faint">
           Extremes across all paths: {inr(m.absolute_worst)} to {inr(m.absolute_best)}.
         </p>
       </Section>
 
-      <div className="grid gap-10 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Section title="Growth paths" description="How the range of outcomes widens over time">
           <FanChart mc={data.mc} />
           <FanLegend target={data.mc.target != null} />

@@ -71,10 +71,10 @@
 
 /* ------------------------------------------------------------------ light: paper & ink */
 :root {
-  --background: #f5f4ef;
-  --surface: #fbfaf7;           /* raised panels */
+  --background: #f1f0ea;
+  --surface: #fcfbf8;           /* raised panels and cards */
   --foreground: #17160f;
-  --card: #fbfaf7;
+  --card: #fcfbf8;
   --card-foreground: #17160f;
   --popover: #fdfcf9;
   --popover-foreground: #17160f;
@@ -88,7 +88,7 @@
   --accent: #ebe9e1;
   --accent-foreground: #17160f;
   --destructive: #b3361f;
-  --border: #e0ddd3;
+  --border: #e2dfd5;
   --rule: #d6d2c6;              /* stronger hairline for section rules */
   --input: #d9d6cb;
   --ring: #8d897c;
@@ -108,8 +108,9 @@
   --chart-7: #4a3aa7;
   --chart-8: #e34948;
   --radius: 0.5rem;
+  --shadow-card: 0 1px 2px rgba(40, 36, 20, 0.04), 0 10px 30px -14px rgba(40, 36, 20, 0.14);
 
-  --sidebar: #f5f4ef;
+  --sidebar: #f1f0ea;
   --sidebar-foreground: #17160f;
   --sidebar-primary: #17160f;
   --sidebar-primary-foreground: #f8f7f2;
@@ -121,11 +122,12 @@
 
 /* ------------------------------------------------------------------ dark: graphite */
 .dark {
-  --background: #0f0f0d;
-  --surface: #161613;
+  --background: #0c0c0b;
+  --surface: #151513;
   --foreground: #ebe9e2;
-  --card: #161613;
+  --card: #151513;
   --card-foreground: #ebe9e2;
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px -16px rgba(0, 0, 0, 0.7);
   --popover: #1b1b18;
   --popover-foreground: #ebe9e2;
   --primary: #ebe9e2;
@@ -158,7 +160,7 @@
   --chart-7: #9085e9;
   --chart-8: #e66767;
 
-  --sidebar: #0f0f0d;
+  --sidebar: #0c0c0b;
   --sidebar-foreground: #ebe9e2;
   --sidebar-primary: #ebe9e2;
   --sidebar-primary-foreground: #121210;
@@ -225,6 +227,11 @@
   .rule-b {
     @apply border-b border-rule;
   }
+  /* raised card: the basic container of the redesign */
+  .card-x {
+    @apply rounded-2xl border border-border bg-card;
+    box-shadow: var(--shadow-card);
+  }
 }
 
 /* charts: quieter grid and ticks everywhere */
@@ -266,8 +273,84 @@
   background: linear-gradient(to bottom, transparent 0, color-mix(in oklab, var(--background) 45%, transparent) 38%, var(--background) 100%);
 }
 
-/* Floating dock: ThreeUI "sable" AnimatedTopDock design (near-black strip, mono uppercase labels, light active chip) */
+/* Light theme: a mint (brand) and warm-sand wash gives the header colour and depth; the arcs render as green dots
+   (multiplied into the wash, masked to a soft ellipse) instead of a flat grey halftone */
+html:not(.dark) .app-backdrop {
+  background:
+    radial-gradient(55% 75% at 12% 0%, color-mix(in oklab, var(--brand) 22%, transparent), transparent 72%),
+    radial-gradient(45% 65% at 88% 4%, rgba(214, 176, 104, 0.28), transparent 70%),
+    radial-gradient(40% 50% at 55% 30%, color-mix(in oklab, var(--brand) 7%, transparent), transparent 75%),
+    var(--background);
+}
+html:not(.dark) .app-backdrop > .threeui-background {
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 65% 90% at 50% 18%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 65% 90% at 50% 18%, #000 25%, transparent 78%);
+}
+
+.hero-fan {
+  position: absolute;
+  z-index: 1;
+  top: 92px;
+  right: var(--page-gutter);
+  width: min(50%, 600px);
+  height: 220px;
+  overflow: visible;
+}
+.hero-fan .hero-fan-cone { fill: var(--brand); opacity: 0.06; }
+.hero-fan .hero-fan-path,
+.hero-fan .hero-fan-history { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.hero-fan .hero-fan-path {
+  stroke: var(--foreground);
+  stroke-opacity: 0.13;
+  stroke-width: 1.1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: hero-fan-draw 1.6s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+}
+.hero-fan .hero-fan-median { stroke: var(--brand); stroke-opacity: 0.75; stroke-width: 2.4; }
+.hero-fan .hero-fan-history {
+  stroke: var(--foreground);
+  stroke-opacity: 0.4;
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: hero-fan-draw 0.7s ease-out forwards;
+}
+.hero-fan .hero-fan-dot { fill: var(--background); stroke: var(--foreground); stroke-opacity: 0.6; stroke-width: 2; }
+@keyframes hero-fan-draw { to { stroke-dashoffset: 0; } }
+@media (max-width: 1100px) {
+  .hero-fan .hero-fan-history { display: none; } /* it would cross the description text */
+  body:has(.page-actions) .hero-fan { top: 84px; height: 140px; } /* end above a header button row */
+}
+/* wide screens put header buttons on the right: keep the drawing in the gap between the text and the buttons */
+@media (min-width: 1101px) { body:has(.page-actions) .hero-fan { right: calc(var(--page-gutter) + 290px); width: min(26%, 440px); } }
+.dark .hero-fan { display: none; }
+@media (max-width: 640px) { .hero-fan { display: none; } }
+@media (min-width: 1024px) { body:has(.agent-rail) .hero-fan { display: none; } } /* the agent side rail fills that corner */
+@media (prefers-reduced-motion: reduce) {
+  .hero-fan .hero-fan-path, .hero-fan .hero-fan-history { animation: none; stroke-dashoffset: 0; }
+}
+
+/* Floating dock: ThreeUI "sable" AnimatedTopDock design (mono uppercase labels, contrasting active chip).
+   Dark: near-black strip with a light chip. Light: cream glass strip with an ink chip, matching the light theme's ink buttons. */
 :root {
+  --dock-surface: #fbfaf6;
+  --dock-border: #dcd9cf;
+  --dock-item: #f1efe8;
+  --dock-fg: #17160f;
+  --dock-muted: #6c6a61;
+  --dock-light: #17160f;
+  --dock-ink: #f8f7f2;
+  --dock-hover-border: #cfcbbf;
+  --dock-hover-bg: #ffffff;
+  --dock-ring: #b9b5a8;
+  --dock-shadow: 0 10px 28px rgba(40, 36, 20, 0.1), 0 1px 2px rgba(40, 36, 20, 0.06), inset 0 1px rgba(255, 255, 255, 0.8);
+  --dock-chip-shadow: 0 6px 14px rgba(23, 22, 15, 0.18);
+  --dock-hover-shadow: 0 6px 14px rgba(40, 36, 20, 0.1);
+  --backdrop-opacity: 0.42;
+}
+.dark {
   --dock-surface: #0e0e0e;
   --dock-border: #292929;
   --dock-item: #151514;
@@ -275,12 +358,12 @@
   --dock-muted: #858580;
   --dock-light: #e8e8e3;
   --dock-ink: #111111;
-  --dock-shadow: 0 12px 34px rgba(0, 0, 0, 0.32), inset 0 1px rgba(255, 255, 255, 0.04);
-  --backdrop-opacity: 0.55;
-}
-.dark {
-  --dock-surface: #0e0e0e;
+  --dock-hover-border: #41413e;
+  --dock-hover-bg: #1b1b1af0;
+  --dock-ring: #8d8d86;
   --dock-shadow: 0 12px 34px rgba(0, 0, 0, 0.62), inset 0 1px rgba(255, 255, 255, 0.04);
+  --dock-chip-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+  --dock-hover-shadow: 0 7px 16px rgba(0, 0, 0, 0.26);
   --backdrop-opacity: 0.95;
 }
 
@@ -361,9 +444,9 @@
 .dock-item:focus-visible {
   z-index: 7;
   color: var(--dock-fg);
-  border-color: #41413e;
-  background: #1b1b1af0;
-  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.26);
+  border-color: var(--dock-hover-border);
+  background: var(--dock-hover-bg);
+  box-shadow: var(--dock-hover-shadow);
 }
 .dock-logo {
   width: 28px;
@@ -380,10 +463,10 @@
   color: var(--dock-ink);
   border-color: var(--dock-light);
   background: var(--dock-light);
-  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--dock-chip-shadow);
 }
 .dock-logo[aria-current="page"] {
-  box-shadow: 0 0 0 2px var(--dock-surface), 0 0 0 3px #8d8d86;
+  box-shadow: 0 0 0 2px var(--dock-surface), 0 0 0 3px var(--dock-ring);
 }
 .dock-icon {
   display: inline-flex;
@@ -469,7 +552,7 @@
 }
 .dock-icon-btn:hover {
   color: var(--dock-fg);
-  background: #1b1b1af0;
+  background: var(--dock-hover-bg);
 }
 @media (min-width: 1240px) {
   .dock-auto,
@@ -500,12 +583,12 @@
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Market tape: 3D barrel marquee
+   Market tape: flat continuous ticker
    --------------------------------------------------------------------------------------------- */
 .tape {
   display: flex;
   align-items: stretch;
-  height: 46px;
+  height: 42px;
   border-bottom: 1px solid color-mix(in oklab, var(--border) 75%, transparent);
   background: color-mix(in oklab, var(--surface) 58%, transparent);
   backdrop-filter: blur(10px);
@@ -516,30 +599,29 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  perspective: 560px;
-  perspective-origin: 50% 50%;
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0, #000 9%, #000 91%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 4%, #000 96%, transparent 100%);
 }
 .tape-track {
   display: flex;
   align-items: center;
   height: 100%;
   width: max-content;
-  transform-style: preserve-3d;
+  animation: tape-scroll var(--tape-duration, 60s) linear infinite;
   will-change: transform;
 }
+.tape-stage:hover .tape-track { animation-play-state: paused; }
+@keyframes tape-scroll { to { transform: translateX(-50%); } } /* the row is rendered twice, so -50% loops seamlessly */
+@media (prefers-reduced-motion: reduce) { .tape-track { animation: none; } }
 .tape-item {
   display: inline-flex;
   flex: none;
   align-items: baseline;
   gap: 8px;
-  margin-right: 34px;
+  padding: 0 18px;
   font-size: 12.5px;
   white-space: nowrap;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
+  border-right: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
 }
 .tape-label {
   color: var(--faint);
@@ -559,3 +641,75 @@
   0% { filter: drop-shadow(0 0 7px color-mix(in oklab, var(--brand) 85%, transparent)); }
   100% { filter: none; }
 }
+
+/* ------------------------------------------------------------------------------------------------
+   Fan loader (the brand mark in motion) and the glowing primary call-to-action
+   ------------------------------------------------------------------------------------------------ */
+.fan-loader { overflow: visible; }
+.fan-loader .fan-cone { fill: var(--brand); opacity: 0.1; }
+.fan-loader .fan-history,
+.fan-loader .fan-path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.fan-loader .fan-history { stroke: var(--foreground); stroke-width: 3.6; }
+.fan-loader .fan-path {
+  stroke: var(--foreground);
+  stroke-opacity: 0.35;
+  stroke-width: 2;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: fan-draw 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.fan-loader .fan-median { stroke: var(--brand); stroke-opacity: 1; stroke-width: 3.6; }
+.fan-loader .fan-dot { fill: var(--background); stroke: var(--foreground); stroke-width: 2.4; }
+@keyframes fan-draw {
+  0% { stroke-dashoffset: 1; opacity: 1; }
+  45%, 75% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.loading-label::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: loading-dots 1.4s steps(4) infinite; }
+@keyframes loading-dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+
+/* primary CTA: a slow light running around the border, in brand green (ThreeUI "spinning border" idea, done in CSS) */
+@property --cta-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+.cta-glow { position: relative; isolation: isolate; }
+.cta-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--cta-angle), transparent 0 62%, var(--brand) 78%, color-mix(in oklab, var(--brand) 40%, white) 84%, transparent 92%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: cta-spin 3.6s linear infinite;
+  pointer-events: none;
+}
+.cta-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 transparent, 0 6px 22px -8px color-mix(in oklab, var(--brand) 70%, transparent);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.cta-glow:hover::after { opacity: 1; }
+.cta-glow:disabled::before, .cta-glow:disabled::after, .cta-glow[aria-disabled="true"]::before, .cta-glow[aria-disabled="true"]::after { animation: none; opacity: 0; }
+@keyframes cta-spin { to { --cta-angle: 360deg; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fan-loader .fan-path { animation: none; stroke-dashoffset: 0; }
+  .loading-label::after { animation: none; content: "…"; }
+  .cta-glow::before { animation: none; }
+}
+
+/* dashboard hero: static stand-in for the shader when motion is reduced; no page-level decoration behind it */
+.dash-hero-static {
+  background:
+    radial-gradient(80% 60% at 70% 110%, rgba(57, 214, 150, 0.55), transparent 70%),
+    radial-gradient(60% 50% at 95% 100%, rgba(80, 230, 220, 0.35), transparent 70%),
+    #050807;
+}
+body:has(.dash-hero) .hero-fan { display: none; }

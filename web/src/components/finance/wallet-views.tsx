@@ -146,7 +146,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
 
 function Notice({ tone, title, meta, children, actions }: { tone: "caution" | "positive" | "neutral"; title: string; meta?: React.ReactNode; children: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className={cn("rounded-lg border bg-surface", tone === "caution" ? "border-caution/40" : tone === "positive" ? "border-positive/35" : "border-border")}>
+    <div className={cn("rounded-2xl border bg-card shadow-[var(--shadow-card)]", tone === "caution" ? "border-caution/40" : tone === "positive" ? "border-positive/35" : "border-border")}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3">
         <div className="flex items-center gap-2.5">
           <span className={cn("size-1.5 rounded-full", tone === "caution" ? "bg-caution" : tone === "positive" ? "bg-positive" : "bg-faint")} />
