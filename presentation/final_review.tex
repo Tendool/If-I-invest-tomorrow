@@ -1,4 +1,4 @@
-% If I Invest Tomorrow — Final review presentation
+% If I Invest Tomorrow — Final review presentation (review structure; detailed backup: final_review_detailed.tex)
 % Build:  tectonic final_review.tex        (or: xelatex final_review.tex)
 % Figures: python presentation/make_figures.py   (regenerates figures/ from the engine)
 \documentclass[aspectratio=169,11pt]{beamer}
@@ -23,7 +23,7 @@
 \usefonttheme{professionalfonts}
 \geometry{papersize={20cm,11.25cm}}
 
-% ------------------------------------------------------------------ colours (match the web app)
+% ------------------------------------------------------------------ colours (project palette)
 \definecolor{paper}{HTML}{F5F4EF}
 \definecolor{surface}{HTML}{FBFAF7}
 \definecolor{ink}{HTML}{17160F}
@@ -84,8 +84,6 @@
 \newcommand{\faint}[1]{\leavevmode{\color{faint}#1}}
 \newcommand{\up}[1]{\leavevmode{\color{pos}#1}}
 \newcommand{\dn}[1]{\leavevmode{\color{neg}#1}}
-% screenshot with a hairline frame
-\newcommand{\shot}[2]{\tikz\node[inner sep=0pt, draw=border, line width=0.6pt, rounded corners=2pt]{\includegraphics[#1]{#2}};}
 \newcommand{\swatch}[1]{\textcolor{#1}{\rule{0.55em}{0.55em}}}
 \newcommand{\hair}{{\color{rulec}\rule{\linewidth}{0.4pt}}}
 % big figure: value + label
@@ -96,6 +94,9 @@
   \end{minipage}}
 \newcolumntype{R}{>{\raggedleft\arraybackslash}X}
 \newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+% tool names: monospace, never hyphenated
+\newcommand{\tool}[1]{\mbox{\fontsize{6.6}{8}\selectfont\ttfamily #1}}
 \newcommand{\thd}[1]{\leavevmode{\fontsize{7}{8}\selectfont\color{muted}\addfontfeature{LetterSpace=8}\MakeUppercase{#1}}}
 \renewcommand{\arraystretch}{1.18}
 \setlength{\aboverulesep}{0pt}\setlength{\belowrulesep}{0pt}
@@ -119,10 +120,23 @@
 
 \graphicspath{{figures/}}
 
+% flowchart extras
+\usetikzlibrary{shapes.geometric}
+\tikzset{
+  dec/.style={diamond, aspect=2.1, draw=brand, fill=surface, line width=0.7pt, align=center, inner sep=1.5pt,
+    font=\fontsize{7.5}{9}\selectfont},
+  term/.style={box, rounded corners=9pt, fill=paper},
+  yes/.style={lab, font=\fontsize{7}{8}\selectfont\color{pos}},
+  no/.style={lab, font=\fontsize{7}{8}\selectfont\color{neg}},
+}
+% one big statement under a slide title
+\newcommand{\lead}[1]{{\fontsize{13}{17}\selectfont #1\par}}
+\newcommand{\stepn}[1]{{\numfont\fontsize{20}{22}\selectfont\color{brand}#1}}
+
 % ================================================================== document
 \begin{document}
 
-% ------------------------------------------------------------------ title
+% ------------------------------------------------------------------ 1 title
 \begin{frame}[plain]
   \vspace*{0.9cm}
   \hspace*{0.15cm}\begin{minipage}{0.92\textwidth}
@@ -136,666 +150,439 @@
       \faint{\small CB.AI.U4AID23033} & \faint{\small CB.AI.U4AID23034} & \faint{\small CB.AI.U4AID23035} & \faint{\small CB.AI.U4AID23036}
     \end{tabularx}
     \vspace{0.6cm}
-    {\small\color{muted}Indian equities, gold, bonds and cash \enspace·\enspace data to 1 October 2026 \enspace·\enspace demo money only}
+    {\small\color{muted}Indian stocks, ETFs, gold, bonds and cash \enspace·\enspace data to 1 October 2026 \enspace·\enspace demo money only}
   \end{minipage}
 \end{frame}
 
-% ------------------------------------------------------------------ agenda
+% ------------------------------------------------------------------ 2 contents
 \section{Overview}
-\begin{frame}{Agenda}
+\begin{frame}{Contents}
+  \vspace{0.35cm}
+  \begin{columns}[T]
+    \column{0.31\textwidth}
+      \eyebrow{01}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Introduction}\vspace{14pt}
+      \eyebrow{02}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Objectives}\vspace{14pt}
+      \eyebrow{03}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Problem statement}
+    \column{0.31\textwidth}
+      \eyebrow{04}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Literature review}\vspace{14pt}
+      \eyebrow{05}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Literature gap}\vspace{14pt}
+      \eyebrow{06}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Methodology}
+    \column{0.31\textwidth}
+      \eyebrow{07}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Working of the system}\vspace{14pt}
+      \eyebrow{08}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{Results and conclusion}\vspace{14pt}
+      \eyebrow{09}\par\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{References}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------ 3 introduction
+\section{Introduction}
+\begin{frame}{Introduction}
+  \vspace{0.3cm}
+  \lead{\textbf{If I Invest Tomorrow} tells an investor exactly what to buy tomorrow, how much of each asset, and the probability of reaching their goal --- before they invest.}
+  \vspace{0.55cm}
+  \begin{columns}[T]
+    \column{0.31\textwidth}
+      \eyebrow{Market}\par\vspace{2pt}\hair\par\vspace{5pt}
+      {\small 26 NSE stocks, 3 index ETFs, gold, government bonds and a liquid fund --- 12 years of daily prices.}
+    \column{0.31\textwidth}
+      \eyebrow{Engine}\par\vspace{2pt}\hair\par\vspace{5pt}
+      {\small Machine learning, CAPM, portfolio optimisation, 10,000-path Monte Carlo and stress tests.}
+    \column{0.31\textwidth}
+      \eyebrow{AI agent}\par\vspace{2pt}\hair\par\vspace{5pt}
+      {\small A local language model you talk to in plain English; it plans, simulates and invests with demo money.}
+  \end{columns}
+  \vspace{0.6cm}
+  \begin{callout}
+    {\normalsize Everything is a simulation with \textbf{₹10 lakh of demo money} --- no real account or broker is touched.}
+  \end{callout}
+\end{frame}
+
+% ------------------------------------------------------------------ 4 objectives
+\begin{frame}{Objectives}
   \vspace{0.3cm}
   \begin{columns}[T]
-    \column{0.31\textwidth}
-      \eyebrow{01 \enspace Problem}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Question, objectives,\\ what was delivered\par}\vspace{14pt}
-      \eyebrow{02 \enspace System}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Architecture and data\par}
-    \column{0.31\textwidth}
-      \eyebrow{03 \enspace Methods}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Features, regimes, ML, CAPM and risk,\\ optimisation, Monte Carlo\par}\vspace{14pt}
-      \eyebrow{04 \enspace Results}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Tomorrow's plan, probabilities,\\ stress tests, timing, backtest\par}
-    \column{0.31\textwidth}
-      \eyebrow{05 \enspace Agent \& app}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Qwen3.5-4B agent, autonomous\\ trading, web application\par}\vspace{14pt}
-      \eyebrow{06 \enspace Close}\par\vspace{3pt}\hair\par\vspace{4pt}
-      {\small Verification, limitations,\\ future work, conclusion\par}
+    \column{0.47\textwidth}
+      \begin{enumerate}\setlength{\itemsep}{9pt}
+        \item Take the investor's \textbf{amount, horizon, risk tolerance, target and sectors}
+        \item \textbf{Analyse the market}: returns, risk, correlation, market regime, anomalies
+        \item \textbf{Estimate} expected return and risk with CAPM and machine learning
+      \end{enumerate}
+    \column{0.47\textwidth}
+      \begin{enumerate}\setcounter{enumi}{3}\setlength{\itemsep}{9pt}
+        \item \textbf{Build and compare five strategies} on the efficient frontier
+        \item \textbf{Simulate} outcomes and \textbf{stress test} against crashes
+        \item Give \textbf{tomorrow's plan} in rupees and shares, and \textbf{execute} it through an AI agent
+      \end{enumerate}
   \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------ problem
-\section{Problem}
-\begin{frame}{The question we answer}
-  \vspace{0.35cm}
-  {\displayfont\fontsize{18}{23}\selectfont Not \emph{“which stock will rise?”} but:\par}
+% ------------------------------------------------------------------ 5 problem statement
+\begin{frame}{Problem statement}
   \vspace{0.4cm}
+  \lead{Given an investor's amount, horizon (1, 3 or 5 years), risk tolerance, target return and preferred sectors, decide:}
+  \vspace{0.5cm}
   \begin{columns}[T]
     \column{0.31\textwidth}
-      {\numfont\fontsize{26}{28}\selectfont\color{brand}1\par}\vspace{2pt}\hair\par\vspace{4pt}
-      \textbf{What} should I invest in tomorrow?
+      {\numfont\fontsize{28}{30}\selectfont\color{brand}1\par}\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{\textbf{What} to buy tomorrow}
     \column{0.31\textwidth}
-      {\numfont\fontsize{26}{28}\selectfont\color{brand}2\par}\vspace{2pt}\hair\par\vspace{4pt}
-      \textbf{How much} should go into each asset, in rupees and shares?
+      {\numfont\fontsize{28}{30}\selectfont\color{brand}2\par}\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{\textbf{How much} of each, in rupees and shares}
     \column{0.31\textwidth}
-      {\numfont\fontsize{26}{28}\selectfont\color{brand}3\par}\vspace{2pt}\hair\par\vspace{4pt}
-      What is the \textbf{probability} of reaching my target, and what happens in a crash?
+      {\numfont\fontsize{28}{30}\selectfont\color{brand}3\par}\vspace{2pt}\hair\par\vspace{5pt}
+      \lead{The \textbf{probability} of reaching the target, and the loss in a crash}
   \end{columns}
-  \vspace{0.55cm}
+  \vspace{0.7cm}
   \begin{callout}
-    Most prediction tools give a single expected price. Investors need the \emph{range} of outcomes, the risk they take,
-    and a concrete, executable plan that fits their amount, horizon (1/3/5 years), risk tolerance, target return and preferred sectors.
+    {\normalsize Constraint: monthly stock returns are close to unpredictable, so the answer must rest on \textbf{risk and probability}, not on a single price forecast.}
   \end{callout}
 \end{frame}
 
-\begin{frame}{Objectives and what was delivered}
-  \vspace{0.1cm}
-  \footnotesize\renewcommand{\arraystretch}{1.12}
-  \begin{tabularx}{\textwidth}{@{}p{4.6cm}Lp{1.3cm}@{}}
+% ------------------------------------------------------------------ 6 literature review
+\section{Literature}
+\begin{frame}{Literature review}
+  \vspace{0.15cm}
+  \small\renewcommand{\arraystretch}{1.28}
+  \begin{tabularx}{\textwidth}{@{}P{3.2cm}P{5.0cm}L@{}}
     \toprl
-    \thd{Objective in the proposal} & \thd{Delivered} & \thd{Status}\\ \tabrule
-    Capture investor inputs & Amount, horizon, risk, target, sectors --- via form \emph{or} plain-language chat & \up{Done}\\ \tabrule
-    Analyse market conditions & Returns, volatility, correlation, beta, GMM market regimes, anomaly detection & \up{Done}\\ \tabrule
-    Financial engineering & CAPM, efficient frontier, Sharpe, VaR, CVaR, max drawdown & \up{Done}\\ \tabrule
-    AI / data-science estimation & Ridge, Random Forest, XGBoost; walk-forward validated, volatility model beats baselines & \up{Done}\\ \tabrule
-    Tomorrow's investment plan & Allocation with rupee amounts and whole-share quantities & \up{Done}\\ \tabrule
-    Monte Carlo + target probability & 10,000 regime-switching, fat-tailed paths per strategy & \up{Done}\\ \tabrule
-    Stress tests & $-$2/$-$5/$-$10\% shocks, sector crash, rate and oil shocks, 3 historical replays & \up{Done}\\ \tabrule
-    Compare five strategies & Max Return, Min Risk, Max Sharpe, Goal-Based, Crash-Resistant & \up{Done}\\ \tabrule
-    \textbf{Beyond the proposal} & Autonomous AI agent, demo-money trading, web app, Docker, backtest, SIP analysis & \textcolor{brand}{Added}\\
-    \botrl
+    \thd{Area} & \thd{Key work} & \thd{What we use from it}\\ \tabrule
+    Portfolio theory & Markowitz (1952); Sharpe (1964) & Efficient frontier, Sharpe ratio, CAPM expected returns\\ \tabrule
+    Risk estimation & Ledoit \& Wolf (2004); Rockafellar \& Uryasev (2000) & Stable covariance matrix; CVaR-minimising crash-resistant portfolio\\ \tabrule
+    Market regimes & Hamilton (1989) & Markets switch between calm and crisis states\\ \tabrule
+    Simulation & Glasserman (2004) & Monte Carlo for outcome probabilities\\ \tabrule
+    ML for returns & Gu, Kelly \& Xiu (2020); Chen \& Guestrin (2016) & ML adds only small, noisy return signals; tree models as baselines\\ \tabrule
+    Anomaly detection & Liu, Ting \& Zhou (2008) & Isolation Forest for unusual market days\\ \tabrule
+    Robo-advisors & Beketov, Lehmann \& Wittke (2018) & Automated allocation is mostly mean--variance based\\ \tabrule
+    LLM agents & Yao et al., ReAct (2023); Schick et al., Toolformer (2023) & Language models that call tools instead of guessing answers\\ \botrl
   \end{tabularx}
 \end{frame}
 
-% ------------------------------------------------------------------ system
-\section{System}
-\begin{frame}{Architecture}
-  \vspace{0.2cm}
+% ------------------------------------------------------------------ 7 literature gap
+\begin{frame}{Literature gap}
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \column{0.47\textwidth}
+      \eyebrow{What exists}\par\vspace{2pt}\hair\par\vspace{6pt}
+      \small
+      \begin{itemize}\setlength{\itemsep}{7pt}
+        \item Prediction tools give a \textbf{single price forecast}, with no range of outcomes
+        \item Robo-advisors give an allocation but \textbf{no probability of reaching a goal} and no crash test
+        \item ML studies report \textbf{weak return predictability}, not a usable plan
+        \item Finance chatbots \textbf{invent numbers} and cannot act safely
+      \end{itemize}
+    \column{0.47\textwidth}
+      \eyebrow{What we add}\par\vspace{2pt}\hair\par\vspace{6pt}
+      \small
+      \begin{itemize}\setlength{\itemsep}{7pt}
+        \item One system: data $\to$ models $\to$ \textbf{plan in rupees and shares}
+        \item \textbf{Probabilities}, ranges and \textbf{stress tests} for every strategy
+        \item Honest validation: use ML only where it shows skill (volatility)
+        \item An agent \textbf{grounded in the engine}, trading only under rules checked in code
+        \item Built for \textbf{Indian markets}
+      \end{itemize}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------ how good are the models
+\begin{frame}{Our models vs published research}
+  \framesubtitle{Our numbers: walk-forward test 2021--2026 on data the models never saw \;·\; theirs: as published}
+  \vspace{0.05cm}
+  \footnotesize\renewcommand{\arraystretch}{1.18}
+  \begin{tabularx}{\textwidth}{@{}P{2.5cm}P{4.2cm}LP{3.2cm}@{}}
+    \toprl
+    \thd{Task} & \thd{Published result} & \thd{Our result} & \thd{Verdict}\\ \tabrule
+    Monthly stock returns ($R^2$) & Best ML (neural net): \textbf{0.40\%}; plain regression: \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US stocks & Ridge: $-$0.24\% vs the historical average (a stricter test); no overfitting & Same ceiling as the best research\\ \tabrule
+    Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{51.2\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
+    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.59} vs 0.50 for the best simple rule & Works, as the literature predicts\\ \tabrule
+    Outcome ranges & No common published benchmark & 90\% band held \textbf{81\%} of 104 real outcomes & Checked and reported\\ \botrl
+  \end{tabularx}\par\vspace{0.2cm}
+  \begin{columns}[T]
+    \column{0.47\textwidth}
+      \eyebrow{Why nobody does much better}\par\vspace{2pt}\hair\par\vspace{4pt}
+      \footnotesize Monthly noise ($\sim$7\%) swamps the expected return ($\sim$1\%); professionals trade patterns away; 12 years is only $\sim$140 months.\par
+    \column{0.47\textwidth}
+      \begin{callout}
+        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model and regimes raise the Sharpe ratio from 0.60 to 0.77.
+      \end{callout}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------ 8 methodology 1: data
+\section{Methodology}
+\begin{frame}{Methodology 1 of 4: data pipeline}
+  \vspace{0.5cm}
+  \centering
+  \begin{tikzpicture}[node distance=0.55cm, every node/.append style={minimum height=1.25cm}]
+    \node[term, text width=2.2cm] (y) {\textbf{Yahoo Finance}\\\muted{37 series, 2014--26}};
+    \node[box, text width=2.4cm, right=of y] (c) {\textbf{Clean}\\\muted{bad ticks, gaps,\\ NSE calendar}};
+    \node[box, text width=2.4cm, right=of c] (r) {\textbf{Repair}\\\muted{liquid fund rebuilt\\ from repo rate}};
+    \node[box, text width=2.4cm, right=of r] (f) {\textbf{Features}\\\muted{returns, volatility,\\ beta, RSI, VIX}};
+    \node[hl, text width=2.3cm, right=of f] (p) {\textbf{Panel}\\\muted{32 assets $\times$\\ 2,950 days}};
+    \draw[flow] (y)--(c); \draw[flow] (c)--(r); \draw[flow] (r)--(f); \draw[flow] (f)--(p);
+  \end{tikzpicture}\par
+  \vspace{0.8cm}
+  \raggedright
+  \begin{columns}[T]
+    \column{0.31\textwidth}\kpi{32}{investable assets}
+    \column{0.31\textwidth}\kpi{12 yrs}{daily prices}
+    \column{0.31\textwidth}\kpi{3}{data errors fixed}
+  \end{columns}
+  \vspace{0.3cm}
+  {\footnotesize\muted{Fixed: wrong-scale prices in 3 ETFs (Dec 2019), erratic gilt-ETF prints, and a liquid-fund price that ignored daily payouts.}}
+\end{frame}
+
+% ------------------------------------------------------------------ 9 methodology 2: models
+\begin{frame}{Methodology 2 of 4: models}
+  \vspace{0.35cm}
   \centering
   \begin{tikzpicture}[x=1cm, y=1cm, every node/.append style={minimum height=1.05cm}]
-    % layer labels
-    \node[lab, anchor=east, text width=1.6cm, align=right] at (-1.55, 0) {DATA};
-    \node[lab, anchor=east, text width=1.6cm, align=right] at (-1.55, -2.05) {ANALYTICS\\ ENGINE};
-    \node[lab, anchor=east, text width=1.6cm, align=right] at (-1.55, -4.1) {INTERFACES};
-    % row 1: data
-    \node[box, text width=2.55cm] (data)  at (0, 0)    {\textbf{Market data}\\\muted{Yahoo Finance, 37 series}};
-    \node[box, text width=2.55cm] (clean) at (3.3, 0)  {\textbf{Clean \& align}\\\muted{calendar, bad ticks, proxies}};
-    \node[box, text width=2.55cm] (feat)  at (6.6, 0)  {\textbf{Features}\\\muted{returns, volatility, beta, RSI}};
-    % row 2: engine
-    \node[box, text width=2.0cm] (reg)  at (0, -2.05)    {\textbf{Regimes}\\\muted{Gaussian mixture}};
-    \node[box, text width=2.0cm] (ml)   at (2.45, -2.05) {\textbf{Return models}\\\muted{walk-forward}};
-    \node[box, text width=2.0cm] (capm) at (4.9, -2.05)  {\textbf{CAPM \& risk}\\\muted{Ledoit--Wolf $\Sigma$}};
-    \node[box, text width=2.0cm] (opt)  at (7.35, -2.05) {\textbf{Optimiser}\\\muted{five strategies}};
-    \node[box, text width=2.0cm] (mc)   at (9.8, -2.05)  {\textbf{Monte Carlo}\\\muted{and stress tests}};
-    \node[fit=(reg)(mc), draw=rulec, dashed, rounded corners=4pt, inner sep=4pt, minimum height=0pt] (eng) {};
-    \node[hl, text width=2.35cm] (plan) at (13.0, -2.05) {\textbf{Tomorrow's plan}\\\muted{amounts, probabilities}};
-    % row 3: interfaces
-    \node[box, text width=2.35cm] (web)    at (1.2, -4.1)  {\textbf{Web app}\\\muted{Next.js, shadcn/ui}};
-    \node[box, text width=2.35cm] (api)    at (4.9, -4.1)  {\textbf{FastAPI}\\\muted{REST, streaming chat}};
-    \node[box, text width=2.35cm] (agent)  at (8.6, -4.1)  {\textbf{AI agent}\\\muted{Qwen3.5-4B, 25 tools}};
-    \node[box, text width=2.35cm] (wallet) at (12.3, -4.1) {\textbf{Demo wallet}\\\muted{SQLite paper trades}};
-    % flows
-    \draw[flow] (data) -- (clean);
-    \draw[flow] (clean) -- (feat);
-    \draw[flow] (feat.south) -- (feat.south |- eng.north);
-    \draw[flow] (eng.east) -- (plan.west);
-    \draw[flow] (eng.south -| api.north) -- (api.north);
-    \draw[flow, {Stealth[length=4pt]}-{Stealth[length=4pt]}] (web) -- (api);
-    \draw[flow, {Stealth[length=4pt]}-{Stealth[length=4pt]}] (api) -- (agent);
-    \draw[flow] (agent) -- node[lab, above=1pt]{trades} (wallet);
-    \node[lab, anchor=north] at (6.75, -4.85) {Docker Compose \enspace·\enspace the model runs locally in Ollama on an 8 GB GPU};
-  \end{tikzpicture}
-\end{frame}
-
-\begin{frame}{Data: Indian markets, 2014–2026}
-  \vspace{0.15cm}
-  \begin{columns}[T]
-    \column{0.52\textwidth}
-      \small
-      \begin{tabularx}{\linewidth}{@{}Lr@{}}
-        \toprl
-        \thd{Universe} & \thd{Count}\\ \tabrule
-        NSE stocks across 12 sectors (NIFTY 50 members) & 26\\
-        Index ETFs: NIFTY 50, Next 50, Bank & 3\\
-        Gold ETF \;·\; G-Sec bond ETF \;·\; liquid fund & 3\\ \tabrule
-        Benchmark: NIFTY 50 index & 1\\
-        Macro: India VIX, Brent, USD/INR, US 10Y, Bank NIFTY & 5\\ \botrl
-      \end{tabularx}
-      \vspace{0.35cm}
-
-      \begin{columns}[T]
-        \column{0.33\linewidth}\kpi{2,950}{trading days}
-        \column{0.33\linewidth}\kpi{32}{investable assets}
-        \column{0.33\linewidth}\kpi{12 yrs}{of daily OHLCV}
-      \end{columns}
-    \column{0.42\textwidth}
-      \eyebrow{Data problems found and fixed}\par\vspace{3pt}\hair\par\vspace{5pt}
-      \small
-      \begin{itemize}\setlength{\itemsep}{5pt}
-        \item \textbf{Wrong-scale prints} on 19--20 Dec 2019 in three ETFs (price $\div$10 to $\div$100) --- caught by a rolling-median filter.
-        \item \textbf{Illiquid gilt ETF}: stale and erratic prints; tighter $\pm$4\% band around the 11-day median.
-        \item \textbf{Liquid fund}: Yahoo's NAV ignores daily distributions; rebuilt from the RBI repo-rate path.
-        \item All series aligned to the NSE trading calendar; small gaps forward-filled.
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------------ methods
-\section{Methods}
-\begin{frame}{Feature engineering}
-  \vspace{0.2cm}
-  \begin{columns}[T]
-    \column{0.47\textwidth}
-      \eyebrow{Per asset, strictly backward-looking}\par\vspace{3pt}\hair\par\vspace{5pt}
-      \small
-      \begin{itemize}\setlength{\itemsep}{3pt}
-        \item Returns over 1, 5, 21, 63, 126, 252 days
-        \item Realised volatility (21, 63 days) and their ratio
-        \item Price vs 20/50-day averages; 50 vs 200-day
-        \item RSI(14), MACD histogram, 252-day drawdown
-        \item Rolling 63-day beta, correlation and skew vs NIFTY
-      \end{itemize}
-    \column{0.47\textwidth}
-      \eyebrow{Market state (shared by all assets)}\par\vspace{3pt}\hair\par\vspace{5pt}
-      \small
-      \begin{itemize}\setlength{\itemsep}{3pt}
-        \item NIFTY 21/63-day return, volatility, drawdown, gap to 200-day average
-        \item India VIX level and 21-day change
-        \item Brent, USD/INR and US 10-year moves
-      \end{itemize}
-      \vspace{0.25cm}
-      \eyebrow{Target}\par\vspace{3pt}\hair\par\vspace{5pt}
-      Forward 21-trading-day return of each asset \\[2pt]
-      \muted{\footnotesize panel of 32 assets $\times$ 2,950 days}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Market regimes}
-  \framesubtitle{Gaussian mixture on NIFTY return, volatility, drawdown and India VIX, 2008--2026 (includes the 2008 and 2020 crashes)}
-  \vspace{0.05cm}
-  \centering\includegraphics[width=\textwidth]{regimes.pdf}\par\vspace{0.1cm}\raggedright
-  \footnotesize
-  \begin{tabularx}{\textwidth}{@{}Lrrrrr@{}}
-    \toprl
-    \thd{Regime} & \thd{Share of days} & \thd{Return p.a.} & \thd{Volatility} & \thd{Avg VIX} & \thd{Persistence}\\ \tabrule
-    \swatch{cC}\; Bull / Calm & 46\% & \up{+13.0\%} & 11.6\% & 14.1 & 96.4\%\\
-    \swatch{cD}\; Neutral / Sideways \;\faint{(today)} & 45\% & \up{+5.7\%} & 18.5\% & 21.0 & 95.5\%\\
-    \swatch{neg}\; Bear / Volatile & 9\% & +17.2\%$^{*}$ & 45.5\% & 42.5 & 95.4\%\\ \botrl
-  \end{tabularx}
-  {\scriptsize\muted{$^{*}$Crisis periods contain both the crash and the violent rebound (2009, 2020); the state is defined by 45\% volatility, VIX 42 and a $-$35\% average drawdown. The regime model now learns from 2008 as well as 2020 (before: 65 Bear days); calibration of the Monte Carlo improved as a result.}}
-\end{frame}
-
-\begin{frame}{Forecasting returns, honestly}
-  \framesubtitle{Expanding-window walk-forward, 2021--2026, purged targets; 43,400 out-of-sample predictions}
-  \vspace{0.15cm}
-  \begin{columns}[T]
-    \column{0.56\textwidth}
-      \small
-      \begin{tabularx}{\linewidth}{@{}Lrrr@{}}
-        \toprl
-        \thd{Model} & \thd{RMSE} & \thd{Direction} & \thd{IC}\\ \tabrule
-        Ridge regression \;\textcolor{brand}{\footnotesize in use} & 0.0566 & 51.2\% & 0.027\\
-        Random Forest & 0.0572 & 50.6\% & 0.001\\
-        XGBoost & 0.0583 & 50.4\% & $-$0.002\\ \tabrule
-        \muted{Historical mean (baseline)} & \muted{0.0565} & \muted{47.5\%} & \muted{---}\\ \botrl
-      \end{tabularx}\par\vspace{0.15cm}
-      {\footnotesize\muted{IC = average daily Spearman correlation between forecast and realised return across assets.}}
-    \column{0.38\textwidth}
-      \begin{callout}
-        \textbf{No model beats the naive baseline on error.} Cross-sectional skill is at most small (IC 0.00--0.03).\par\vspace{5pt}
-        So the forecast is used only as a \emph{relative tilt}, weighted by measured skill:
-        \[\lambda = \mathrm{clip}(5\cdot\mathrm{IC},\,0,\,0.5) = 13.5\%\]
-        A model with no skill would get zero weight automatically.
-      \end{callout}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Volatility is forecastable; simulated outcomes are checked against reality}
-  \vspace{0.15cm}
-  \begin{columns}[T]
-    \column{0.5\textwidth}
-      \eyebrow{Next-month volatility, walk-forward 2021--26}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \small
-      \begin{tabularx}{\linewidth}{@{}Lrr@{}}
-        \toprl
-        \thd{Model} & \thd{R$^2$} & \thd{Error}\\ \tabrule
-        Ridge, range-based features, 80/20 blend \;\textcolor{brand}{\footnotesize in use} & 0.59 & 25\%\\
-        \muted{Same as last quarter} & \muted{0.50} & \muted{29\%}\\
-        \muted{Same as last month} & \muted{0.39} & \muted{31\%}\\ \botrl
-      \end{tabularx}\par\vspace{0.2cm}
-      {\footnotesize\muted{40{,}423 forecasts, settings chosen on 2017--20 validation. Trees, GARCH and ensembles scored lower. Liquid fund excluded.}}
-    \column{0.46\textwidth}
-      \eyebrow{Monte Carlo calibration, 1-year horizon}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \small
-      \begin{itemize}\setlength{\itemsep}{4pt}
-        \item 104 forecasts from quarterly dates 2019--25, information as of each date
-        \item 50 / 75 / 90 / 95 / 99\% bands held 53 / 74 / 81 / 88 / 96\% (88\% at 90\% outside 2020)
-        \item The miss is the COVID crash and the rebound; realised returns beat expected by 7\% on average
-        \item Adds estimation error of the expected return ($\sigma/\sqrt{5}$) and regimes learned from 2008, nothing tuned
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Does the model stack create value? Walk-forward backtest, 2021--26}
-  \vspace{0.1cm}
-  \begin{columns}[T]
-    \column{0.56\textwidth}
-      \footnotesize
-      \begin{tabularx}{\linewidth}{@{}Lrrrrr@{}}
-        \toprl
-        \thd{Strategy} & \thd{CAGR} & \thd{Vol} & \thd{Sharpe} & \thd{Max DD} & \thd{Turn./yr}\\ \tabrule
-        Min-variance & 11.5\% & 5.7\% & 0.96 & $-$6.1\% & 0.8$\times$\\
-        Max-Sharpe, prior & 12.8\% & 11.4\% & 0.60 & $-$16.1\% & 3.3$\times$\\
-        \quad + volatility model & 14.3\% & 11.2\% & 0.74 & $-$15.2\% & 4.5$\times$\\
-        \quad + 13.5\% return tilt & 14.9\% & 12.0\% & 0.75 & $-$16.9\% & 4.6$\times$\\
-        \quad + regime overlay (full) & 13.8\% & 10.1\% & 0.77 & $-$13.9\% & 4.9$\times$\\ \tabrule
-        \muted{NIFTY 50 ETF} & \muted{10.4\%} & \muted{12.8\%} & \muted{0.34} & \muted{$-$16.1\%} & \muted{0.2$\times$}\\
-        \muted{Equal-weight stocks} & \muted{16.6\%} & \muted{13.0\%} & \muted{0.82} & \muted{$-$15.0\%} & \muted{0.7$\times$}\\ \botrl
-      \end{tabularx}\par\vspace{0.12cm}
-      {\footnotesize\muted{Monthly rebalance, long-only, 0.10\% cost per trade; every input uses only data available at each date.}}
-    \column{0.42\textwidth}
-      \includegraphics[width=\linewidth]{eval_curves.pdf}\par\vspace{0.08cm}
-      \begin{callout}
-        The volatility model and regime overlay add \emph{risk control}; the return tilt adds little. An equal-weight stock basket matches the full system in this one bull-market sample.
-      \end{callout}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Robustness: year by year, calibration, and what regimes and anomalies tell us}
-  \vspace{0.1cm}
-  \begin{columns}[T]
-    \column{0.5\textwidth}
-      \includegraphics[width=\linewidth]{eval_by_year.pdf}\par\vspace{0.1cm}
-      {\footnotesize\muted{Return signal: IC positive in 5 of 6 years, never significant on its own. Volatility model: ahead of the baseline every year (2023 narrowly).}}
-    \column{0.46\textwidth}
-      \small
-      \begin{itemize}\setlength{\itemsep}{5pt}
-        \item \textbf{Calibration.} Intervals of 50 / 75 / 90 / 95 / 99\% held 53 / 74 / 81 / 88 / 96\% (was 44 / 69 / 81 / 84 / 93). Remaining miss: the 2020 crash.
-        \item \textbf{Regimes.} Calm $\to$ Neutral in a month 18\% of the time. After Neutral, 35\% of months saw a $\ge$5\% market drawdown against 13\% after Calm. VIX alone flags drawdowns as well.
-        \item \textbf{Anomalies.} Flagged days are followed by 21--23\% volatility vs 13\% and a 5\% drawdown 60--65\% of the time vs 21\%, but not by lower returns: a risk warning, not a sell signal.
-        \item \textbf{Return signal.} No feature set or target showed skill on 2017--20 validation; kept as a small tilt.
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Expected returns and the risk model}
-  \vspace{0.15cm}
-  \begin{columns}[T]
-    \column{0.5\textwidth}
-      \eyebrow{CAPM}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \[ \mathbb{E}[R_i] = r_f + \beta_i\,\mathrm{ERP}, \qquad r_f = 6\% \]
-      {\small ERP blends 5-year NIFTY history with a 5.5\% prior, clipped to [3\%, 8\%] $\Rightarrow$ 3.0\%, market return 9.0\%.}\par\vspace{0.25cm}
-      \eyebrow{Final expected return}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \[ \mu_i = 0.6\,\mathrm{CAPM}_i + 0.4\,\mathrm{History}_i + \lambda\cdot\mathrm{Tilt}^{\mathrm{ML}}_i \]
-    \column{0.44\textwidth}
-      \eyebrow{Risk}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \small
-      \begin{itemize}\setlength{\itemsep}{4pt}
-        \item Covariance $\Sigma$: Ledoit--Wolf shrinkage on 5 years of daily returns
-        \item $\mathrm{VaR}_{95}$ and $\mathrm{CVaR}_{95} = \mathbb{E}[L \mid L \ge \mathrm{VaR}]$
-        \item Maximum drawdown, Sharpe $=(\mu-r_f)/\sigma$
-        \item Oil and rate sensitivities for stress tests
-        \item Isolation Forest flags anomalous market days
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Five strategies on one efficient frontier}
-  \vspace{0.05cm}
-  \begin{columns}[T]
-    \column{0.47\textwidth}
-      \footnotesize
-      \begin{tabularx}{\linewidth}{@{}p{2.85cm}L@{}}
-        \toprl
-        \thd{Strategy} & \thd{Optimisation}\\ \tabrule
-        \swatch{cB}\; Max Return & $\max_w\, w^\top\mu$ \;(linear program)\\
-        \swatch{cA}\; Min Risk & $\min_w\, w^\top\Sigma w$\\
-        \swatch{cC}\; Max Sharpe & $\max_w\, (w^\top\mu - r_f)/\sqrt{w^\top\Sigma w}$\\
-        \swatch{cG}\; Goal-Based & frontier point with the highest \emph{simulated} P(reach target)\\
-        \swatch{cE}\; Crash-Resistant & $\min\mathrm{CVaR}_{95}$ over history \emph{and} stress scenarios (Rockafellar--Uryasev LP)\\ \botrl
-      \end{tabularx}\par\vspace{0.2cm}
-      {\footnotesize\muted{Long-only, fully invested; per-asset caps by risk profile (single stock 8 / 15 / 25\%); preferred sectors restrict the stock universe.}}
-    \column{0.5\textwidth}
-      \includegraphics[width=0.86\linewidth]{frontier.pdf}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Monte Carlo engine}
-  \vspace{0.05cm}
-  \begin{columns}[T]
-    \column{0.42\textwidth}
-      \small
-      \begin{itemize}\setlength{\itemsep}{5pt}
-        \item \textbf{10,000 daily paths} per strategy over the horizon
-        \item \textbf{Fat tails}: Student-$t$ innovations, $\nu = 5$
-        \item \textbf{Regime switching}: 3-state Markov chain from the GMM transition matrix, started from today's regime
-        \item Drift $\ln(1+\mu) - \tfrac12\sigma_k^2$ so the mean equals the expected return
-        \item \textbf{Day-0 shocks} move the market into the bear regime
-        \item Outputs: P(gain), P(target), VaR, CVaR, drawdowns, percentile bands
-      \end{itemize}
-    \column{0.55\textwidth}
-      \includegraphics[width=\linewidth]{fan.pdf}\par
-      {\footnotesize\muted{Recommended plan, ₹1,00,000 over 3 years: median, middle 50\% and 90\% of paths against the 12\% target path.}}
-  \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------------ results
-\section{Results}
-\begin{frame}{Tomorrow's investment plan}
-  \framesubtitle{Sample investor: ₹1,00,000 \;·\; 3 years \;·\; medium risk \;·\; 12\% target \;·\; prices at the close of 1 Oct 2026}
-  \vspace{0.1cm}
-  \begin{columns}[T]
-    \column{0.47\textwidth}
-      {\displayfont\fontsize{19}{22}\selectfont Goal-Based \; {\fontsize{7}{8}\selectfont\sffamily\color{brand}\addfontfeature{LetterSpace=10}RECOMMENDED}\par}\vspace{3pt}
-      {\footnotesize\muted{Within medium-risk limits and the best chance (58\%) of reaching 12\%; ties within 2 pp go to the higher Sharpe.}}\par\vspace{0.2cm}
-      \includegraphics[width=0.96\linewidth]{allocation.pdf}\par
-      {\footnotesize\swatch{cA}\,Stocks 76\% \quad \swatch{cD}\,Gold 20\% \quad \swatch{faint}\,Cash \faint{\& residual}}
-    \column{0.47\textwidth}
-      \vspace{0.35cm}
-      \begin{columns}[T]
-        \column{0.5\linewidth}\kpi{14.4\%}{Expected return}\par\vspace{9pt}\kpi{96\%}{Chance of gain}\par\vspace{9pt}\kpi{14.5\%}{Expected drawdown}
-        \column{0.5\linewidth}\kpi{12.9\%}{Volatility}\par\vspace{9pt}\kpi{58\%}{Reach 12\% target}\par\vspace{9pt}\kpi{8 of 9}{Stress tests passed}
-      \end{columns}
-      \vspace{0.3cm}\hair\par\vspace{3pt}
-      {\footnotesize Sharpe 0.65 \;·\; beta 0.74 \;·\; 1-year VaR\textsubscript{95} 7.3\% \;·\; CVaR\textsubscript{95} 13.9\%\par
-       \muted{Whole shares at the latest close, after 0.1\% trading costs.}}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{What could happen: the distribution, not a point}
-  \vspace{0.05cm}
-  \begin{columns}[T]
-    \column{0.55\textwidth}
-      \includegraphics[width=\linewidth]{distribution.pdf}\par
-      {\footnotesize\swatch{pos}\;target met \quad\swatch{faint}\;gain, below target \quad\swatch{neg}\;loss}
-    \column{0.4\textwidth}
-      \vspace{0.2cm}
-      \eyebrow{Value after 3 years}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \begin{tabularx}{\linewidth}{@{}Lr@{}}
-        Worst 5\% & {\numfont ₹1,01,941}\\
-        \textbf{Median} & {\numfont\textbf{₹1,46,925}}\\
-        Best 5\% & {\numfont ₹2,06,622}\\
-      \end{tabularx}\par\vspace{0.3cm}
-      \eyebrow{Proposal's illustration vs system output}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \footnotesize
-      \begin{tabularx}{\linewidth}{@{}Lrr@{}}
-        & \thd{Proposal} & \thd{System}\\
-        Expected return & $\sim$12.4\% & 14.4\%\\
-        Volatility & $\sim$14.2\% & 12.9\%\\
-        P(positive) & $\sim$73\% & 96\%\\
-        P(target) & $\sim$68\% & 58\%\\
-      \end{tabularx}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Five strategies compared}
-  \framesubtitle{Same investor, same 10,000 simulated futures for every strategy}
-  \vspace{0.25cm}
-  \small
-  \begin{tabularx}{\textwidth}{@{}Lrrrrrr@{}}
-    \toprl
-    \thd{Strategy} & \thd{Return} & \thd{Volatility} & \thd{Sharpe} & \thd{Chance of gain} & \thd{Reach target} & \thd{Median value}\\ \tabrule
-    \swatch{cB}\; Max Return & 14.8\% & 14.2\% & 0.62 & 94\% & \textbf{58\%} & ₹1,47,461\\
-    \swatch{cA}\; Min Risk & 7.1\% & 4.9\% & 0.22 & 99\% & 4\% & ₹1,22,476\\
-    \swatch{cC}\; Max Sharpe & 12.4\% & 9.5\% & \textbf{0.67} & 98\% & 50\% & ₹1,40,605\\
-    \swatch{cG}\; \textbf{Goal-Based} \;\textcolor{brand}{\footnotesize recommended} & 14.4\% & 12.9\% & 0.65 & 96\% & \textbf{58\%} & ₹1,46,925\\
-    \swatch{cE}\; Crash-Resistant & 7.4\% & 5.5\% & 0.25 & 99\% & 7\% & ₹1,23,409\\ \botrl
-  \end{tabularx}
-  \vspace{0.45cm}
+    \node[box, text width=2.0cm] (f) at (0, -1.6) {\textbf{Features}};
+    \node[box, text width=2.6cm] (g) at (3.6, 0.6)   {\textbf{Regime}\\\muted{Gaussian mixture}};
+    \node[box, text width=2.6cm] (i) at (3.6, -0.75) {\textbf{Anomalies}\\\muted{Isolation Forest}};
+    \node[box, text width=2.6cm] (m) at (3.6, -2.1)  {\textbf{Return tilt}\\\muted{Ridge, weight by skill}};
+    \node[box, text width=2.6cm] (v) at (3.6, -3.45) {\textbf{Volatility}\\\muted{Ridge regression}};
+    \node[box, text width=2.9cm] (mu) at (7.9, -0.75) {\textbf{Expected return}\\\muted{0.6 CAPM + 0.4 history + tilt}};
+    \node[box, text width=2.9cm] (cov) at (7.9, -2.75) {\textbf{Risk}\\\muted{Ledoit--Wolf covariance}};
+    \node[hl, text width=2.4cm, minimum height=4.5cm] (out) at (11.9, -1.4) {\textbf{Inputs to the optimiser and simulator}};
+    \foreach \n in {g,i,m,v} \draw[flow] (f.east) -- (\n.west);
+    \draw[flow] (m.east) -- (mu.west);
+    \draw[flow] (v.east) -- (cov.west);
+    \draw[flow] (g.east) -- (out.west |- g.east);
+    \draw[flow] (mu.east) -- (out.west |- mu.east);
+    \draw[flow] (cov.east) -- (out.west |- cov.east);
+  \end{tikzpicture}\par
+  \vspace{0.35cm}
+  \raggedright
   \begin{callout}
-    \textbf{Decision rule.} Keep strategies inside the investor's limits on volatility, worst stress loss and one-year VaR;
-    pick the highest probability of reaching the target; within 2 percentage points prefer the higher Sharpe ratio.
-    Defensive strategies are almost certain to gain but rarely reach a 12\% goal.
+    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.59); next-month returns are not (IC 0.03), so ML returns get only a 13.5\% weight.
   \end{callout}
 \end{frame}
 
-\begin{frame}{Stress tests}
-  \vspace{0.05cm}
-  \begin{columns}[T]
-    \column{0.58\textwidth}
-      \includegraphics[width=\linewidth]{stress.pdf}
-    \column{0.37\textwidth}
-      \eyebrow{Monte Carlo after a day-0 shock}\par\vspace{3pt}\hair\par\vspace{3pt}
-      \footnotesize
-      \begin{tabularx}{\linewidth}{@{}Lrr@{}}
-        \thd{Scenario} & \thd{Median} & \thd{P(tgt)}\\
-        No shock & ₹1,47,278 & 59\%\\
-        Market $-$2\% & ₹1,45,088 & 56\%\\
-        Market $-$5\% & ₹1,37,454 & 47\%\\
-        Market $-$10\% & ₹1,32,146 & 41\%\\
-        Pharma crash & ₹1,36,467 & 46\%\\
-        Rate +100 bp & ₹1,38,899 & 48\%\\
-        Oil +25\% & ₹1,47,545 & 60\%\\
-      \end{tabularx}\par\vspace{0.2cm}
-      {\footnotesize\muted{Only a COVID-scale crash (\dn{$-$26.8\%}) breaches the 18\% medium-risk loss limit.}}
-  \end{columns}
+% ------------------------------------------------------------------ 10 methodology 3: portfolio construction
+\begin{frame}{Methodology 3 of 4: building and choosing the plan}
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}[x=1cm, y=1cm, every node/.append style={minimum height=1.0cm}]
+    \node[term, text width=2.1cm] (p) at (0, 0) {\textbf{Investor profile}};
+    \node[box, text width=2.3cm] (b) at (3.0, 0) {\textbf{Limits}\\\muted{caps by risk, sector filter}};
+    \node[box, text width=2.3cm] (o) at (6.0, 0) {\textbf{Optimiser}\\\muted{5 strategies}};
+    \node[box, text width=2.3cm] (s) at (9.0, 0) {\textbf{Simulate}\\\muted{10,000 futures each}};
+    \node[box, text width=2.3cm] (t) at (12.0, 0) {\textbf{Stress test}\\\muted{9 scenarios}};
+    \node[dec, text width=1.9cm] (d) at (12.0, -2.4) {Within risk\\ limits?};
+    \node[box, text width=2.3cm, fill=paper] (x) at (12.0, -4.5) {\muted{Strategy dropped}};
+    \node[box, text width=2.7cm] (r) at (8.2, -2.4) {\textbf{Rank}\\\muted{best chance of target; tie $\to$ higher Sharpe}};
+    \node[hl, text width=2.7cm] (w) at (4.4, -2.4) {\textbf{Recommended plan}\\\muted{rupees and whole shares}};
+    \draw[flow] (p)--(b); \draw[flow] (b)--(o); \draw[flow] (o)--(s); \draw[flow] (s)--(t);
+    \draw[flow] (t)--(d);
+    \draw[flow] (d) -- node[yes, above]{yes} (r);
+    \draw[flow] (d) -- node[no, right]{no} (x);
+    \draw[flow] (r) -- (w);
+  \end{tikzpicture}\par
+  \vspace{0.2cm}
+  \raggedright
+  {\small\textbf{Five strategies:} Max Return \;·\; Min Risk \;·\; Max Sharpe \;·\; Goal-Based \;·\; Crash-Resistant (min CVaR)}
 \end{frame}
 
-\begin{frame}{Invest now, wait, or SIP?}
-  \framesubtitle{All options run on the same simulated markets; uninvested money earns the risk-free rate}
-  \vspace{0.25cm}
+% ------------------------------------------------------------------ 11 methodology 4: monte carlo
+\begin{frame}{Methodology 4 of 4: Monte Carlo simulation}
+  \vspace{0.3cm}
+  \centering
+  \begin{tikzpicture}[x=1cm, y=1cm, every node/.append style={minimum height=1.0cm}]
+    \node[term, text width=2.2cm] (a) at (0, 0) {\textbf{Start}\\\muted{today's regime}};
+    \node[box, text width=2.4cm] (b) at (3.2, 0) {\textbf{Draw return}\\\muted{fat-tailed (Student-$t$)}};
+    \node[box, text width=2.4cm] (c) at (6.4, 0) {\textbf{Switch regime?}\\\muted{Markov chain}};
+    \node[box, text width=2.4cm] (d) at (9.6, 0) {\textbf{Update value}\\\muted{one trading day}};
+    \node[dec, text width=1.6cm] (e) at (12.6, 0) {End of\\ horizon?};
+    \node[box, text width=2.6cm] (f) at (12.6, -2.6) {\textbf{Repeat}\\\muted{10,000 paths}};
+    \node[hl, text width=3.2cm] (g) at (7.6, -2.6) {\textbf{Outcomes}\\\muted{P(gain), P(target), VaR, worst / median / best}};
+    \draw[flow] (a)--(b); \draw[flow] (b)--(c); \draw[flow] (c)--(d); \draw[flow] (d)--(e);
+    \draw[flow] (e.north) -- ++(0,0.55) -| node[no, pos=0.25, above]{no, next day} (b.north);
+    \draw[flow] (e) -- node[yes, right]{yes} (f);
+    \draw[flow] (f) -- (g);
+  \end{tikzpicture}\par
+  \vspace{0.4cm}
+  \raggedright
   \begin{columns}[T]
-    \column{0.56\textwidth}
-      \small
-      \begin{tabularx}{\linewidth}{@{}Lrr@{}}
-        \toprl
-        \thd{Option} & \thd{Median after 3 yr} & \thd{Beats lump sum}\\ \tabrule
-        \textbf{Invest now (lump sum)} & \textbf{₹1,46,205} & ---\\
-        Wait 1 month & ₹1,45,444 & 44\%\\
-        Wait 3 months & ₹1,43,725 & 38\%\\
-        Wait 6 months & ₹1,41,197 & 34\%\\
-        SIP over 6 months & ₹1,44,301 & 37\%\\
-        SIP over 12 months & ₹1,42,120 & 32\%\\ \botrl
-      \end{tabularx}
-    \column{0.38\textwidth}
-      \vspace{0.2cm}
+    \column{0.47\textwidth}
+      {\small Each path also draws its own expected return, to include estimation error. A \textbf{stress test} starts the paths with a day-0 shock in the bear regime.}
+    \column{0.47\textwidth}
       \begin{callout}
-        With a positive expected return, \textbf{time in the market beats timing it}: every delay lowers the median outcome.\par\vspace{5pt}
-        A SIP is still useful when the investor values a narrower range of bad outcomes over the higher median --- it wins in about a third of futures.
+        Checked against reality: of 104 past forecasts, 81\% of outcomes fell inside the 90\% band.
       \end{callout}
   \end{columns}
 \end{frame}
 
-\begin{frame}{Walk-forward backtest}
-  \framesubtitle{Weights chosen only from data before 3 Oct 2023, rebalanced quarterly, held to 1 Oct 2026; no ML (no look-ahead)}
-  \vspace{0.05cm}
-  \centering\includegraphics[width=\textwidth]{backtest.pdf}\par\vspace{0.05cm}\raggedright
-  \footnotesize
-  \begin{tabularx}{\textwidth}{@{}Lrrrrr@{}}
-    \toprl
-    \thd{Strategy} & \thd{Total return} & \thd{CAGR} & \thd{Volatility} & \thd{Sharpe} & \thd{Max drawdown}\\ \tabrule
-    \swatch{cG}\; Goal-Based & \up{+55.1\%} & 16.1\% & 8.9\% & \textbf{1.14} & $-$8.1\%\\
-    \swatch{cC}\; Max Sharpe & \up{+58.8\%} & 17.1\% & 10.3\% & 1.07 & $-$9.3\%\\
-    \swatch{cA}\; Min Risk \;/\; \swatch{cE}\; Crash-Resistant & \up{+39.1\%} \;/\; \up{+38.1\%} & 11.9 / 11.6\% & 5.9 / 6.0\% & 1.00 / 0.95 & $-$6.8 / $-$6.3\%\\
-    \muted{NIFTY 50 benchmark} & \muted{+14.8\%} & \muted{4.8\%} & \muted{13.3\%} & \muted{$-$0.09} & \muted{$-$15.8\%}\\ \botrl
-  \end{tabularx}
+% ------------------------------------------------------------------ 12 working 1: modules
+\section{Working}
+\begin{frame}{Working 1 of 3: four modules on one engine}
+  \vspace{0.35cm}
+  \begin{columns}[T]
+    \column{0.235\textwidth}
+      {\large\textbf{Planner}\par}\vspace{2pt}\hair\par\vspace{5pt}
+      {\small Enter a profile; get tomorrow's plan, all five strategies, simulations, stress tests and a backtest.\par}
+    \column{0.235\textwidth}
+      {\large\textbf{Simulator}\par}\vspace{2pt}\hair\par\vspace{5pt}
+      {\small ``What if I put ₹X, plus ₹Y a month, into these assets?'' Year-by-year range vs a fixed deposit and NIFTY.\par}
+    \column{0.235\textwidth}
+      {\large\textbf{Markets}\par}\vspace{2pt}\hair\par\vspace{5pt}
+      {\small Today's regime and anomalies, risk and return of every asset, correlations, model test results.\par}
+    \column{0.235\textwidth}
+      {\large\textbf{Portfolio}\par}\vspace{2pt}\hair\par\vspace{5pt}
+      {\small ₹10 lakh demo wallet: buy, sell, invest a plan, rebalance, monthly SIPs, health check.\par}
+  \end{columns}
+  \par\vspace*{0.8cm}
+  \begin{callout}
+    {\normalsize Example: ₹1 lakh + ₹10,000 a month for 10 years in NIFTY, gold and bonds --- ₹13 lakh put in, typical result ₹19 lakh, 90\% chance of profit.}
+  \end{callout}
 \end{frame}
 
-% ------------------------------------------------------------------ agent
-\section{AI agent}
-\begin{frame}{The agent: Qwen3.5-4B with tools}
-  \framesubtitle{Runs locally through Ollama; the language model chooses tools and explains, the engine produces every number}
-  \vspace{0.0cm}
+% ------------------------------------------------------------------ 13 working 2: agent
+\begin{frame}{Working 2 of 3: the AI agent}
+  \framesubtitle{Qwen3.5-4B runs locally; it chooses the tool and explains --- the engine produces every number}
+  \vspace{0.35cm}
   \centering
-  \begin{tikzpicture}[node distance=0.5cm]
-    \tikzset{every node/.append style={minimum height=1.0cm}}
-    \node[box, text width=2.3cm] (u) {\textbf{Investor}\\\muted{plain language}};
-    \node[hl, text width=2.7cm, right=0.55cm of u] (g) {\textbf{Intent guard}\\\muted{which tool is needed}};
-    \node[box, text width=2.6cm, right=0.55cm of g] (l) {\textbf{Qwen3.5-4B}\\\muted{tool-calling loop}};
-    \node[box, text width=3.0cm, right=0.55cm of l] (t) {\textbf{25 tools}\\\muted{plan, simulate, stress test,\\ trade, rebalance}};
-    \node[box, text width=2.4cm, right=0.55cm of t] (e) {\textbf{Engine}\\\muted{and demo wallet}};
-    \node[box, text width=7.4cm, below=0.6cm of l, xshift=1.6cm] (o) {\textbf{Answer with attached tables and charts}\\\muted{narrated from tool results only; the app renders the real data}};
+  \begin{tikzpicture}[node distance=0.5cm, every node/.append style={minimum height=1.0cm}]
+    \node[term, text width=2.2cm] (u) {\textbf{Investor}\\\muted{plain English}};
+    \node[hl, text width=2.5cm, right=of u] (g) {\textbf{Intent guard}\\\muted{which tool is needed?}};
+    \node[box, text width=2.4cm, right=of g] (l) {\textbf{Language model}\\\muted{picks a tool}};
+    \node[box, text width=2.4cm, right=of l] (t) {\textbf{29 tools}\\\muted{plan, simulate, trade}};
+    \node[box, text width=2.2cm, right=of t] (e) {\textbf{Engine}\\\muted{and wallet}};
+    \node[box, text width=6.5cm, below=0.75cm of l, xshift=1.5cm] (o) {\textbf{Answer + the tool's real tables and charts}};
     \draw[flow] (u)--(g); \draw[flow] (g)--(l); \draw[flow] (l)--(t); \draw[flow] (t)--(e);
     \draw[flow] (e.south) |- (o.east);
-    \draw[flow] (t.north) to[bend right=28] node[lab, above]{results} (l.north);
     \draw[flow] (o.west) -| (u.south);
-  \end{tikzpicture}
-  \vspace{0.1cm}
+  \end{tikzpicture}\par
+  \vspace{0.35cm}
+  \raggedright
+  \small\renewcommand{\arraystretch}{1.2}
+  \begin{tabularx}{\textwidth}{@{}p{7.2cm}L@{}}
+    ``I have ₹2 lakh for 3 years, medium risk, want 12\%'' & builds and explains tomorrow's plan\\
+    ``What's my chance? Stress test it.'' \;·\; ``Tell me about TCS'' & runs the simulation, crash tests, stock analysis\\
+    ``Invest it'' \;·\; ``Sell all my TCS'' \;·\; ``Check my portfolio'' & trades and manages the demo wallet\\
+  \end{tabularx}\par\vspace{0.15cm}
+  {\footnotesize\muted{23 of 23 test conversations pass. If the model skips a needed tool, the system runs it; the model only explains.}}
+\end{frame}
+
+% ------------------------------------------------------------------ 14 working 3: auto-trade
+\begin{frame}{Working 3 of 3: what happens in auto-trade}
+  \vspace{0.25cm}
+  \centering
+  \begin{tikzpicture}[x=1cm, y=1cm, every node/.append style={minimum height=0.95cm}]
+    \node[term, text width=2.2cm] (m) at (0, 0) {\textbf{“Invest it”}};
+    \node[dec, text width=1.75cm] (q) at (3.3, 0) {An instruction?};
+    \node[box, text width=2.2cm, fill=paper] (a) at (3.3, -2.3) {\muted{Answer only --- no trade}};
+    \node[box, text width=2.3cm] (o) at (6.6, 0) {\textbf{Build orders}\\\muted{whole shares, fits cash}};
+    \node[dec, text width=1.75cm] (au) at (9.8, 0) {Auto-trade on?};
+    \node[hl, text width=2.3cm] (x) at (13.0, 0) {\textbf{Execute}\\\muted{all fill or none}};
+    \node[box, text width=2.3cm] (st) at (9.8, -2.3) {\textbf{Stage orders}\\\muted{wait for “confirm”}};
+    \node[box, text width=2.3cm] (rp) at (13.0, -2.3) {\textbf{Report}\\\muted{bought, cash left}};
+    \draw[flow] (m)--(q);
+    \draw[flow] (q) -- node[yes, above]{yes} (o);
+    \draw[flow] (q) -- node[no, right]{no} (a);
+    \draw[flow] (o)--(au);
+    \draw[flow] (au) -- node[yes, above]{yes} (x);
+    \draw[flow] (au) -- node[no, right]{no (ask-first)} (st);
+    \draw[flow] (st) -- node[lab, above]{confirm} (rp);
+    \draw[flow] (x) -- (rp);
+  \end{tikzpicture}\par
+  \vspace{0.3cm}
+  \raggedright
   \begin{columns}[T]
-    \column{0.31\textwidth}
-      \eyebrow{Grounding}\par\vspace{3pt}\hair\par\vspace{3pt}
-      {\footnotesize Early tests: the 4B model invented an allocation. Now, if a request needs a tool and the model skips it, the agent runs it and the model only narrates.}
-    \column{0.31\textwidth}
-      \eyebrow{Guards in code}\par\vspace{3pt}\hair\par\vspace{3pt}
-      {\footnotesize A strategy sticks only if the user named it; trades need an instruction, not a question; resets need an explicit “reset”.}
-    \column{0.31\textwidth}
-      \eyebrow{Measured}\par\vspace{3pt}\hair\par\vspace{3pt}
-      {\footnotesize \textbf{23 / 23} scripted conversation cases pass, covering analysis, trading, stop-loss handling and ask-first confirmation.}
+    \column{0.47\textwidth}
+      \eyebrow{Auto-manage rules}\par\vspace{2pt}\hair\par\vspace{5pt}
+      {\small Sell a holding down 15\% \;·\; trim one that grows too big \;·\; reduce risk in a crisis \;·\; invest idle cash\par}
+    \column{0.47\textwidth}
+      \eyebrow{Autopilot}\par\vspace{2pt}\hair\par\vspace{5pt}
+      {\small Runs these rules automatically after every market-data update. All checks are in code, not in the language model.\par}
   \end{columns}
 \end{frame}
 
-\begin{frame}{Autonomous trading with demo money}
-  \vspace{0.15cm}
-  \begin{columns}[T]
-    \column{0.47\textwidth}
-      \eyebrow{Two modes}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \small
-      \textbf{Auto-trade} --- “invest it”, “sell all my TCS”, “rebalance” execute immediately. \emph{Questions never trade}: “should I sell TCS?” gets analysis.\par\vspace{5pt}
-      \textbf{Ask first} --- every order is staged; it executes only after the investor's own “confirm”.\par\vspace{0.3cm}
-      \eyebrow{Demo wallet}\par\vspace{3pt}\hair\par\vspace{4pt}
-      ₹10,00,000 of virtual cash in SQLite; fills at the latest close with 0.05\% brokerage + 0.05\% slippage; atomic multi-order execution.
-    \column{0.47\textwidth}
-      \eyebrow{Health check \& auto-manage}\par\vspace{3pt}\hair\par\vspace{2pt}
-      \footnotesize
-      \begin{tabularx}{\linewidth}{@{}p{2.1cm}L@{}}
-        \textbf{Stop-loss} & position down 15\% from cost $\Rightarrow$ sell\\ \tabrule
-        \textbf{Drift} & holding above its cap by 3 pp $\Rightarrow$ trim\\ \tabrule
-        \textbf{Risk limit} & volatility $>$ 1.1$\times$ limit $\Rightarrow$ de-risk\\ \tabrule
-        \textbf{Bear regime} & equity $>$ 60\% $\Rightarrow$ move to Crash-Resistant\\ \tabrule
-        \textbf{Idle cash} & $>$ 25\% of wallet $\Rightarrow$ deploy\\
-      \end{tabularx}\par\vspace{0.2cm}
-      {\footnotesize\muted{\textbf{Autopilot} runs this review when switched on and after every market-data refresh.}}
-  \end{columns}
-\end{frame}
-
-% ------------------------------------------------------------------ app
-\section{Application}
-\begin{frame}{Web application: the planner}
-  \framesubtitle{Next.js 16, TypeScript, Tailwind CSS, shadcn/ui \;·\; screenshot of the running app (data refreshed 2 Oct 2026)}
-  \vspace{0.1cm}
-  \centering\shot{height=6.55cm, trim=0 400 0 0, clip}{ui/planner.png}\par\vspace{0.12cm}
-  \raggedright{\footnotesize\muted{Profile on the left; the five strategies; the recommended plan with its key figures, risk-limit check, allocation and composition. Tabs open the Monte Carlo, stress tests, timing and backtest views.}}
-\end{frame}
-
-\begin{frame}{Web application: overview, agent, markets, portfolio}
+% ------------------------------------------------------------------ 15 results (graphs)
+\section{Results}
+\begin{frame}{Results}
+  \framesubtitle{Sample investor: ₹1,00,000 \;·\; 3 years \;·\; medium risk \;·\; 12\% target \;·\; recommended plan: Goal-Based}
   \vspace{0.05cm}
-  \begin{columns}[T,totalwidth=\textwidth]
-    \column{0.49\textwidth}
-      \eyebrow{Overview}\par\vspace{2pt}\shot{width=\linewidth, trim=0 560 0 0, clip}{ui/overview.png}\par\vspace{0.22cm}
-      \eyebrow{Markets}\par\vspace{2pt}\shot{width=\linewidth, trim=0 560 0 0, clip}{ui/market.png}
-    \column{0.49\textwidth}
-      \eyebrow{Agent}\par\vspace{2pt}\shot{width=\linewidth, trim=0 560 0 0, clip}{ui/agent.png}\par\vspace{0.22cm}
-      \eyebrow{Portfolio}\par\vspace{2pt}\shot{width=\linewidth, trim=0 560 0 0, clip}{ui/wallet.png}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Engineering and verification}
-  \vspace{0.15cm}
   \begin{columns}[T]
-    \column{0.31\textwidth}
-      \eyebrow{Stack}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \footnotesize
-      Python 3.13 \;·\; pandas, scikit-learn, XGBoost, PyTorch, SciPy\par\vspace{3pt}
-      FastAPI with streaming chat\par\vspace{3pt}
-      Ollama + Qwen3.5-4B (RTX 4070, 8 GB)\par\vspace{3pt}
-      Next.js 16, TypeScript, Tailwind, shadcn/ui, Recharts\par\vspace{3pt}
-      Docker Compose (API + web)
-    \column{0.31\textwidth}
-      \kpi{55}{unit tests passing}\par\vspace{9pt}
-      \kpi{27}{API endpoint checks}\par\vspace{9pt}
-      \kpi{23 / 23}{agent conversation cases}
-    \column{0.31\textwidth}
-      \eyebrow{What the tests cover}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \footnotesize
-      CAPM, VaR/CVaR and drawdown maths; optimiser constraints for every risk level; Monte Carlo mean and shock behaviour; wallet accounting;
-      trade intent detection; confirmation and stop-loss guards.\par\vspace{0.35cm}
-      \muted{Code: github.com/Tendool/If-I-invest-tomorrow}
+    \column{0.5\textwidth}
+      \eyebrow{Range of outcomes after 3 years}\par\vspace{2pt}
+      \includegraphics[width=\linewidth, height=4.6cm, keepaspectratio]{distribution.pdf}\par\vspace{1pt}
+      {\footnotesize\swatch{pos}\;target met \quad\swatch{faint}\;gain, below target \quad\swatch{neg}\;loss\par}
+    \column{0.46\textwidth}
+      \eyebrow{Backtest: chosen Oct 2023, held to Oct 2026}\par\vspace{2pt}
+      \includegraphics[width=\linewidth]{backtest.pdf}\par\vspace{0.3cm}
+      \begin{columns}[T]
+        \column{0.33\linewidth}\kpi{14.1\%}{Expected return}\par\vspace{8pt}\kpi[pos]{+55\%}{Backtest, 3 yrs}
+        \column{0.33\linewidth}\kpi{53\%}{Reach target}\par\vspace{8pt}\kpi{+15\%}{NIFTY, 3 yrs}
+        \column{0.33\linewidth}\kpi{8 of 9}{Stress tests}\par\vspace{8pt}\kpi{$-$8\%}{Worst fall}
+      \end{columns}
   \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------ close
-\section{Close}
-\begin{frame}{Limitations}
-  \vspace{0.2cm}
-  \begin{columns}[T]
-    \column{0.47\textwidth}
-      \small
-      \begin{itemize}\setlength{\itemsep}{6pt}
-        \item \textbf{Weak predictability}: monthly returns are close to unforecastable; the ML adds only a small tilt.
-        \item \textbf{Assumptions}: risk-free rate 6\%, ERP prior, sector rate sensitivities and bond duration are set by hand.
-        \item \textbf{One backtest window}: NIFTY was weak over 2023--26 in this data, which flatters diversified portfolios.
-      \end{itemize}
-    \column{0.47\textwidth}
-      \small
-      \begin{itemize}\setlength{\itemsep}{6pt}
-        \item \textbf{Data}: Yahoo Finance prices; the liquid fund is a reconstructed proxy; no taxes (STT, capital gains).
-        \item \textbf{Small language model}: occasional slips in wording; the tables under each answer are authoritative.
-        \item \textbf{Simulation only}: demo money, not investment advice.
-      \end{itemize}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Future work}
-  \vspace{0.2cm}
-  \begin{columns}[T]
-    \column{0.31\textwidth}
-      \eyebrow{Signals}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \small News sentiment with FinBERT as a model feature; macro factors from RBI data; Black--Litterman views instead of a fixed blend.
-    \column{0.31\textwidth}
-      \eyebrow{Realism}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \small Indian tax and transaction costs; mutual funds and SIP products; multi-period rebalancing; intraday data.
-    \column{0.31\textwidth}
-      \eyebrow{Agent}\par\vspace{3pt}\hair\par\vspace{4pt}
-      \small Benchmark 7--9B local models on the same 23 cases; scheduled autopilot; explanation of each trade in the history.
-  \end{columns}
-\end{frame}
-
+% ------------------------------------------------------------------ 16 conclusion
 \begin{frame}{Conclusion}
   \vspace{0.3cm}
   {\displayfont\fontsize{19}{25}\selectfont From \emph{“what might happen”} to \emph{“what to do tomorrow”}.\par}
-  \vspace{0.45cm}
+  \vspace{0.5cm}
   \begin{columns}[T]
     \column{0.31\textwidth}
-      \kpi[brand]{1}{integrated pipeline}\par\vspace{4pt}
-      {\footnotesize Data, ML, CAPM, optimisation, Monte Carlo and stress testing in one system.}
+      \kpi[brand]{1}{complete system}\par\vspace{4pt}
+      {\small Data, ML, CAPM, optimisation, simulation and stress tests in one pipeline.\par}
     \column{0.31\textwidth}
-      \kpi[brand]{5}{strategies, one rule}\par\vspace{4pt}
-      {\footnotesize Compared on the same futures and chosen transparently against the investor's limits.}
+      \kpi[brand]{5}{strategies, 1 rule}\par\vspace{4pt}
+      {\small Compared on the same 10,000 futures and chosen transparently.\par}
     \column{0.31\textwidth}
       \kpi[brand]{1}{agent that acts}\par\vspace{4pt}
-      {\footnotesize Plans, simulates, invests, sells and rebalances --- grounded in the engine, guarded in code.}
+      {\small Plans, simulates, invests and manages --- with safety checks in code.\par}
   \end{columns}
-  \vspace{0.5cm}
+  \par\vspace*{0.5cm}
   \begin{callout}
-    The honest finding matters as much as the plan: forecasting single-month returns barely beats a naive baseline, so the
-    value of the system lies in measuring risk, comparing strategies and showing the full range of outcomes.
+    {\normalsize Key finding: next month's returns cannot be predicted reliably, but risk can --- so the system's value is in measuring risk, comparing strategies and showing the full range of outcomes.}
   \end{callout}
+  \vspace{0.3cm}
+  {\footnotesize\muted{Future work: taxes and costs, news sentiment, mutual funds, larger local language models.}}
 \end{frame}
 
+% ------------------------------------------------------------------ 17 references
+\section{References}
 \begin{frame}{References}
-  \vspace{0.1cm}
-  \footnotesize
-  \begin{enumerate}\setlength{\itemsep}{2.5pt}
-    \item Markowitz, H. --- Portfolio Selection. \emph{Journal of Finance}, 1952.
-    \item Sharpe, W. F. --- Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk. \emph{Journal of Finance}, 1964.
+  \vspace{0.05cm}
+  \scriptsize
+  \begin{enumerate}\setlength{\itemsep}{1.5pt}
+    \item Markowitz, H. --- Portfolio Selection. \emph{Journal of Finance}, 7(1), 1952.
+    \item Sharpe, W. F. --- Capital Asset Prices: A Theory of Market Equilibrium under Conditions of Risk. \emph{Journal of Finance}, 19(3), 1964.
+    \item Ledoit, O. \& Wolf, M. --- A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices. \emph{Journal of Multivariate Analysis}, 88(2), 2004.
+    \item Rockafellar, R. T. \& Uryasev, S. --- Optimization of Conditional Value-at-Risk. \emph{Journal of Risk}, 2(3), 2000.
+    \item Hamilton, J. D. --- A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle. \emph{Econometrica}, 57(2), 1989.
     \item Glasserman, P. --- \emph{Monte Carlo Methods in Financial Engineering}. Springer, 2004.
-    \item Hull, J. C. --- \emph{Options, Futures, and Other Derivatives}. Pearson.
-    \item Hochreiter, S. \& Schmidhuber, J. --- Long Short-Term Memory. \emph{Neural Computation}, 1997.
-    \item Ledoit, O. \& Wolf, M. --- A Well-Conditioned Estimator for Large-Dimensional Covariance Matrices. \emph{Journal of Multivariate Analysis}, 2004.
-    \item Rockafellar, R. T. \& Uryasev, S. --- Optimization of Conditional Value-at-Risk. \emph{Journal of Risk}, 2000.
-    \item Hamilton, J. D. --- A New Approach to the Economic Analysis of Nonstationary Time Series and the Business Cycle. \emph{Econometrica}, 1989.
-    \item Liu, F. T., Ting, K. M. \& Zhou, Z.-H. --- Isolation Forest. \emph{IEEE ICDM}, 2008.
-    \item Chen, T. \& Guestrin, C. --- XGBoost: A Scalable Tree Boosting System. \emph{KDD}, 2016.
-    \item Cho, K. et al. --- Learning Phrase Representations using RNN Encoder--Decoder (GRU). \emph{EMNLP}, 2014.
+    \item Gu, S., Kelly, B. \& Xiu, D. --- Empirical Asset Pricing via Machine Learning. \emph{Review of Financial Studies}, 33(5), 2020.
+    \item Chen, T. \& Guestrin, C. --- XGBoost: A Scalable Tree Boosting System. \emph{Proc. KDD}, 2016.
+    \item Fischer, T. \& Krauss, C. --- Deep Learning with Long Short-Term Memory Networks for Financial Market Predictions. \emph{European Journal of Operational Research}, 270(2), 2018.
+    \item Corsi, F. --- A Simple Approximate Long-Memory Model of Realized Volatility. \emph{Journal of Financial Econometrics}, 7(2), 2009.
+    \item Liu, F. T., Ting, K. M. \& Zhou, Z.-H. --- Isolation Forest. \emph{Proc. IEEE ICDM}, 2008.
+    \item Beketov, M., Lehmann, K. \& Wittke, M. --- Robo-Advisors: Quantitative Methods inside the Robots. \emph{Journal of Asset Management}, 19, 2018.
+    \item Yao, S. et al. --- ReAct: Synergizing Reasoning and Acting in Language Models. \emph{ICLR}, 2023.
+    \item Schick, T. et al. --- Toolformer: Language Models Can Teach Themselves to Use Tools. \emph{NeurIPS}, 2023.
   \end{enumerate}
 \end{frame}
 
+% ------------------------------------------------------------------ 18 thank you
 \begin{frame}[plain]
   \vspace*{2.2cm}
   \hspace*{0.15cm}\begin{minipage}{0.9\textwidth}
     {\displayfont\fontsize{38}{40}\selectfont Thank \textit{you}\par}\vspace{0.3cm}
     {\fontsize{13}{16}\selectfont\color{muted}Questions and live demo\par}\vspace{0.7cm}
     {\color{rulec}\rule{\linewidth}{0.4pt}}\par\vspace{0.25cm}
-    {\small\color{muted}Rupali K \enspace·\enspace Mahadev S \enspace·\enspace Srivatsav S \enspace·\enspace Sarang U \hfill github.com/Tendool/If-I-invest-tomorrow}
+    {\small\color{muted}Rupali K \enspace·\enspace Mahadev S \enspace·\enspace Srivatsav S \enspace·\enspace Sarang U \hfill github.com/Tendool/If-I-invest-tomorrow}\par\vspace{0.4cm}
+    {\scriptsize\color{faint}Simulation with demo money only --- not investment advice.}
   \end{minipage}
 \end{frame}
 
