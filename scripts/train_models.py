@@ -1,6 +1,6 @@
-"""Train + walk-forward-validate the ML return models and write the reports.
+"""Train + walk-forward-validate the return signal and the volatility model, and write the reports.
 
-    python scripts/train_models.py            # Ridge / Random Forest / XGBoost
+    python scripts/train_models.py            # reversal + momentum signal (in use) vs Ridge / Random Forest / XGBoost
     python scripts/train_models.py --gru      # also the optional GRU
 """
 import sys, warnings
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     print(est.metrics.round(4))
     print(f"\nselected: {est.model_name}  skill weight (lambda) = {est.skill_weight:.2f}")
     print()
-    print("training the volatility forecaster (Ridge on realised + range-based features, 80/20 blend with last quarter) ...")
+    print("training the volatility forecaster (Ridge on realised, range-based and seasonal features, 85/15 blend with last quarter) ...")
     fc = ml.train_vol_model(md)
     print(fc.round(3).sort_values(ascending=False).head(8).to_string())
     reg = ml.fit_regimes(md)

@@ -175,6 +175,43 @@ def _metrics(df: pd.DataFrame) -> dict:
     )
 
 
+# Return signal: a fixed, documented factor composite, nothing fitted. Every fitted model (Ridge, RF, XGBoost, LightGBM
+# ranker, GRU, a Ridge on factor ranks) has validation IC at or below ~0 on 2017-20.
+# Round 6 (scripts/model_search_v5.py): 1-month reversal + 12-1 momentum, validation IC 0.049 (t 2.3), test 0.052.
+# Round 7 (scripts/model_search_v6.py, rule fixed in advance: beat the incumbent's validation t): the same two effects measured
+# on *residual* returns (after removing each stock's beta x market move; Blitz, Huij & Martens 2011) - validation IC 0.061
+# (t 3.2), test 0.046 (t 2.2); over all ten years 2017-26 IC 0.052 vs 0.051 for the round-6 signal.
+FACTOR_NAME = "Residual reversal + momentum"
+FACTOR_VAL_IC = 0.061
+
+
+def residual_factors(md: MarketData) -> pd.DataFrame:
+    """(date, symbol) residual momentum (months t-12..t-1, risk-scaled) and residual 1-month return, point in time."""
+    r = md.prices.pct_change()
+    mr = md.market.pct_change().reindex(r.index)
+    beta = r.rolling(252, min_periods=126).cov(mr).div(mr.rolling(252, min_periods=126).var(), axis=0)
+    resid = r - beta.shift(1).mul(mr, axis=0)                       # yesterday's beta: no look-ahead
+    s231 = resid.rolling(231, min_periods=120)
+    res_mom = s231.sum().shift(21) / (s231.std().shift(21) * np.sqrt(231))
+    res_rev = resid.rolling(21).sum()
+    out = pd.concat([res_mom.stack().rename("res_mom"), res_rev.stack().rename("res_rev")], axis=1)
+    out.index.names = ["date", "symbol"]
+    return out.replace([np.inf, -np.inf], np.nan)
+
+
+def factor_score(fx: pd.DataFrame) -> pd.Series:
+    """Cross-sectional z-score of residual momentum + residual reversal (date by date; higher = expected to beat the rest)."""
+    rk = lambda x: x.groupby(level=0).rank(pct=True) - 0.5
+    raw = (rk(fx["res_mom"]) - rk(fx["res_rev"])) / 2
+    sd = raw.groupby(level=0).transform("std").replace(0, np.nan)
+    return ((raw - raw.groupby(level=0).transform("mean")) / sd).fillna(0.0)
+
+
+def factor_forecast(fx: pd.DataFrame, cs_sd: float) -> pd.Series:
+    """Score -> expected relative 21-day return, Grinold's refined forecast: IC x cross-sectional volatility x score."""
+    return FACTOR_VAL_IC * cs_sd * factor_score(fx)
+
+
 def walk_forward(md: MarketData, test_years: tuple[int, ...] = (2021, 2022, 2023, 2024, 2025, 2026),
                  include_gru: bool = False, verbose: bool = False) -> tuple[pd.DataFrame, dict]:
     """Expanding-window walk-forward evaluation. Returns (metrics table, out-of-sample predictions)."""
@@ -183,6 +220,8 @@ def walk_forward(md: MarketData, test_years: tuple[int, ...] = (2021, 2022, 2023
     dates = panel.index.get_level_values(0)
     models = _models()
     oos: dict[str, list[pd.DataFrame]] = {n: [] for n in models}
+    oos[FACTOR_NAME] = []
+    fx = residual_factors(md)
     if include_gru:
         oos["GRU"] = []
     base_oos = []
@@ -200,6 +239,10 @@ def walk_forward(md: MarketData, test_years: tuple[int, ...] = (2021, 2022, 2023
             p = mdl.predict(te[feats].values)
             oos[name].append(pd.DataFrame({"y": te["target"].values, "pred": p}, index=te.index))
         base_oos.append(pd.DataFrame({"y": te["target"].values, "pred": tr["target"].mean()}, index=te.index))
+        fte = fx.reindex(te.index)
+        oos[FACTOR_NAME].append(pd.DataFrame({"y": te["target"].values,
+                                              "pred": factor_forecast(fte, float(tr["target"].std())).reindex(te.index).fillna(0.0).values},
+                                             index=te.index))
         if include_gru:
             try:
                 from .gru import fit_predict_gru
@@ -240,30 +283,22 @@ class ReturnEstimator:
 
 def train_return_model(md: MarketData, include_gru: bool = False, save: bool = True) -> ReturnEstimator:
     table, _ = walk_forward(md, include_gru=include_gru)
-    # GRU is reported for comparison; the production model is chosen among Ridge / RF / XGBoost
-    cand = table.drop(index=["Historical mean (baseline)", "GRU"], errors="ignore")
-    best = cand["ic_cross_section"].astype(float).idxmax()
-    ic = float(cand.loc[best, "ic_cross_section"])
-    # Skill weight: zero when the model shows no cross-sectional skill, capped at 0.5.
+    # Production signal: the residual reversal + momentum composite, chosen on the 2017-20 validation (round 7). The fitted models
+    # (Ridge, RF, XGBoost, GRU) stay in the table for comparison.
+    best = FACTOR_NAME
+    ic = float(table.loc[best, "ic_cross_section"])
+    # Skill weight: zero when the signal shows no cross-sectional skill, capped at 0.5.
     lam = float(np.clip(5.0 * ic, 0.0, 0.5))
 
     panel = relative_panel(md)
-    feats = F.feature_columns(panel)
-    train = panel.dropna()
-    train = train.iloc[::3]
-    mdl = _models().get(best) or _models()["XGBoost"]
-    mdl.fit(train[feats].values, train["target"].values)
-
+    cs_sd = float(panel["target"].dropna().std())
     last_date = panel.index.get_level_values(0).max()
-    latest = panel.xs(last_date, level=0)[feats]
-    latest = latest.fillna(latest.median())
-    pred = pd.Series(mdl.predict(latest.values), index=latest.index)
-    imp = None
-    if hasattr(mdl, "feature_importances_"):
-        imp = pd.Series(mdl.feature_importances_, index=feats).sort_values(ascending=False)
-    est = ReturnEstimator(best, table, lam, pred, imp)
+    fx = residual_factors(md)
+    pred = factor_forecast(fx.loc[[last_date]], cs_sd).droplevel(0).reindex(panel.xs(last_date, level=0).index).fillna(0.0)
+    est = ReturnEstimator(best, table, lam, pred, None)
     if save:
-        joblib.dump(dict(model=mdl, features=feats, best=best), C.MODELS_DIR / "return_model.joblib")
+        joblib.dump(dict(model=None, kind="factor", features=["res_mom", "res_rev"], best=best, val_ic=FACTOR_VAL_IC, cs_sd=cs_sd),
+                    C.MODELS_DIR / "return_model.joblib")
         table.to_csv(C.REPORTS_DIR / "ml_walk_forward_metrics.csv")
         json.dump(dict(best=best, ic=ic, skill_weight=lam, asof=str(last_date.date())),
                   open(C.MODELS_DIR / "return_model_meta.json", "w"), indent=2)
@@ -316,7 +351,7 @@ def expected_returns(rm, est: ReturnEstimator | None) -> pd.DataFrame:
 # --------------------------------------------------------------------------- #
 _ANN = np.sqrt(C.TRADING_DAYS)
 VOL_ALPHA = 3000.0
-VOL_NAIVE_WEIGHT = 0.20       # forecast = 0.8 x Ridge + 0.2 x trailing 63-day vol (weight chosen on 2017-20 walk-forward validation)
+VOL_NAIVE_WEIGHT = 0.15       # forecast = 0.85 x Ridge + 0.15 x trailing 63-day vol (weight chosen on 2017-20 walk-forward validation, round 6)
 VOL_TEST_YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
 
 
@@ -331,6 +366,19 @@ def _load_ohlc(md):
         for k, col in (("open", "Open"), ("high", "High"), ("low", "Low"), ("close", "Close")):
             out[k][sym] = raw[col]
     return {k: pd.DataFrame(v) for k, v in out.items()}
+
+
+RESULTS_MONTHS = (1, 2, 4, 5, 7, 8, 10, 11)       # months in which Indian companies mostly report quarterly results
+
+
+def _results_season_share(panel: pd.DataFrame) -> np.ndarray:
+    """Share of the next 21 business days that fall in a results month (known in advance); 0 for non-stocks."""
+    dates = panel.index.get_level_values(0)
+    udates = pd.DatetimeIndex(dates.unique())
+    share = pd.Series([np.isin(pd.bdate_range(d + pd.Timedelta(days=1), periods=21).month, RESULTS_MONTHS).mean() for d in udates],
+                      index=udates)
+    is_stock = np.array([C.UNIVERSE[s][2] == "stock" for s in panel.index.get_level_values(1)], dtype=float)
+    return share.reindex(dates).values * is_stock
 
 
 def vol_panel(md: MarketData) -> pd.DataFrame:
@@ -392,6 +440,18 @@ def vol_panel(md: MarketData) -> pd.DataFrame:
     lr = np.log((r.rolling(21).std() * _ANN).clip(lower=0.01)).rolling(756, min_periods=252).mean()
     panel["lr_level"] = lr.stack().reindex(panel.index)
     panel["rv21_vs_lr"] = panel["rv_21"] - panel["lr_level"]
+    # seasonality (round 6, chosen on 2017-20 validation): quarterly results make each stock's volatility repeat by calendar
+    seas = np.log((r.rolling(21).std().shift(231) * _ANN).clip(lower=0.01))      # vol in the same 21-day window a year ago
+    panel["rv_seas"] = seas.stack().reindex(panel.index)
+    panel["rv_seas_vs_252"] = panel["rv_seas"] - panel["rv_252"]
+    panel["results_season"] = _results_season_share(panel)
+    # asset-class effects (round 7, chosen on 2017-20 validation): ETFs, gold and bonds follow different volatility dynamics
+    cls = np.array([C.UNIVERSE[s][2] for s in panel.index.get_level_values(1)])
+    for c in ("etf", "gold", "bond"):
+        dmy = (cls == c).astype(float)
+        panel[f"is_{c}"] = dmy
+        for f in ("rv_21", "rv_63", "m_rv_21", "lr_level"):
+            panel[f"{f}_x_{c}"] = panel[f] * dmy
 
     fvol = r.rolling(21).std().shift(-21) * _ANN
     panel["y"] = np.log(fvol.stack().rename("y").clip(lower=0.01)).reindex(panel.index)
@@ -469,7 +529,7 @@ def train_vol_model(md: MarketData, save: bool = True) -> pd.Series:
     if save:
         joblib.dump(dict(model=model, features=feats, naive_weight=VOL_NAIVE_WEIGHT), C.MODELS_DIR / "vol_model.joblib")
         fc.to_csv(C.MODELS_DIR / "latest_vol_forecast.csv")
-        json.dump(dict(asof=str(last.date()), version=3, model="Ridge on realised + range-based volatility features, blended 80/20 with last quarter",
+        json.dump(dict(asof=str(last.date()), version=5, model="Ridge on realised, range-based, seasonal and asset-class volatility features, blended 85/15 with last quarter",
                        features=len(feats), **metrics), open(C.MODELS_DIR / "vol_model_meta.json", "w"), indent=2)
     return fc
 

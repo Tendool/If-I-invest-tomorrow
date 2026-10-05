@@ -300,10 +300,10 @@
   \begin{tabularx}{\textwidth}{@{}P{2.5cm}P{4.2cm}LP{3.2cm}@{}}
     \toprl
     \thd{Task} & \thd{Published result} & \thd{Our result} & \thd{Verdict}\\ \tabrule
-    Monthly stock returns ($R^2$) & Best ML (neural net): \textbf{0.40\%}; plain regression: \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US stocks & Ridge: $-$0.24\% vs the historical average (a stricter test); no overfitting & Same ceiling as the best research\\ \tabrule
-    Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{51.2\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
-    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.59} vs 0.50 for the best simple rule & Works, as the literature predicts\\ \tabrule
-    Outcome ranges & No common published benchmark & 90\% band held \textbf{81\%} of 104 real outcomes & Checked and reported\\ \botrl
+    Monthly stock returns ($R^2$) & Best ML (neural net): \textbf{0.40\%}; plain regression: \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US stocks & Residual reversal + momentum: \textbf{+0.09\%} (same definition); our fitted Ridge: $-$0.24\% & Positive, in the range of top research\\ \tabrule
+    Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{50.5\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
+    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.597} vs 0.50 for the best simple rule, ahead in every year & Works, as the literature predicts\\ \tabrule
+    Outcome ranges & No common published benchmark & 90\% band held \textbf{82\%} of 104 real outcomes & Checked and reported\\ \botrl
   \end{tabularx}\par\vspace{0.2cm}
   \begin{columns}[T]
     \column{0.47\textwidth}
@@ -311,7 +311,7 @@
       \footnotesize Monthly noise ($\sim$7\%) swamps the expected return ($\sim$1\%); professionals trade patterns away; 12 years is only $\sim$140 months.\par
     \column{0.47\textwidth}
       \begin{callout}
-        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model and regimes raise the Sharpe ratio from 0.60 to 0.77.
+        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model raises the Sharpe ratio from 0.60 to 0.79.
       \end{callout}
   \end{columns}
 \end{frame}
@@ -348,7 +348,7 @@
     \node[box, text width=2.0cm] (f) at (0, -1.6) {\textbf{Features}};
     \node[box, text width=2.6cm] (g) at (3.6, 0.6)   {\textbf{Regime}\\\muted{Gaussian mixture}};
     \node[box, text width=2.6cm] (i) at (3.6, -0.75) {\textbf{Anomalies}\\\muted{Isolation Forest}};
-    \node[box, text width=2.6cm] (m) at (3.6, -2.1)  {\textbf{Return tilt}\\\muted{Ridge, weight by skill}};
+    \node[box, text width=2.6cm] (m) at (3.6, -2.1)  {\textbf{Return signal}\\\muted{residual reversal + momentum}};
     \node[box, text width=2.6cm] (v) at (3.6, -3.45) {\textbf{Volatility}\\\muted{Ridge regression}};
     \node[box, text width=2.9cm] (mu) at (7.9, -0.75) {\textbf{Expected return}\\\muted{0.6 CAPM + 0.4 history + tilt}};
     \node[box, text width=2.9cm] (cov) at (7.9, -2.75) {\textbf{Risk}\\\muted{Ledoit--Wolf covariance}};
@@ -363,7 +363,7 @@
   \vspace{0.35cm}
   \raggedright
   \begin{callout}
-    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.59); next-month returns are not (IC 0.03), so ML returns get only a 13.5\% weight.
+    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.60); for returns only a simple residual reversal + momentum signal shows skill (IC 0.05), so it gets only a 23\% weight.
   \end{callout}
 \end{frame}
 
@@ -413,10 +413,10 @@
   \raggedright
   \begin{columns}[T]
     \column{0.47\textwidth}
-      {\small Each path also draws its own expected return, to include estimation error. A \textbf{stress test} starts the paths with a day-0 shock in the bear regime.}
+      {\small Each path also draws its own expected return and volatility level, to include estimation error. A \textbf{stress test} starts the paths with a day-0 shock in the bear regime.}
     \column{0.47\textwidth}
       \begin{callout}
-        Checked against reality: of 104 past forecasts, 81\% of outcomes fell inside the 90\% band.
+        Checked against reality: of 104 past forecasts, 82\% of outcomes fell inside the 90\% band.
       \end{callout}
   \end{columns}
 \end{frame}
@@ -521,7 +521,7 @@
       \includegraphics[width=\linewidth]{backtest.pdf}\par\vspace{0.3cm}
       \begin{columns}[T]
         \column{0.33\linewidth}\kpi{14.1\%}{Expected return}\par\vspace{8pt}\kpi[pos]{+55\%}{Backtest, 3 yrs}
-        \column{0.33\linewidth}\kpi{53\%}{Reach target}\par\vspace{8pt}\kpi{+15\%}{NIFTY, 3 yrs}
+        \column{0.33\linewidth}\kpi{54\%}{Reach target}\par\vspace{8pt}\kpi{+15\%}{NIFTY, 3 yrs}
         \column{0.33\linewidth}\kpi{8 of 9}{Stress tests}\par\vspace{8pt}\kpi{$-$8\%}{Worst fall}
       \end{columns}
   \end{columns}

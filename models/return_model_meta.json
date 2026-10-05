@@ -1,6 +1,6 @@
 {
-  "best": "Ridge (Linear)",
-  "ic": 0.027053859447004613,
-  "skill_weight": 0.13526929723502307,
+  "best": "Residual reversal + momentum",
+  "ic": 0.04552811823370302,
+  "skill_weight": 0.2276405911685151,
   "asof": "2026-10-01"
 }

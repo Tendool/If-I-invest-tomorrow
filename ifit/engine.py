@@ -284,19 +284,26 @@ class Engine:
                              weight=float(wt), target_amount=float(wt * p.amount), price=float(px[s])))
         df = pd.DataFrame(rows)
         # keep room for trading costs
-        budget = p.amount / (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE)
-        df["shares"] = np.floor(df.target_amount / (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE) / df.price).astype(int)
+        cost = 1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE
+        budget = p.amount / cost
+        # a position too small for half a share cannot be bought: give its money to the rest of the plan, pro rata
+        alloc = df.target_amount.copy()
+        for _ in range(len(df)):
+            tiny = (alloc / cost < 0.5 * df.price) & (alloc > 0)
+            if not tiny.any() or tiny.all():
+                break
+            alloc[tiny] = 0.0
+            alloc *= p.amount / alloc.sum()
+        df["shares"] = np.floor(alloc / cost / df.price).astype(int)
         spent = float((df.shares * df.price).sum())
         left = budget - spent
-        # hand out the leftover cash one share at a time to the most under-allocated asset
+        # hand out the leftover cash one share at a time to the most under-allocated asset that still deserves a share
         for _ in range(500):
-            gap = (df.target_amount / (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE) - df.shares * df.price)
-            afford = df.price <= left
-            if not afford.any():
+            gap = alloc / cost - df.shares * df.price
+            ok = (df.price <= left) & (gap >= 0.5 * df.price)
+            if not ok.any():
                 break
-            i = (gap.where(afford)).idxmax()
-            if gap[i] < df.price[i] * 0.5:
-                break
+            i = gap.where(ok).idxmax()
             df.loc[i, "shares"] += 1
             left -= df.price[i]
         df["invested"] = df.shares * df.price

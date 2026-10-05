@@ -39,7 +39,7 @@ def figures(ret, vol, cal, port):
     # equity curves
     cur = pd.read_csv(R / "eval_portfolio_curves.csv", index_col=0, parse_dates=True)
     fig, ax = plt.subplots(figsize=(5.4, 2.9))
-    pick = {"E  Full system (D + regime overlay)": (BRAND, 1.9, "Full system"), "D  C+ + 13.5% return tilt": (C3, 1.1, "Volatility + return tilt"),
+    pick = {"E  Full system (D + regime overlay)": (BRAND, 1.9, "Full system"), "D  C+ + return tilt": (C3, 1.1, "Volatility + return tilt"),
             "B  Min-variance + volatility model": (C1, 1.1, "Min-variance + volatility model"),
             "NIFTY 50 ETF (benchmark)": (MUTED, 1.4, "NIFTY 50 ETF"), "Equal-weight stocks (monthly)": (C4, 1.1, "Equal-weight stocks")}
     for k, (col, lw, lab) in pick.items():
@@ -97,7 +97,10 @@ def report(ret, vol, cal, reg, ano, port):
           f"out-of-sample IC {ret['selected_on_validation_oos_ic']:+.3f}). Adding relative-strength features (vs index and vs sector) lifts the out-of-sample IC from 0.027 to 0.041 "
           "(t 2.2 Newey-West, 1.6 on independent windows) and helps on all five targets (stacking cross-sectional ranks on top does not help consistently), but it is not significant at 5% on independent windows and was not confirmed "
           "by the validation window, so it is a candidate, not adopted. Sector-neutral targets are weaker: most of the little signal is cross-sector.", "",
-          "### By year (production model)", ""]
+          "Round 6 (section 9) replaced the fitted Ridge model in production with a fixed reversal + momentum composite, the first signal with skill on the 2017-20 validation; "
+          "round 7 (section 10) moved it to residual returns. "
+          "The tables in this section are the study of fitted models (Ridge, alpha 300000) that led there.", "",
+          "### By year (Ridge study model)", ""]
     rows = [[y, f"{v['ic']:+.3f}", "" if v["ic_t_nw"] is None else f"{v['ic_t_nw']:+.2f}", f"{v['rmse']:.4f}", f"{v['rmse_mean_baseline']:.4f}", f"{v['dir_acc']:.1%}"] for y, v in ret["by_year"].items()]
     L += [md_table(rows, ["Year", "IC", "IC t-stat", "RMSE", "RMSE of historical mean", "Direction"]), ""]
     rr = ret["rolling"]
@@ -106,18 +109,19 @@ def report(ret, vol, cal, reg, ano, port):
           "## 2. Volatility model", ""]
     L += [md_table([[k, f"{v['r2']:.3f}", f"{v['within_asset_r2']:.3f}", f"{v['err']:.1%}", f"{v['corr']:.3f}"] for k, v in vol["models"].items() if "Parkinson" not in k],
                    ["Model", "R2", "within-asset R2", "avg. error", "correlation"]), "",
-          "Production = Ridge on realised, range-based and long-run-level features, blended 80/20 with trailing 63-day volatility (blend weight chosen on a 2017-20 walk-forward validation, round 4). "
+          "Production = Ridge on realised, range-based, long-run-level, seasonal and asset-class features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6 and 7). "
           "Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. "
-          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads 0.575 against 0.589 in the production meta file.)", "",
+          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.597 in the production meta file.)", "",
           md_table([[y, f"{v['r2']:.3f}", f"{v['naive_63d_r2']:.3f}", f"{v['naive_21d_r2']:.3f}", f"{v['err']:.1%}"] for y, v in vol["by_year"].items()],
                    ["Year", "model R2", "same as last quarter", "same as last month", "avg. error"]), "",
           md_table([[k, f"{v['r2']:.3f}", f"{v['err']:.1%}", v["n"]] for k, v in vol["by_class"].items()], ["Asset class", "R2 within class", "avg. error", "n"]), "",
-          "The model beats the naive rules in every year (2023 only narrowly: 0.458 vs 0.454). Within a class, R2 is lower because much of the pooled R2 is knowing which assets are riskier.", "",
+          "The model beats both naive rules in every year. Within a class, R2 is lower because much of the pooled R2 is knowing which assets are riskier.", "",
           "## 3. Monte Carlo calibration (1-year horizon, 104 forecasts per method)", ""]
     cols = ["50", "75", "90", "95", "99"]
     L += [md_table([[m] + [f"{v[c]:.0%}" for c in cols] + [f"{v['cover90_excl_2020']:.0%}", f"{v['cover90_2020_origins']:.0%}", f"{v['mean_error']:+.1%}"] for m, v in cal.items()],
                    ["Simulator", "50% interval", "75%", "90%", "95%", "99%", "90% excl. 2020 origins", "90% for 2020 origins", "mean error of expected return"]), "",
-          "The production simulator now draws a per-path error in the expected return (standard error sigma/sqrt(5 years), not tuned), which moved coverage from 44/69/81/84/93% to 49/73/82/84/93%; letting the regime model learn from 2008- (not just 2014-) moved it to 53/74/81/88/96%. "
+          "The production simulator draws a per-path error in the expected return (standard error sigma/sqrt(5 years), not tuned), which moved coverage from 44/69/81/84/93% to 49/73/82/84/93%; letting the regime model learn from 2008- (not just 2014-) moved it to 53/74/81/88/96%. "
+          "Round 6 adds a per-path volatility level (log-normal, sd 0.17 = the spread of next-year vs trailing-year volatility measured on pre-2018 data, not tuned on these outcomes). "
           "Fatter tails (dof 3) and a block bootstrap of the portfolio's own history do not fix the outer tails. The remaining miss is concentrated in forecasts made in 2020 (COVID crash and "
           "rebound), and realised returns beat the expected return by about 6-7% on average, which shifts the whole distribution. Outside 2020 the 90% band holds 88%.", "",
           "## 4. Regime model", "",
@@ -149,12 +153,12 @@ def report(ret, vol, cal, reg, ano, port):
                      f"{v['vs_benchmark_cagr']:+.1%}", "" if v["info_ratio"] is None else f"{v['info_ratio']:+.2f}"])
     L += [md_table(rows, ["Strategy", "CAGR", "Vol", "Sharpe", "Sortino", "Max DD", "Calmar", "Turnover/yr", "Cumulative costs (% of start)", "Hit rate (months)", "Downside dev", "VaR95 1d", "CVaR95 1d",
                           "vs NIFTY (CAGR)", "Info ratio"]), "",
-          "Reading it like-for-like: in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.74, the return tilt adds little (0.75, +0.6% CAGR, within noise), and the "
-          "regime overlay trades about 1 point of return for lower volatility and drawdown (12.0% -> 10.1% vol, -16.9% -> -13.9%). In the minimum-variance family the volatility model does not help "
-          "(Sharpe 0.96 -> 0.89) and trades 3.5x more. Halving the trading (moving only half-way to the target each month) halves turnover but lowers Sharpe (0.77 -> 0.75), so it is not used. "
-          "The round-4 volatility model is more accurate (R2 0.583 -> 0.589) yet the full system's Sharpe moved 0.80 -> 0.77: forecast accuracy and portfolio value are not the same thing, and both "
-          "differences are within noise. Every strategy beats the NIFTY 50 ETF on risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) "
-          "matches or beats the full system, so in this one bull-market sample the models add risk control, not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.", "",
+          "Reading it like-for-like (round-7 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.79; in the minimum-variance family it is about neutral "
+          "(Sharpe 0.96 -> 0.95; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.79 -> 0.73: its reversal half flips every month, raising "
+          "turnover from 4.5x to 5.9x a year and costs from 4.3% to 5.2% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown "
+          "(full system Sharpe 0.75, max drawdown -13.1%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on "
+          "risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, "
+          "not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.", "",
           "## 7. Round 4 (selection on a 2017-20 walk-forward validation; this protocol change was made after 2021-26 had been seen, so gains are tentative)", "",
           "| Idea | Validation 2017-20 | Test 2021-26 | Decision |", "|---|---|---|---|",
           "| Volatility: + long-run level, blended 80/20 with last quarter | R2 0.504 -> 0.533 | R2 0.583 -> 0.589, within-asset 0.177 -> 0.189 | adopted |",
@@ -176,7 +180,40 @@ def report(ret, vol, cal, reg, ano, port):
           "| Returns, wider universe | IC -0.015 -> -0.042 | 0.028 -> 0.035 | rejected |",
           "| Regime model learns from 2008- (incl. the 2008 crash), only for the regime model | - | MC coverage gap 0.051 -> 0.037 (same seeds), better or equal at all 5 levels | adopted |", "",
           "With 2008 included, the Bear/Volatile state is learned from 394 days (2008-09 and 2020) instead of 65. Its average return is positive (+17% p.a.) because crisis "
-          "periods include the violent rebounds; it is defined by 45% volatility, VIX 42 and a -35% average drawdown.", ""]
+          "periods include the violent rebounds; it is defined by 45% volatility, VIX 42 and a -35% average drawdown.", "",
+          "## 9. Round 6 (scripts/model_search_v5.py; selection on 2017-20 validation, test 2021-26 reported once)", "",
+          "| Idea | Validation 2017-20 | Test 2021-26 | Decision |", "|---|---|---|---|",
+          "| Volatility: + seasonal features (same window last year, results-season share), blend 85/15 | R2 0.533 -> 0.536 | R2 0.589 -> 0.592, within-asset 0.189 -> 0.192; better in 4 of 6 years | adopted |",
+          "| Volatility: + implied systematic vol (beta x India VIX + idiosyncratic) | R2 0.533 -> 0.530 | 0.595 | rejected on validation |",
+          "| Volatility: seasonal + implied systematic | R2 0.533 -> 0.533 | 0.598 | rejected on validation |",
+          "| Volatility: boosted trees on Ridge residuals / trees alone | R2 0.525 / 0.474 | 0.591 / 0.594 | rejected |",
+          "| Returns: 1-month reversal (no fitting) | IC +0.015 (t 1.9) | IC +0.049 | - |",
+          "| Returns: 12-1 month momentum (no fitting) | IC +0.052 (t 1.2) | IC +0.024 | picked by the pre-set rule (highest mean IC) |",
+          "| Returns: reversal + momentum composite (no fitting) | IC +0.049 (t 2.3) | IC +0.052 (t 2.4), R2 vs zero +0.24% (Ridge -0.24%); positive in 4 of 6 years | adopted (see note) |",
+          "| Returns: LightGBM ranker on rank features | IC -0.015 | IC +0.036 | rejected |",
+          "| Monte Carlo: volatility uncertainty, sd 0.17 measured on pre-2018 data | - | mean coverage gap 0.045 -> 0.039; 90% band 81% -> 82% | adopted |",
+          "| Plan: whole-share rounding gives positions too small for one share to the rest of the plan | - | Rs 1 lakh medium plan invests 97.0% (was 92.6%) | adopted |", "",
+          "Note on the return signal: the rule fixed before the run (highest mean validation IC) picks momentum alone; momentum and the composite are tied on mean IC (0.052 vs 0.049), and the composite "
+          "is far more consistent (t 2.3 vs 1.2), which is why it is used. That choice was made after the test numbers had been seen, so its test IC is tentative. It is the first return signal in six rounds "
+          "with skill on the validation years; every fitted model (Ridge, Random Forest, XGBoost, LightGBM, GRU) stays at or below zero there. In the portfolio backtest it does not pay after costs "
+          "(section 6). Round 7 replaced it with the residual version (section 10).", "",
+          "## 10. Round 7 (scripts/model_search_v6.py; rules fixed before running: a candidate must beat the incumbent on validation)", "",
+          "The 2017-20 validation years had been used in earlier rounds, so the bar was raised from 'positive' to 'better than the model in use'. The Monte Carlo was "
+          "decided on 2016-18 forecast origins, which no earlier decision had used.", "",
+          "| Idea | Validation | Test | Decision |", "|---|---|---|---|",
+          "| Volatility: + asset-class effects (ETF, gold, bond dummies and interactions) | R2 0.5361 -> 0.5375 | R2 0.592 -> 0.597, within-asset 0.192 -> 0.202, error 25.2% -> 24.9%; bonds 0.14 -> 0.22 | adopted |",
+          "| Volatility: + log-VIX nonlinearity | 0.5352 | 0.592 | rejected |",
+          "| Volatility: recency-weighted training (half-life 3 years) | 0.5330 | 0.585 | rejected |",
+          "| Volatility: log VIX + asset class (+ recency) | 0.5370 (0.5345) | 0.598 (0.595) | rejected: below the adopted variant on validation |",
+          "| Returns: residual reversal + residual momentum (Blitz, Huij & Martens) | IC 0.061 (t 3.2) | IC 0.046 (t 2.2); 2017-26 pooled 0.052 vs 0.051 for round 6 | adopted |",
+          "| Returns: reversal + momentum + seasonality (Heston & Sadka) | IC 0.058 (t 2.8) | IC 0.039 | rejected: lower validation t |",
+          "| Returns: residual reversal alone / residual momentum alone | t 2.8 / 1.3 | IC 0.050 / 0.016 | rejected |",
+          "| Returns: 52-week high (George & Hwang) | IC 0.013 (t -0.2) | IC -0.058 | rejected |",
+          "| Returns: all six factors equal weight / Ridge fitted on them | t 2.4 / -0.1 | IC 0.023 / 0.030 | rejected |",
+          "| Monte Carlo: Student-t dof 4 or 8 | gap 0.057 -> 0.049 (identical for 4 and 8) | gap 0.037 / 0.033 | rejected: opposite tail changes score the same, a random-number effect |",
+          "| Monte Carlo: uncertainty in the CAPM/history blend weight | gap 0.057 (no change) | 0.037 | rejected |", "",
+          "Following the rule cost a little on the test years for returns (IC 0.052 -> 0.046) and gained over the full ten years (0.051 -> 0.052); the decision was not revisited. "
+          "On 2016-18 origins the simulated bands were too wide (90% band held 98%), on 2019-25 too narrow (82%): the two periods disagree, so no change was made.", ""]
     (R / "evaluation.md").write_text("\n".join(L), encoding="utf-8")
 
 

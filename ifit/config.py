@@ -154,6 +154,8 @@ HISTORICAL_CRASHES = {
 MC_PATHS = 10_000
 MC_T_DOF = 5                        # Student-t degrees of freedom for fat tails
 MC_PARAM_UNCERTAINTY = True        # draw a per-path error in the expected return (standard error sigma/sqrt(lookback years))
+MC_VOL_UNCERTAINTY = 0.17          # sd of a per-path log-normal volatility multiplier: sd of log(next-year vol / trailing-year vol),
+                                   # measured on pre-2018 data (scripts/model_search_v5.py mc: coverage gap 0.045 -> 0.039)
 COV_LOOKBACK_YEARS = 5
 
 # --------------------------------------------------------------------------- #

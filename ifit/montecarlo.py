@@ -35,8 +35,10 @@ def _stationary(T: np.ndarray) -> np.ndarray:
 
 def simulate_paths(mu_p: float, sigma_p: float, beta_p: float, regime: RegimeModel | None,
                    years: float, n_paths: int = C.MC_PATHS, steps_per_year: int = 252,
-                   shock: float = 0.0, seed: int = 123, dof: int = C.MC_T_DOF) -> np.ndarray:
-    """Return growth factors V_t/V_0, shape (n_paths, steps+1), float32."""
+                   shock: float = 0.0, seed: int = 123, dof: int = C.MC_T_DOF, extra_drift_se: float = 0.0) -> np.ndarray:
+    """Return growth factors V_t/V_0, shape (n_paths, steps+1), float32.
+
+    extra_drift_se: additional standard error of the expected return (e.g. model uncertainty), added in quadrature."""
     rng = np.random.default_rng(seed)
     spy = steps_per_year
     steps = max(int(round(years * spy)), 1)
@@ -66,12 +68,18 @@ def simulate_paths(mu_p: float, sigma_p: float, beta_p: float, regime: RegimeMod
     # error is sigma / sqrt(years). Each path draws its own drift error (mean-preserving); widens long horizons honestly.
     # Calibration backtest (scripts/model_search_v4.py mc): mean coverage gap 0.078 -> 0.051.
     drift_err = np.zeros(n_paths, dtype=np.float32)
-    if C.MC_PARAM_UNCERTAINTY:
-        se = sigma_p / np.sqrt(C.COV_LOOKBACK_YEARS)
+    se = np.sqrt((sigma_p ** 2 / C.COV_LOOKBACK_YEARS if C.MC_PARAM_UNCERTAINTY else 0.0) + extra_drift_se ** 2)
+    if se > 0:
         drift_err = rng.normal(-0.5 * se ** 2 * years, se, n_paths).astype(np.float32)
     logv = np.zeros((n_paths, steps + 1), dtype=np.float32)
     u = rng.random((n_paths, steps)).astype(np.float32)
-    sig_step = sigma_p * np.sqrt(dt)
+    # Volatility uncertainty: each path draws its own volatility level (mean-preserving log-normal multiplier), sized by how much
+    # next-year volatility differs from trailing volatility. Drawn last, so the other random streams are unchanged.
+    vmult = np.ones(n_paths, dtype=np.float32)
+    if C.MC_VOL_UNCERTAINTY > 0:
+        s = C.MC_VOL_UNCERTAINTY
+        vmult = np.exp(rng.normal(-0.5 * s ** 2, s, n_paths)).astype(np.float32)
+    sig_step = sigma_p * np.sqrt(dt) * vmult
     for t in range(steps):
         sig = sig_step * mult[reg]
         # ln(1+mu): mu is an *annual effective* expected return, so E[V_T] = (1+mu)^T

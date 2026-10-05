@@ -5,7 +5,7 @@
 Every month-end from Jan-2021, using only data up to that date:
   * risk model (5y Ledoit-Wolf covariance, CAPM, history prior)           -> built from truncated data
   * volatility model (Ridge, retrained each year on pre-year data)        -> rescales each asset's volatility in the covariance
-  * return tilt (Ridge relative-return model, retrained each year)         -> expected return = prior + 13.5% x tilt
+  * return tilt (residual reversal + momentum, production; nothing fitted) -> expected return = prior + lambda x tilt
   * regime (Gaussian mixture refit each year on pre-year data)             -> cuts risky exposure in non-calm regimes
 Weights are optimised long-only with the 'medium' risk-profile caps, held with daily drift, costs 0.10% of traded value.
 
@@ -34,7 +34,7 @@ from eval_risk import PITRegime  # noqa: E402
 START = "2021-01-01"
 TD = C.TRADING_DAYS
 COST = C.BROKERAGE_RATE + C.SLIPPAGE_RATE
-LAMBDA = 0.135                                   # production skill weight
+LAMBDA = json.load(open(C.MODELS_DIR / "return_model_meta.json"))["skill_weight"]   # production skill weight
 PURGE = pd.Timedelta(days=int(F.FWD_DAYS * 1.5))
 RISK_PROFILE = "medium"
 LIQUID = "LIQUIDBEES.NS"
@@ -55,22 +55,19 @@ def pit_predictions(md, dates):
     risky_cols = [c for c in md.prices.columns if C.UNIVERSE[c][2] != "cash"]
     sub = dataclasses.replace(md, prices=md.prices[risky_cols], volume=md.volume[risky_cols])
     rpanel = ml.relative_panel(md)
-    rfeats = F.feature_columns(rpanel)
+    fx = ml.residual_factors(md)
     vpanel = ml.vol_panel(sub)
     vfeats = ml.vol_features(vpanel)
     rd, vd = rpanel.index.get_level_values(0), vpanel.index.get_level_values(0)
     ret_fc, vol_fc, reg = {}, {}, {}
     for yr in sorted({d.year for d in dates}):
         a = pd.Timestamp(f"{yr}-01-01")
-        tr = rpanel[rd < a - PURGE].dropna().iloc[::3]
-        mr = make_pipeline(StandardScaler(), Ridge(alpha=3000.0)).fit(tr[rfeats].values, tr["target"].values)
+        cs_sd = float(rpanel[rd < a - PURGE]["target"].dropna().std())      # scale of the refined forecast, pre-year data only
         tv = vpanel[vd < a - PURGE].dropna(subset=vfeats + ["y"]).iloc[::3]
         mv = make_pipeline(StandardScaler(), Ridge(alpha=ml.VOL_ALPHA)).fit(tv[vfeats].values, tv["y"].values)
         pr = PITRegime(trunc(md, a - pd.Timedelta(days=1))).probs(md)
         for t in [d for d in dates if d.year == yr]:
-            x = rpanel.xs(t, level=0)[rfeats]
-            x = x.fillna(x.median())
-            ret_fc[t] = pd.Series(mr.predict(x.values), index=x.index)
+            ret_fc[t] = ml.factor_forecast(fx.loc[[t]], cs_sd).droplevel(0)
             z = vpanel.xs(t, level=0)[vfeats]
             z = z.fillna(z.median())
             vol_fc[t] = pd.Series(np.exp(ml._blend(mv.predict(z.values), z["rv_63"].values)), index=z.index)
@@ -104,7 +101,7 @@ def run():
     rets = md.prices.pct_change().fillna(0.0)
 
     names = ["A  Min-variance, trailing covariance", "B  Min-variance + volatility model", "B+ B + regime overlay",
-             "C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + 13.5% return tilt", "E  Full system (D + regime overlay)"]
+             "C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)"]
     target_w = {n: {} for n in names}
     for t in dates:
         md_t = trunc(md, t)
