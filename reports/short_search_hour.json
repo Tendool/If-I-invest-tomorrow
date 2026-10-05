@@ -1,0 +1,89 @@
+{
+ "results": {
+  "production features | ridge:10": {
+   "val_r2": 0.6252002412234985,
+   "test_r2": 0.6222778242241735,
+   "test_within": 0.49005354449718996,
+   "test_err": 0.20799646894907603,
+   "n": 5220
+  },
+  "production features | ridge:300": {
+   "val_r2": 0.6281338594145145,
+   "test_r2": 0.6221632423811053,
+   "test_within": 0.4903764603732169,
+   "test_err": 0.20817174491550858,
+   "n": 5220
+  },
+  "production features | lgbm": {
+   "val_r2": 0.6265689265194146,
+   "test_r2": 0.6206604446720749,
+   "test_within": 0.4885580867377445,
+   "test_err": 0.20977439053471209,
+   "n": 5220
+  },
+  "production features | avg": {
+   "val_r2": 0.637165945100806,
+   "test_r2": 0.6293172747458324,
+   "test_within": 0.49966044751262584,
+   "test_err": 0.20659844616723058,
+   "n": 5220
+  },
+  "+ time-of-day levels | ridge:10": {
+   "val_r2": 0.6246753582298266,
+   "test_r2": 0.6324858940669631,
+   "test_within": 0.5111008289257923,
+   "test_err": 0.20177532778590918,
+   "n": 5213
+  },
+  "+ time-of-day levels | ridge:300": {
+   "val_r2": 0.6281576049965645,
+   "test_r2": 0.6315666584278403,
+   "test_within": 0.5092526921209486,
+   "test_err": 0.20259759315523332,
+   "n": 5213
+  },
+  "+ time-of-day levels | lgbm": {
+   "val_r2": 0.6207891492151423,
+   "test_r2": 0.6278128031795907,
+   "test_within": 0.5021207477630443,
+   "test_err": 0.2053914506196443,
+   "n": 5213
+  },
+  "+ time-of-day levels | avg": {
+   "val_r2": 0.6334059677754809,
+   "test_r2": 0.6382045538036942,
+   "test_within": 0.5173547591709569,
+   "test_err": 0.20105945479441484,
+   "n": 5213
+  },
+  "+ time-of-day levels + slot persistence + weekday | ridge:10": {
+   "val_r2": 0.619078401649837,
+   "test_r2": 0.6320330087667655,
+   "test_within": 0.511075952739529,
+   "test_err": 0.20152053343599863,
+   "n": 5213
+  },
+  "+ time-of-day levels + slot persistence + weekday | ridge:300": {
+   "val_r2": 0.6230903971397439,
+   "test_r2": 0.6314566588024654,
+   "test_within": 0.5086556642771173,
+   "test_err": 0.20240133380145103,
+   "n": 5213
+  },
+  "+ time-of-day levels + slot persistence + weekday | lgbm": {
+   "val_r2": 0.619325595807013,
+   "test_r2": 0.6296250578217186,
+   "test_within": 0.5050279367393702,
+   "test_err": 0.20428770493943635,
+   "n": 5213
+  },
+  "+ time-of-day levels + slot persistence + weekday | avg": {
+   "val_r2": 0.6303936860253245,
+   "test_r2": 0.6387883731037294,
+   "test_within": 0.5186532489213582,
+   "test_err": 0.20050527760071868,
+   "n": 5213
+  }
+ },
+ "chosen": "production features | avg"
+}

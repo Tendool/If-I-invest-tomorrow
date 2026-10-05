@@ -34,7 +34,7 @@ docker compose down                   # stop (volumes, wallet and models are kep
   browser; changing it needs `--build`. Ports: `WEB_PORT` / `API_PORT`.
 
 Other entry points: `python scripts/chat_cli.py` (agent in the terminal), `streamlit run app.py` (legacy Streamlit UI),
-`python scripts/generate_report.py` (sample report), `pytest tests -q` (59 tests),
+`python scripts/generate_report.py` (sample report), `pytest tests -q` (72 tests),
 `python scripts/test_agent.py` (23-turn end-to-end agent test, needs Ollama), `python scripts/test_api.py` (REST smoke test).
 
 ### Web UI (`web/`: Next.js 16 + TypeScript + Tailwind CSS 4 + shadcn/ui + Recharts)
@@ -78,6 +78,7 @@ The Python side is a FastAPI service (`ifit/api.py`, docs at http://127.0.0.1:80
 | "Rebalance" / "Check my portfolio" / "Manage my portfolio" | `rebalance_portfolio`, `check_portfolio`, `auto_manage_portfolio` | demo money |
 | "Switch to ask-first mode" -> "confirm" | `set_autonomy`, `confirm_pending_order`, `cancel_pending_order` | demo money |
 | "Show wallet / history", "add funds", "reset" | `wallet_*`, `add_demo_funds`, `reset_wallet` | demo money |
+| "Start a SIP of 10000 for 12 months" / "What would 10000 a month become?" / "Stop my SIP" | `start_sip`, `project_sip`, `sip_status`, `stop_sip` | demo money (instalments run when new monthly data arrives) |
 
 **Safety by construction.** In ask-first mode trades are *staged* and only execute when the user's own next message confirms
 (checked in code, not by the LLM); in autonomous mode execution requires an instruction-style user message (checked in code). Wallet reset needs an explicit "reset"+confirm. A small 4B model tends to improvise

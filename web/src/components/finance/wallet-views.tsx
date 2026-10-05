@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Delta, Empty, Figure, Figures, Meter } from "@/components/kit";
 import { cn } from "@/lib/utils";
 import { compactInr, inr, inrSigned, pct, pctSigned, toneName, toneOf } from "@/lib/format";
-import type { HealthData, OrderRow, OrdersData, PendingOrders, Trade, Valuation, WalletData } from "@/lib/types";
+import type { HealthData, OrderRow, OrdersData, PendingOrders, SipRow, Trade, Valuation, WalletData } from "@/lib/types";
 
 export function Side({ side }: { side: "BUY" | "SELL" }) {
   return (
@@ -251,6 +251,60 @@ export function HealthCard({ d, onApply, busy }: { d: HealthData; onApply?: () =
         </div>
       ) : null}
     </Notice>
+  );
+}
+
+export function SipsTable({ sips, onStop, busy }: { sips: SipRow[]; onStop?: (id: number) => void; busy?: string | null }) {
+  if (!sips.length)
+    return <Empty title="No SIPs yet">Start one here or ask the agent, e.g. &ldquo;start a SIP of 10,000 for 12 months&rdquo;.</Empty>;
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>SIP</TableHead>
+          <TableHead className="text-right">Every month</TableHead>
+          <TableHead className="text-right">Instalments</TableHead>
+          <TableHead className="text-right">Invested</TableHead>
+          <TableHead className="text-right">Next</TableHead>
+          {onStop ? <TableHead className="w-20" /> : null}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {sips.map((s) => {
+          const active = s.status === "active";
+          return (
+            <TableRow key={s.id} className={cn(!active && "text-muted-foreground")}>
+              <TableCell>
+                <span className="font-medium">#{s.id}</span> <span className="text-muted-foreground">{s.strategy}</span>
+              </TableCell>
+              <TableCell className="text-right">{inr(s.monthly_amount_rs)}</TableCell>
+              <TableCell className="text-right">
+                {s.instalments_done} / {s.instalments_total}
+              </TableCell>
+              <TableCell className="text-right">{inr(s.invested_rs)}</TableCell>
+              <TableCell className="text-right text-[12.5px]">
+                {active && s.next_date
+                  ? new Date(s.next_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+                  : s.status}
+              </TableCell>
+              {onStop ? (
+                <TableCell className="text-right">
+                  {active ? (
+                    <button
+                      disabled={!!busy}
+                      onClick={() => onStop(s.id)}
+                      className="text-[12px] text-muted-foreground underline-offset-4 hover:text-negative hover:underline disabled:opacity-40"
+                    >
+                      Stop
+                    </button>
+                  ) : null}
+                </TableCell>
+              ) : null}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 

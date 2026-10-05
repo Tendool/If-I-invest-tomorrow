@@ -7,7 +7,7 @@ import { MonteCarloView } from "./mc-view";
 import { PlanView } from "./plan-view";
 import { BacktestView, StressView, TimingView } from "./risk-views";
 import { StrategiesView } from "./strategies-view";
-import { HealthCard, OrdersCard, PendingCard, PositionsTable, TradesTable, WalletSummary } from "./wallet-views";
+import { HealthCard, OrdersCard, PendingCard, PositionsTable, SipsTable, TradesTable, WalletSummary } from "./wallet-views";
 
 /** Render any tool artifact the agent produced (shown inside the chat). */
 export function ArtifactView({ a }: { a: Artifact }) {
@@ -44,6 +44,8 @@ export function ArtifactView({ a }: { a: Artifact }) {
       return <OrdersCard d={a.data} />;
     case "health":
       return <HealthCard d={a.data} />;
+    case "sips":
+      return <SipsTable sips={a.data.sips} />;
     default:
       return null;
   }

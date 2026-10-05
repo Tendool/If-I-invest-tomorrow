@@ -26,6 +26,7 @@ from . import trading               # noqa: E402
 from .agent import Agent            # noqa: E402
 from .engine import STRATEGIES, UserProfile  # noqa: E402
 from .session import Session        # noqa: E402
+from .sip import sip_rows            # noqa: E402
 from .tools import call_tool        # noqa: E402
 
 app = FastAPI(title="If I Invest Tomorrow API", version="1.0")
@@ -65,6 +66,7 @@ def wallet_state(s: Session) -> dict:
     v = s.wallet.valuation(md.last_prices(), asof=str(md.last_date.date()))
     return dict(valuation=Z.valuation(v), equity=s.wallet.equity_curve().to_dict("records"),
                 pending=Z.pending(s.wallet.pending()), trades=Z.trades(s.wallet.trades(100)),
+                sips=sip_rows(s),
                 autonomy=s.autonomy, autopilot=s.autopilot)
 
 
@@ -413,11 +415,25 @@ def autopilot_run():
         return run_tool("auto_manage_portfolio")
 
 
+@app.post("/api/sips/start")
+def sip_start(body: dict = Body(...)):
+    """Start a monthly SIP from the UI (a click is an explicit instruction)."""
+    with LOCK:
+        return run_tool("start_sip", {"amount_rs": body.get("amount"), "months": body.get("months"), "strategy": body.get("strategy")})
+
+
+@app.post("/api/sips/stop")
+def sip_stop(body: dict | None = Body(default=None)):
+    with LOCK:
+        return run_tool("stop_sip", {"sip_id": (body or {}).get("id")})
+
+
 @app.post("/api/data/refresh")
 def refresh():
     with LOCK:
         out = run_tool("refresh_market_data", force=True)
         s = S()
+        out["sips"] = run_tool("run_due_sips")            # SIP instalments that fell due with the new data
         if s.autopilot:
             out["autopilot"] = run_tool("auto_manage_portfolio")
         return out

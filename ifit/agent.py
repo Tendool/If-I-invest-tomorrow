@@ -36,7 +36,13 @@ probability of reaching the target, and the stress-test result, exactly as the t
 - Tables and charts are shown to the user automatically by the app, so do not repeat every row of big tables; \
 summarise the key insight.
 - If a tool returns an error, explain it simply and suggest the fix.
-- Stay on topic (investing, markets, this project). You are not a licensed financial advisor."""
+- Stay on topic (investing, markets, this project). You are not a licensed financial advisor.
+- SIP (monthly investing): start_sip starts a real demo SIP (first instalment now, then automatically every month); project_sip shows what a monthly SIP could grow to; sip_status lists SIPs; stop_sip stops them. compare_timing only compares lump sum vs waiting vs SIP - it does not start anything.
+- After any trade, state the tool's summary numbers exactly (amount bought, cash left, wallet value); never compute or guess balances yourself.
+- This app's universe has stocks and 6 ETFs, no mutual funds. If the user names a fund or fund house the app does not have (e.g. Navi, SBI, Parag Parikh), say so plainly and only then mention the closest asset the app does have. Never call a stock a fund.
+- Expected returns from the tools are model estimates, not past performance or guarantees; say so when ranking assets.
+- Horizons: the planner works with 1, 3 or 5 years. If a tool returns a note about the horizon, tell the user.
+- Amounts: a plan or investment of a specific amount ("invest 2,00,000", "plan for my whole cash") is built by the tool for exactly that amount - report the tool's plan_amount_rs and allocation; never rescale numbers yourself. For "how much should I invest?" questions: give the facts (cash available, the plan for the profile amount, its risk and worst case), note that money needed within the horizon or as an emergency fund should not be invested, and leave the decision to the user."""
 
 
 @dataclass
@@ -64,6 +70,10 @@ INTENT_RULES: list[tuple[re.Pattern, str]] = [
     (re.compile(r"(my |the )?(demo )?(wallet|balance|holdings|p&l|pnl)|how much (cash|money) do i have", re.I), "wallet_status"),
     (re.compile(r"trade history|my trades|past trades|transactions", re.I), "wallet_history"),
     (re.compile(r"ml model|machine learning|how (does|do).*(model|predict|work)|validated|xgboost|random forest|lstm|gru", re.I), "get_model_report"),
+    (re.compile(r"how much.{0,60}\binvest|what (percent|percentage|portion|share|part)\b.{0,40}(wallet|cash|money|invest)|"
+                r"how much of my (wallet|cash|money)", re.I), "wallet_status"),
+    (re.compile(r"how much.{0,60}\binvest|what (percent|percentage|portion|share|part)\b.{0,40}(wallet|cash|money|invest)|"
+                r"how much of my (wallet|cash|money)", re.I), "get_investment_plan"),
     (re.compile(r"what (should|do) i (invest|buy|put)|where (should|do) i (invest|put)|invest(ment)? plan|"
                 r"\bplan\b|allocat|build.*portfolio|recommend|tomorrow", re.I), "get_investment_plan"),
 ]
@@ -97,8 +107,107 @@ def trade_args(text: str) -> dict | None:
     return out
 
 
+_ALL_CASH = re.compile(r"\b(all|complete|entire|whole|full|remaining|rest of)\b(\s+\w+){0,3}?\s+(cash|money|balance|wallet|funds?)\b|"
+                       r"\beverything i have\b|\ball (of )?my money\b", re.I)
+_AMOUNT_RX = re.compile(r"(rs\.?|inr|₹)?\s*(\d[\d,]*(?:\.\d+)?)\s*(lakhs?|lacs?|l|crores?|cr|k|thousand)?\b"
+                        r"(\s*(%|percent|years?|yrs?|y\b|months?|days?|shares?|units?|times?))?", re.I)
+
+
+def parse_amount(text: str) -> float | str | None:
+    """Rupee amount the user asked to invest/plan: '2,00,000', 'Rs 1.5 lakh', '50k', '1 crore'; 'all' for
+    'all/complete/entire cash'. Percentages, durations and share counts are ignored. None if no amount."""
+    t = text or ""
+    if _ALL_CASH.search(t):
+        return "all"
+    best = None
+    for m in _AMOUNT_RX.finditer(t):
+        if m.group(4):
+            continue
+        v = float(m.group(2).replace(",", ""))
+        u = (m.group(3) or "").lower()
+        if u.startswith(("lakh", "lac")) or u == "l":
+            v *= 1e5
+        elif u.startswith("cr"):
+            v *= 1e7
+        elif u in ("k", "thousand"):
+            v *= 1e3
+        elif not m.group(1) and "," not in m.group(2) and 1900 <= v <= 2100:
+            continue                                           # a year, not rupees
+        if v >= 1000 and (best is None or v > best):
+            best = v
+    return best
+
+
+AMOUNT_TOOLS = ("invest_plan", "get_investment_plan")
+STRATEGY_TOOLS = ("invest_plan", "get_investment_plan", "compare_timing", "run_monte_carlo", "stress_test", "rebalance_portfolio",
+                  "start_sip", "project_sip")
+_DURATION = re.compile(r"(\d+(?:\.\d+)?)\s*(months?|mos?|years?|yrs?)\b", re.I)
+
+
+def parse_months(text: str) -> int | None:
+    """'for 6 months' -> 6, 'for 2 years' -> 24, 'in 3 months' -> 3. None when no duration is given."""
+    m = _DURATION.search(text or "")
+    if not m:
+        return None
+    n = float(m.group(1))
+    return int(round(n if m.group(2).lower().startswith("mo") else n * 12))
+
+
+def named_strategy(text: str) -> str | None:
+    """The one strategy the user's message names ('maximum returns' -> Max Return), else None."""
+    from .tools import _MENTION
+    hits = [n for n, rx in _MENTION.items() if re.search(rx, text or "", re.I)]
+    return hits[0] if len(hits) == 1 else None
+
+
+def fix_user_args(tool: str, args: dict, text: str) -> dict:
+    """Amounts, durations and strategy names come from the user's own words, never from the model
+    (a 4B model drops them, or invents them from earlier turns)."""
+    args = dict(args)
+    if tool in AMOUNT_TOOLS:
+        args.pop("amount_rs", None)
+        args.pop("horizon_years", None)
+        amt = parse_amount(text)
+        if amt is not None:
+            args["amount_rs"] = amt
+        mo = parse_months(text)
+        if mo is not None:
+            args["horizon_years"] = round(mo / 12, 3)
+    elif tool == "start_sip":
+        args.pop("amount_rs", None)
+        args.pop("months", None)
+        amt = parse_amount(text)
+        if isinstance(amt, float):
+            args["amount_rs"] = amt
+        mo = parse_months(text)
+        if mo is not None:
+            args["months"] = mo
+    elif tool == "project_sip":
+        args.pop("monthly_rs", None)
+        args.pop("years", None)
+        args.pop("initial_rs", None)                     # a starting lump sum only if the user names one (not supported by parsing)
+        amt = parse_amount(text)
+        if isinstance(amt, float):
+            args["monthly_rs"] = amt
+        mo = parse_months(text)
+        if mo is not None:
+            args["years"] = max(1, round(mo / 12))
+    if tool in STRATEGY_TOOLS:
+        st = named_strategy(text)
+        if st:
+            args["strategy"] = st
+    return args
+
+
+fix_amount_args = fix_user_args          # backwards-compatible name
+
+
 def forced_args(tool: str, text: str) -> dict:
-    return trade_args(text) or {} if tool == "trade" else {}
+    if tool == "trade":
+        return trade_args(text) or {}
+    if tool == "list_assets" and re.search(r"mutual|\bmfs?\b|index fund|\bfunds?\b|\betfs?\b|nifty|sensex|index|bees", text or "", re.I):
+        return {"sector_or_class": "funds"}
+    return fix_user_args(tool, {}, text)
 
 
 def required_tools(text: str) -> list[str]:
@@ -107,6 +216,20 @@ def required_tools(text: str) -> list[str]:
     t = text or ""
     if user_confirmed(t) and len(t.split()) <= 6 and not re.search(r"rebalanc|invest|sell|buy|manage|plan", t, re.I):
         return []                                        # a plain "yes / confirm" - no analysis needed
+    if re.search(r"\bsips?\b|systematic invest", t, re.I):
+        if re.search(r"\b(stop|cancel|pause|end|halt)\b", t, re.I):
+            return ["stop_sip"]
+        if re.search(r"\b(my|active|current|running|existing)\s+sips?\b|sip status|show.{0,12}sips?|list.{0,12}sips?", t, re.I):
+            return ["sip_status"]
+        if re.search(r"\b(start|begin|set ?up|create|open|launch|activate)\b", t, re.I) and not re.search(r"\bshould i\b|\bwhat if\b", t, re.I):
+            return ["start_sip"]
+        if re.search(r"\b(every|each|per|a)\s+month|monthly|sip of|plan for a sip|how much.{0,40}sip|grow", t, re.I):
+            return ["project_sip"]
+        return ["compare_timing"]                        # 'SIP or lump sum?'
+    if re.search(r"mutual funds?|\bmfs?\b|index funds?", t, re.I):
+        return ["list_assets"]
+    if re.search(r"\b(navi|sbi|hdfc|uti|icici pru\w*|axis|parag parikh|ppfas|kotak|motilal|mirae|zerodha|groww|dsp|quant|edelweiss|bandhan|franklin|aditya birla|hsbc|invesco)\b.{0,25}\b(nifty|sensex|index|fund|etf|bees|gold|liquid)", t, re.I):
+        return ["list_assets"]
     if re.search(r"\b(confirm|cancel|reset)\b|\badd\b.*\b(funds?|money|cash)\b|autonomy|ask[- ]first", t, re.I):
         return []
     if has_action_intent(t):
@@ -233,6 +356,7 @@ class Agent:
                                         for tc in tool_calls]})
             for tc in tool_calls:
                 name, args = tc.function.name, dict(tc.function.arguments or {})
+                args = fix_user_args(name, args, user_text)
                 calls_made.append((name, args))
                 called.add(name)
                 yield AgentEvent("tool_call", name, args)

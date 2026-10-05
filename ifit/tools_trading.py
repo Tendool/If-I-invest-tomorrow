@@ -10,13 +10,13 @@ import re
 from . import config as C
 from . import data as D
 from .session import Session
-from .tools import _inr, _r, _resolve_strategy, get_investment_plan
+from .tools import _inr, _r, _resolve_strategy, get_investment_plan, resolve_amount
 from .wallet import WalletError
 
 _QUESTION = re.compile(r"^(should|would|could|is|are|was|does|do|did|what|which|how|why|when|where|who|shall)\b"
                        r"|\bshould i\b|\bdo you think\b|\bwhat if\b", re.I)
 _PRE = re.compile(r"^(please|ok(ay)?|now|then|and|so|hey|alright|cool|great|thanks?|yes|yep|sure)[,!.\s]+", re.I)
-_VERBS = re.compile(r"^(stage|place|invest|buy|sell|liquidate|rebalance|deploy|put|exit|manage|execute|dump|square|trim|reduce|"
+_VERBS = re.compile(r"^(start|begin|set ?up|stage|place|invest|buy|sell|liquidate|rebalance|deploy|put|exit|manage|execute|dump|square|trim|reduce|"
                     r"increase|cash out|book|purchase|get rid|switch|move|shift|de-?risk|take care|fix|do whatever|act)\b", re.I)
 _GENERAL = re.compile(r"(go ahead|do it|\binvest it\b|\binvest (the |my )?(money|amount|plan|everything|all)|"
                       r"put (it|the money|my money)|execute (the )?plan|\bsell (it|them|all|everything)\b)", re.I)
@@ -57,21 +57,39 @@ def _place(s: Session, orders: list[dict], label: str) -> dict:
     rows = [dict(side=o["side"], ticker=o["ticker"], name=o["name"], qty=o["qty"], price=_r(o["price"]),
                  value_rs=_inr(o["value"])) for o in desc]
     if execute:
+        bought = sum(o["value"] for o in desc if o["side"] == "BUY")
+        sold = sum(o["value"] for o in desc if o["side"] == "SELL")
+        parts = ([f"bought Rs.{bought:,.0f}"] if bought else []) + ([f"sold Rs.{sold:,.0f}"] if sold else [])
         return dict(status="EXECUTED with demo money", label=label, orders=rows, cash_left_rs=_inr(v["cash"]),
-                    total_wallet_value_rs=_inr(v["total_value"]))
+                    total_wallet_value_rs=_inr(v["total_value"]),
+                    summary=f"{' and '.join(parts)} in {len(rows)} order(s). Cash left Rs.{v['cash']:,.0f}; "
+                            f"total wallet value Rs.{v['total_value']:,.0f}.")
     return dict(status=f"STAGED - waiting for the user's confirmation (autonomy mode: {s.autonomy})", label=label,
                 orders=rows, instruction="Show the orders and ask the user to reply 'confirm' to execute with demo money.")
 
 
-def invest_plan(s: Session, strategy: str | None = None) -> dict:
-    """Invest the current plan in the demo wallet: buys every asset in tomorrow's plan."""
-    if s.last_plan is None or (strategy and _resolve_strategy(s, strategy) != s.selected_strategy):
+def invest_plan(s: Session, strategy: str | None = None, amount_rs: float | str | None = None,
+                horizon_years: float | None = None) -> dict:
+    """Invest the current plan in the demo wallet: buys every asset in tomorrow's plan, sized to amount_rs
+    (rupees; 'all' = all demo cash; default = the profile amount), never more than the cash available."""
+    amt, note = resolve_amount(s, amount_rs, cap_to_cash=True)
+    if horizon_years not in (None, ""):
+        get_investment_plan(s, strategy, amt, horizon_years)
+    elif amt is not None and abs(amt - s.profile.normalised().amount) >= 1:
+        get_investment_plan(s, strategy, amt)            # re-size the plan (and the profile amount) first
+    elif s.last_plan is None or (strategy and _resolve_strategy(s, strategy) != s.selected_strategy):
         get_investment_plan(s, strategy)
     name = s.selected_strategy
     orders = [dict(symbol=r.symbol, side="BUY", qty=int(r.shares), price=float(r.price))
               for r in s.last_plan.itertuples() if int(r.shares) > 0]
-    res = _place(s, orders, f"invest plan: {name}")
+    if not orders:
+        return dict(error=f"not enough demo cash to buy even one share of the plan (cash Rs.{s.wallet.cash():,.0f}); "
+                          f"add demo funds or sell something first", **({"note": note} if note else {}))
+    res = _place(s, orders, f"invest plan: {name} · Rs.{s.profile.normalised().amount:,.0f}")
     res["strategy"] = name
+    res["plan_amount_rs"] = _inr(s.profile.normalised().amount)
+    if note:
+        res["note"] = note
     return res
 
 

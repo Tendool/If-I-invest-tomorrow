@@ -1,5 +1,11 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+/* daisyUI: ONLY the loading spinner (no themes / base styles, so shadcn styling is untouched) */
+@plugin "daisyui" {
+  include: loading;
+  themes: false;
+  logs: false;
+}
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

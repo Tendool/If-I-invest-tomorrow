@@ -1,0 +1,61 @@
+{
+ "results": {
+  "production features | ridge:10": {
+   "val_r2": 0.4622020507091209,
+   "test_r2": 0.5357431352205915,
+   "test_within": 0.31527575933420915,
+   "test_err": 0.22807337617437135,
+   "n": 12925
+  },
+  "production features | ridge:300": {
+   "val_r2": 0.46572265590411466,
+   "test_r2": 0.5360648443900529,
+   "test_within": 0.3161295490206105,
+   "test_err": 0.22797797387302626,
+   "n": 12925
+  },
+  "production features | lgbm": {
+   "val_r2": 0.40649132555192236,
+   "test_r2": 0.5218666892244962,
+   "test_within": 0.29596724565035126,
+   "test_err": 0.23347311960511574,
+   "n": 12925
+  },
+  "production features | avg": {
+   "val_r2": 0.4454199650955535,
+   "test_r2": 0.5368566789942628,
+   "test_within": 0.3172278406412572,
+   "test_err": 0.22836065098937702,
+   "n": 12925
+  },
+  "+ 12-year daily-bar features | ridge:10": {
+   "val_r2": 0.461223123176861,
+   "test_r2": 0.5242597414628751,
+   "test_within": 0.3230421553752605,
+   "test_err": 0.22418983457746045,
+   "n": 12669
+  },
+  "+ 12-year daily-bar features | ridge:300": {
+   "val_r2": 0.4702499105640555,
+   "test_r2": 0.5252044513971921,
+   "test_within": 0.3244393758219912,
+   "test_err": 0.2242172211051004,
+   "n": 12669
+  },
+  "+ 12-year daily-bar features | lgbm": {
+   "val_r2": 0.42735203862678595,
+   "test_r2": 0.5104031433360643,
+   "test_within": 0.3052730528210096,
+   "test_err": 0.23099560100287522,
+   "n": 12669
+  },
+  "+ 12-year daily-bar features | avg": {
+   "val_r2": 0.4581682335705326,
+   "test_r2": 0.5260345660054876,
+   "test_within": 0.3259444301606953,
+   "test_err": 0.22511496448400012,
+   "n": 12669
+  }
+ },
+ "chosen": "+ 12-year daily-bar features | ridge:300"
+}

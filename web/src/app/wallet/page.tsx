@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Loading, PageHeader, Section, Segmented } from "@/components/kit";
-import { EquityChart, HealthCard, OrdersCard, PendingCard, PositionsTable, TradesTable, WalletSummary } from "@/components/finance/wallet-views";
+import { EquityChart, HealthCard, OrdersCard, PendingCard, PositionsTable, SipsTable, TradesTable, WalletSummary } from "@/components/finance/wallet-views";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/app-context";
 import type { ActionResponse, Artifact, HealthData } from "@/lib/types";
@@ -41,6 +41,9 @@ export default function WalletPage() {
   const [by, setBy] = React.useState<"amt" | "qty">("amt");
   const [val, setVal] = React.useState("");
   const [funds, setFunds] = React.useState("100000");
+  const [sipOpen, setSipOpen] = React.useState(false);
+  const [sipAmt, setSipAmt] = React.useState("10000");
+  const [sipMonths, setSipMonths] = React.useState("12");
   const [tickers, setTickers] = React.useState<string[]>([]);
 
   React.useEffect(() => {
@@ -155,6 +158,18 @@ export default function WalletPage() {
         <PositionsTable v={v} busy={busy} onSell={(ticker) => void act("sell-" + ticker, () => api.trade({ side: "SELL", asset: ticker }))} />
       </Section>
 
+      <Section
+        title="SIPs"
+        description="A fixed amount invested every month into the selected strategy's allocation. Later instalments run automatically when market data for a new month arrives."
+        actions={
+          <Button variant="outline" className="h-8 px-3" onClick={() => setSipOpen(true)} disabled={busy !== null}>
+            Start a SIP
+          </Button>
+        }
+      >
+        <SipsTable sips={wallet.sips ?? []} busy={busy} onStop={(id) => void act("sip-stop", () => api.stopSip(id))} />
+      </Section>
+
       <div className="grid gap-12 xl:grid-cols-2">
         <Section title="Value over time">
           <EquityChart w={wallet} />
@@ -208,6 +223,39 @@ export default function WalletPage() {
             </Button>
             <Button onClick={() => void submitTrade()} disabled={!asset || !val}>
               Place {side === "BUY" ? "buy" : "sell"} order
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={sipOpen} onOpenChange={setSipOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Start a SIP</DialogTitle>
+            <DialogDescription>The first instalment is invested now with demo money; the rest follow every month.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-1">
+            <div className="space-y-1.5">
+              <div className="label">Every month</div>
+              <div className="flex items-center rounded-md border border-rule bg-surface focus-within:border-foreground/40">
+                <span className="pl-3 text-faint">₹</span>
+                <input inputMode="numeric" value={sipAmt ? Number(sipAmt).toLocaleString("en-IN") : ""} onChange={(e) => setSipAmt(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full bg-transparent px-2 text-[14px] outline-none" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <div className="label">Months</div>
+              <input inputMode="numeric" value={sipMonths} onChange={(e) => setSipMonths(e.target.value.replace(/[^\d]/g, ""))} className="num h-10 w-full rounded-md border border-rule bg-surface px-3 text-[14px] outline-none focus:border-foreground/40" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              disabled={!(Number(sipAmt) >= 1000) || !(Number(sipMonths) >= 1)}
+              onClick={async () => {
+                setSipOpen(false);
+                await act("sip", () => api.startSip({ amount: Number(sipAmt), months: Number(sipMonths) }));
+              }}
+            >
+              Start SIP
             </Button>
           </DialogFooter>
         </DialogContent>

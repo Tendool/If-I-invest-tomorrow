@@ -136,3 +136,109 @@ def test_stage_word_forces_staging_even_in_auto_mode(sess):
     sess.last_user_text = "Stage 5 shares of TCS for me"
     r = call_tool(sess, "trade", {"side": "BUY", "asset": "TCS", "quantity": 5})
     assert r["status"].startswith("STAGED") and not held(sess)
+
+
+# ------------------------------------------------------------ invest a specific amount
+def test_parse_amount_from_user_words():
+    from ifit.agent import parse_amount
+    assert parse_amount("invest 200000") == 200000
+    assert parse_amount("give the investment plan of Rs. 9,06,120") == 906120
+    assert parse_amount("invest 2 lakh") == 200000 and parse_amount("put 50k") == 50000
+    assert parse_amount("invest the complete cash i have") == "all"
+    assert parse_amount("invest it") is None
+    assert parse_amount("Rs 1,00,000 for 3 years at 12%") == 100000      # years and % are not rupees
+
+
+def test_model_cannot_change_the_amount():
+    from ifit.agent import fix_amount_args
+    assert fix_amount_args("invest_plan", {"amount_rs": 906120}, "invest it") == {}             # invented by the model -> dropped
+    assert fix_amount_args("invest_plan", {}, "invest 200000") == {"amount_rs": 200000}         # dropped by the model -> restored
+    assert fix_amount_args("trade", {"amount_rs": 5}, "buy rs 5 of tcs") == {"amount_rs": 5}    # other tools untouched
+
+
+def test_invest_plan_uses_requested_amount_and_caps_to_cash(sess):
+    sess.set_autonomy("auto")
+    sess.last_user_text = "invest 200000"
+    r = call_tool(sess, "invest_plan", {"amount_rs": 200000})
+    assert r["status"].startswith("EXECUTED") and r["plan_amount_rs"] == 200000
+    assert 190_000 < 1_000_000 - sess.wallet.cash() <= 200_000
+    sess.last_user_text = "invest the complete cash i have"
+    r = call_tool(sess, "invest_plan", {"amount_rs": "all"})
+    assert r["status"].startswith("EXECUTED") and sess.wallet.cash() < 20_000
+    sess.last_user_text = "invest 5 lakh"
+    r = call_tool(sess, "invest_plan", {"amount_rs": 500000})
+    assert "error" in r or "only" in r.get("note", "")
+
+
+# ------------------------------------------------------------ SIPs
+def test_sip_lifecycle(sess):
+    sess.set_autonomy("auto")
+    sess.last_user_text = "start a sip of 10000 for 6 months"
+    r = call_tool(sess, "start_sip", {"amount_rs": 10000, "months": 6})
+    assert r["status"].startswith("SIP #") and r["first_instalment"]["status"].startswith("EXECUTED")
+    sip = sess.wallet.sips()[0]
+    assert sip["done"] == 1 and sip["active"] == 1 and 9_000 < sip["invested"] <= 10_000
+    cash0 = sess.wallet.cash()
+    # nothing is due until a new month of data arrives
+    assert call_tool(sess, "run_due_sips", {})["count"] == 0
+    # pretend two months have passed: both instalments are invested at the latest close
+    with sess.wallet._conn() as c:
+        c.execute("UPDATE sips SET next_date = ?", (str((sess.engine.md.last_date - pd.DateOffset(months=1)).date()),))
+    assert call_tool(sess, "run_due_sips", {})["count"] == 2
+    assert sess.wallet.sips()[0]["done"] == 3 and sess.wallet.cash() < cash0 - 18_000
+    assert call_tool(sess, "stop_sip", {})["status"] == "stopped 1 SIP(s)"
+    assert call_tool(sess, "sip_status", {})["active"] == 0
+
+
+def test_sip_routing_and_args():
+    assert required_tools("start a sip for 6 months") == ["start_sip"]
+    assert forced_args("start_sip", "start a SIP of 10000 for 12 months") == {"amount_rs": 10000.0, "months": 12}
+    assert required_tools("plan for a sip of 10000 every month") == ["project_sip"]
+    assert required_tools("stop my sip") == ["stop_sip"]
+    assert required_tools("should I do a SIP or lump sum?") == ["compare_timing"]
+    assert has_action_intent("start a sip for 6 months") and not has_action_intent("should I start a sip?")
+
+
+def test_strategy_and_horizon_come_from_the_users_words():
+    a = forced_args("get_investment_plan", "give me a new plan for 10000 for maximum returns in 3 months")
+    assert a == {"amount_rs": 10000.0, "horizon_years": 0.25, "strategy": "Max Return"}
+
+
+def test_short_horizon_is_explained_not_ignored(sess):
+    sess.last_user_text = "plan for 10000 for maximum returns in 3 months"
+    r = call_tool(sess, "get_investment_plan", {"amount_rs": 10000, "horizon_years": 0.25, "strategy": "Max Return"})
+    assert r["strategy"] == "Max Return" and "1 year" in r["note"] and "LIQUIDBEES" in r["note"]
+
+
+def test_no_mutual_funds_and_unknown_fund_house_is_flagged(sess):
+    assert required_tools("best mutual funds now?") == ["list_assets"] and required_tools("navi nifty 50") == ["list_assets"]
+    sess.last_user_text = "best mutual funds now?"
+    r = call_tool(sess, "list_assets", {"sector_or_class": "funds"})
+    assert "no mutual funds" in r["funds_note"] and all(a["asset_class"] != "stock" for a in r["assets"])
+    sess.last_user_text = "navi nifty 50"
+    r = call_tool(sess, "analyze_asset", {"asset": "NIFTYBEES"})
+    assert "Navi" in r["note"] and r["daily_var95_rs_per_1000"] > 5
+
+
+def test_sip_is_not_started_by_a_planning_question(sess):
+    sess.set_autonomy("auto")
+    sess.last_user_text = "plan for a sip of 10000 every month"
+    r = call_tool(sess, "start_sip", {"amount_rs": 10000})
+    assert "REFUSED" in r["error"] and sess.wallet.sips() == []
+    assert "median_final_rs" in call_tool(sess, "project_sip", {"monthly_rs": 10000, "years": 3})
+
+
+def test_staged_sip_instalment_counts_when_confirmed(sess):
+    sess.set_autonomy("ask")
+    sess.last_user_text = "start a sip of 10000 for 6 months"
+    r = call_tool(sess, "start_sip", {"amount_rs": 10000, "months": 6})
+    assert r["first_instalment"]["status"].startswith("STAGED")
+    assert sess.wallet.sips()[0]["done"] == 0
+    sess.wallet.confirm_pending()
+    sip = sess.wallet.sips()[0]
+    assert sip["done"] == 1 and sip["invested"] > 9_000
+
+
+def test_model_cannot_invent_sip_lump_sum():
+    from ifit.agent import fix_user_args
+    assert fix_user_args("project_sip", {"initial_rs": 990022, "monthly_rs": 5}, "plan for a sip of 10000 every month") == {"monthly_rs": 10000.0}

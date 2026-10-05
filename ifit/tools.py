@@ -104,13 +104,23 @@ def get_market_overview(s: Session) -> dict:
 def list_assets(s: Session, sector_or_class: str | None = None) -> dict:
     """List the investable universe (optionally filtered by sector or asset class)."""
     q = (sector_or_class or "").strip().lower()
+    funds = bool(re.search(r"fund|etf|mutual|index", q))
     rows = []
     for sym, (name, sector, cls) in C.UNIVERSE.items():
-        if q and q not in (sector.lower(), cls, sym.lower(), D.short(sym).lower()) and q not in name.lower():
+        if funds:
+            if cls == "stock":
+                continue
+        elif q and q not in (sector.lower(), cls, sym.lower(), D.short(sym).lower()) and q not in name.lower():
             continue
         rows.append(dict(ticker=D.short(sym), name=name, sector=sector, asset_class=cls,
                          expected_return_pct=_pct(s.engine.mu[sym]), price=_r(s.engine.md.last_prices()[sym], 2)))
-    return dict(count=len(rows), sectors=C.SECTORS + ["Gold", "Bonds", "Cash", "Broad Market"], assets=rows)
+    out = dict(count=len(rows), sectors=C.SECTORS + ["Gold", "Bonds", "Cash", "Broad Market"], assets=rows,
+               note="expected_return_pct is this app's model estimate (CAPM + history), not a past return and not a guarantee.")
+    if funds or re.search(r"mutual|\bmfs?\b|index fund|\b(navi|sbi|hdfc|uti|icici pru\w*|axis|parag parikh|ppfas|kotak|motilal|mirae|zerodha|groww|dsp|quant|edelweiss|bandhan|franklin|aditya birla|hsbc|invesco)\b", s.last_user_text or "", re.I):
+        out["funds_note"] = ("This app has no mutual funds. Its fund-like assets are 6 exchange-traded funds (ETFs): NIFTYBEES "
+                             "(NIFTY 50), JUNIORBEES (Nifty Next 50), BANKBEES (Bank NIFTY), GOLDBEES (gold), LTGILTBEES "
+                             "(government bonds) and LIQUIDBEES (liquid/cash). Individual stocks are not funds.")
+    return out
 
 
 def analyze_asset(s: Session, asset: str) -> dict:
@@ -126,6 +136,12 @@ def analyze_asset(s: Session, asset: str) -> dict:
         ml_forecast_next_21d_pct=_pct(rep["ml_forecast_21d"]), forecast_volatility_next_month_pct=_pct(rep["forecast_vol_21d"]), model_expected_return_pct=_pct(rep["final_expected_return"]),
         rsi14=_r(rep["rsi14"], 0), above_200_day_average=rep["above_200dma"],
     )
+    out["daily_var95_rs_per_1000"] = round(float(rep["var95_1d"]) * 1000, 1)
+    house = re.search(r"\b(navi|sbi|hdfc|uti|icici|axis|parag parikh|ppfas|kotak|motilal|mirae|zerodha|groww|dsp|tata|quant|"
+                      r"edelweiss|bandhan|franklin|aditya birla|hsbc|invesco|nippon)\b", s.last_user_text or "", re.I)
+    if house and house.group(1).lower() not in out["name"].lower():
+        out["note"] = (f"The user asked about a {house.group(1).title()} fund, which is not in this app's universe. This is the "
+                       f"closest asset the app has ({out['ticker']}, {out['name']}); say so clearly.")
     s.emit("asset", f"{out['ticker']} analysis", rep)
     return out
 
@@ -181,8 +197,63 @@ def compare_strategies(s: Session) -> dict:
                 strategies=rows)
 
 
-def get_investment_plan(s: Session, strategy: str | None = None) -> dict:
-    """Tomorrow's investment plan: asset allocation with rupee amounts and whole-share quantities."""
+def resolve_amount(s: Session, amount_rs, cap_to_cash: bool) -> tuple[float | None, str | None]:
+    """Turn an amount argument (number, '2,00,000', 'all') into rupees. 'all' = all demo cash. With cap_to_cash the
+    amount cannot exceed the wallet's cash. Returns (amount or None for 'use the profile amount', note)."""
+    cash = float(s.wallet.cash())
+    note = None
+    if amount_rs is None or str(amount_rs).strip() == "":
+        amt = None
+    elif str(amount_rs).strip().lower() in ("all", "max", "everything", "all cash", "full"):
+        amt = cash
+        note = f"investing all available demo cash (Rs.{cash:,.0f})"
+    else:
+        amt = float(str(amount_rs).replace(",", "").replace("Rs.", "").replace("₹", "").strip())
+        if amt <= 0:
+            raise ValueError("amount must be positive")
+    if cap_to_cash:
+        want = amt if amt is not None else s.profile.normalised().amount
+        if want > cash + 1:
+            note = f"requested Rs.{want:,.0f} but only Rs.{cash:,.0f} demo cash is available - investing Rs.{cash:,.0f}"
+            amt = cash
+    return amt, note
+
+
+def _set_plan_amount(s: Session, amount: float | None) -> None:
+    """Re-size the plan to `amount` (the profile amount follows, so every rupee figure matches); keeps the chosen strategy."""
+    if amount is None or abs(amount - s.profile.normalised().amount) < 1:
+        return
+    keep = s.selected_strategy
+    s.set_profile(amount=float(amount))
+    s.selected_strategy = keep
+
+
+def _set_plan_horizon(s: Session, horizon_years) -> str | None:
+    """Apply a horizon the user asked for. The planner works with 1, 3 or 5 years; anything else is snapped (with a note)."""
+    if horizon_years in (None, ""):
+        return None
+    h = float(horizon_years)
+    keep = s.selected_strategy
+    p = s.set_profile(horizon_years=max(h, 1.0))
+    s.selected_strategy = keep
+    if h < 1:
+        months = round(h * 12)
+        return (f"{months} months is shorter than the planner's shortest horizon (1 year), so this plan uses 1 year. Over a few months "
+                f"stock returns are mostly noise: money needed that soon usually belongs in the liquid fund (LIQUIDBEES), not in shares.")
+    if abs(p.horizon_years - h) > 0.01:
+        return f"the planner works with 1, 3 or 5-year horizons; {h:g} years was rounded to {p.horizon_years} years"
+    return None
+
+
+def get_investment_plan(s: Session, strategy: str | None = None, amount_rs: float | str | None = None,
+                        horizon_years: float | None = None) -> dict:
+    """Tomorrow's investment plan: asset allocation with rupee amounts and whole-share quantities.
+    amount_rs re-sizes the plan to that many rupees ('all' = all demo cash); horizon_years changes the horizon."""
+    amt, note = resolve_amount(s, amount_rs, cap_to_cash=False)
+    hnote = _set_plan_horizon(s, horizon_years)
+    if hnote:
+        note = f"{note}; {hnote}" if note else hnote
+    _set_plan_amount(s, amt)
     name = _resolve_strategy(s, strategy)
     board = s.ensure_board()
     e = board[name]
@@ -206,6 +277,7 @@ def get_investment_plan(s: Session, strategy: str | None = None) -> dict:
         expected_max_drawdown_pct=_pct(m["exp_max_drawdown"]), p95_max_drawdown_pct=_pct(m["p95_max_drawdown"]),
         median_final_value_rs=_inr(m["median_final"]), worst_case_5pct_rs=_inr(m["worst_case_p5"]),
         best_case_95pct_rs=_inr(m["best_case_p95"]),
+        plan_amount_rs=_inr(p.amount), **({"note": note} if note else {}),
         within_risk_limits=e.within_tolerance, limit_breaches=e.breaches,
         stress_survival=f"{int(e.stress.survives.sum())}/{len(e.stress)} scenarios within loss limit",
         next_step="Ask the user if they want to stage this plan in the demo wallet.",
@@ -405,7 +477,9 @@ def _fn(name, desc, props=None, required=None):
 
 from .tools_trading import (invest_plan, trade, rebalance_portfolio, check_portfolio,  # noqa: E402
                              auto_manage_portfolio, set_autonomy)
+from .sip import start_sip, sip_status, stop_sip, project_sip, run_due_sips  # noqa: E402
 
+_AMOUNT = {"type": "string", "description": "Rupees to invest, e.g. 200000; 'all' = all demo cash. Omit to use the profile amount."}
 _STRAT = {"type": "string", "description": "Max Return | Min Risk | Max Sharpe | Goal-Based | Crash-Resistant. Omit for the recommended one."}
 
 TOOL_FUNCS = {f.__name__: f for f in [
@@ -413,7 +487,8 @@ TOOL_FUNCS = {f.__name__: f for f in [
     get_investment_plan, run_monte_carlo, stress_test, compare_timing, run_backtest, get_model_report,
     wallet_status, wallet_history, invest_plan, trade, rebalance_portfolio, check_portfolio,
     auto_manage_portfolio, set_autonomy, confirm_pending_order,
-    cancel_pending_order, add_demo_funds, reset_wallet, refresh_market_data]}
+    cancel_pending_order, add_demo_funds, reset_wallet, refresh_market_data,
+    start_sip, sip_status, stop_sip, project_sip, run_due_sips]}
 
 TOOL_SCHEMAS = [
     _fn("get_market_overview", "Current Indian market snapshot: NIFTY, India VIX, market regime, anomalies."),
@@ -431,7 +506,8 @@ TOOL_SCHEMAS = [
     _fn("get_profile", "Show the current investor profile."),
     _fn("compare_strategies", "Evaluate all five strategies for the current profile and recommend one."),
     _fn("get_investment_plan", "Tomorrow's investment plan: allocation, rupee amounts, shares, expected return, "
-                               "volatility, probability of reaching the target.", {"strategy": _STRAT}),
+                               "volatility, probability of reaching the target.", {"strategy": _STRAT, "amount_rs": _AMOUNT,
+                               "horizon_years": {"type": "number"}}),
     _fn("run_monte_carlo", "Monte Carlo simulation results (probabilities, best/median/worst outcomes, drawdown).",
         {"strategy": _STRAT}),
     _fn("stress_test", "Stress test: -2/-5/-10% market shocks, sector crash, interest-rate, oil shock, "
@@ -443,7 +519,7 @@ TOOL_SCHEMAS = [
     _fn("wallet_status", "Demo wallet balance, holdings and profit/loss."),
     _fn("wallet_history", "Recent demo trades.", {"limit": {"type": "number"}}),
     _fn("invest_plan", "INVEST: buy every asset of the current plan with demo money (executes when the user told you to).",
-        {"strategy": _STRAT}),
+        {"strategy": _STRAT, "amount_rs": _AMOUNT}),
     _fn("trade", "BUY or SELL one asset in the demo wallet by quantity or rupee amount. asset='all' + SELL liquidates everything.",
         {"side": {"type": "string", "enum": ["BUY", "SELL"]}, "asset": {"type": "string"},
          "quantity": {"type": "number"}, "amount_rs": {"type": "number"}}, ["side", "asset"]),
@@ -458,6 +534,12 @@ TOOL_SCHEMAS = [
     _fn("add_demo_funds", "Add virtual money to the demo wallet.", {"amount": {"type": "number"}}, ["amount"]),
     _fn("reset_wallet", "Reset the demo wallet to Rs.10,00,000 (only if the user asks to reset and confirms)."),
     _fn("refresh_market_data", "Download the latest market data (about a minute)."),
+    _fn("start_sip", "START a monthly SIP with demo money: invests amount_rs now and every month for `months` months.",
+        {"amount_rs": {"type": "number", "description": "rupees per month"}, "months": {"type": "number"}, "strategy": _STRAT}),
+    _fn("project_sip", "Projection of a monthly SIP: what amount_rs every month could grow to over `years` (worst/median/best).",
+        {"monthly_rs": {"type": "number"}, "years": {"type": "number"}, "initial_rs": {"type": "number"}, "strategy": _STRAT}),
+    _fn("sip_status", "List the user's SIPs (monthly amount, instalments done, invested, next date)."),
+    _fn("stop_sip", "Stop one SIP (sip_id) or all SIPs; holdings already bought are kept.", {"sip_id": {"type": "number"}}),
 ]
 
 

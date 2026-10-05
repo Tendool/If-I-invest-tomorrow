@@ -6,6 +6,7 @@ A plan is first *staged* and only executed after an explicit ``confirm_pending``
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -24,6 +25,9 @@ CREATE TABLE IF NOT EXISTS pending (id INTEGER PRIMARY KEY CHECK (id = 1), creat
     strategy TEXT NOT NULL, orders TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS equity (asof TEXT PRIMARY KEY, total REAL NOT NULL, cash REAL NOT NULL);
+CREATE TABLE IF NOT EXISTS sips (id INTEGER PRIMARY KEY AUTOINCREMENT, created TEXT NOT NULL, strategy TEXT NOT NULL,
+    weights TEXT NOT NULL, amount REAL NOT NULL, months INTEGER NOT NULL, done INTEGER NOT NULL DEFAULT 0,
+    invested REAL NOT NULL DEFAULT 0, next_date TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
 """
 
 
@@ -71,8 +75,9 @@ class Wallet:
 
     def reset(self, starting_cash: float = C.DEMO_STARTING_CASH) -> None:
         with self._conn() as c:
-            for t in ("holdings", "trades", "pending", "equity"):
+            for t in ("holdings", "trades", "pending", "equity", "sips"):
                 c.execute(f"DELETE FROM {t}")
+            c.execute("DELETE FROM sqlite_sequence WHERE name IN ('trades', 'sips')")
             c.execute("UPDATE account SET cash=?, starting_cash=?, created=?",
                       (starting_cash, starting_cash, datetime.now().isoformat(timespec="seconds")))
 
@@ -199,7 +204,14 @@ class Wallet:
         pend = self.pending()
         if not pend:
             raise WalletError("there is no staged order to execute")
-        return self.execute_orders(pend["orders"], pend["label"])
+        res = self.execute_orders(pend["orders"], pend["label"])
+        m = re.match(r"SIP #(\d+) instalment", pend["label"] or "")
+        if m:                                       # a staged SIP instalment now counts as invested
+            spent = sum(o["qty"] * o["price"] for o in pend["orders"] if o["side"] == "BUY")
+            with self._conn() as c:
+                c.execute("UPDATE sips SET done = done + 1, invested = invested + ?, "
+                          "active = CASE WHEN done + 1 >= months THEN 0 ELSE active END WHERE id = ?", (spent, int(m.group(1))))
+        return res
 
     # ---------------------------------------------------------------- settings
     def get_setting(self, key: str, default: str = "") -> str:
@@ -210,6 +222,38 @@ class Wallet:
     def set_setting(self, key: str, value: str) -> None:
         with self._conn() as c:
             c.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", (key, str(value)))
+
+    # ------------------------------------------------------------------ SIPs
+    def add_sip(self, strategy: str, weights: dict, amount: float, months: int, next_date: str) -> int:
+        """A monthly SIP: `amount` per month into fixed target `weights`, `months` instalments in total."""
+        with self._conn() as c:
+            cur = c.execute("INSERT INTO sips (created, strategy, weights, amount, months, done, invested, next_date, active) "
+                            "VALUES (?,?,?,?,?,0,0,?,1)", (datetime.now().isoformat(timespec="seconds"), strategy,
+                                                            json.dumps(weights), float(amount), int(months), next_date))
+            return int(cur.lastrowid)
+
+    def sips(self, active_only: bool = False) -> list[dict]:
+        with self._conn() as c:
+            q = "SELECT * FROM sips" + (" WHERE active=1" if active_only else "") + " ORDER BY id"
+            rows = [dict(r) for r in c.execute(q).fetchall()]
+        for r in rows:
+            r["weights"] = json.loads(r["weights"])
+        return rows
+
+    def record_sip_instalment(self, sip_id: int, spent: float, next_date: str) -> None:
+        with self._conn() as c:
+            c.execute("UPDATE sips SET done = done + 1, invested = invested + ?, next_date = ?, "
+                      "active = CASE WHEN done + 1 >= months THEN 0 ELSE active END WHERE id = ?", (float(spent), next_date, int(sip_id)))
+
+    def delete_sip(self, sip_id: int) -> None:
+        with self._conn() as c:
+            c.execute("DELETE FROM sips WHERE id = ?", (int(sip_id),))
+
+    def stop_sip(self, sip_id: int | None = None) -> int:
+        with self._conn() as c:
+            if sip_id is None:
+                return c.execute("UPDATE sips SET active = 0 WHERE active = 1").rowcount
+            return c.execute("UPDATE sips SET active = 0 WHERE active = 1 AND id = ?", (int(sip_id),)).rowcount
 
     # -------------------------------------------------------------- reporting
     def holdings(self) -> pd.DataFrame:

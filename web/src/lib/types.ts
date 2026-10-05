@@ -400,11 +400,23 @@ export interface Trade {
   note: string;
 }
 
+export interface SipRow {
+  id: number;
+  strategy: string;
+  monthly_amount_rs: number;
+  instalments_done: number;
+  instalments_total: number;
+  invested_rs: number;
+  next_date: string | null;
+  status: string;
+}
+
 export interface WalletData {
   valuation: Valuation;
   equity: { asof: string; total: number; cash: number }[];
   pending: PendingOrders | null;
   trades?: Trade[];
+  sips?: SipRow[];
   autonomy?: Autonomy;
   autopilot?: boolean;
 }
@@ -447,7 +459,8 @@ export type Artifact =
   | { kind: "wallet"; title: string; data: WalletData }
   | { kind: "trades"; title: string; data: { trades: Trade[] } }
   | { kind: "orders"; title: string; data: OrdersData }
-  | { kind: "health"; title: string; data: HealthData };
+  | { kind: "health"; title: string; data: HealthData }
+  | { kind: "sips"; title: string; data: { sips: SipRow[] } };
 
 export interface ActionResponse {
   result: Record<string, unknown>;

@@ -135,11 +135,8 @@ function Message({ m }: { m: ChatMessage }) {
           {m.streaming ? <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-foreground" /> : null}
         </div>
       ) : m.streaming ? (
-        <div className="flex items-center gap-2.5 text-[13px] text-muted-foreground">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand/60" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-brand" />
-          </span>
+        <div className="flex w-full flex-col items-center justify-center gap-3 py-16 text-[13px] text-muted-foreground" role="status" aria-live="polite">
+          <span className="loading loading-infinity loading-xl w-16 text-brand" aria-hidden="true" />
           {m.tools.some((t) => t.status === "running") ? "Running the numbers…" : "Thinking…"}
         </div>
       ) : null}

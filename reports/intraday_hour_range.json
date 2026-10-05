@@ -1,0 +1,31 @@
+{
+ "rows": 5220,
+ "assets": 30,
+ "test_days": 29,
+ "results": {
+  "Ridge (HAR + time-of-day + range + market)": {
+   "r2": 0.6222778242241735,
+   "within_asset_r2": 0.49005354449718996,
+   "corr": 0.7903949955595903,
+   "err": 0.20799646894907603
+  },
+  "naive: same as last hour": {
+   "r2": -0.07059964251524775,
+   "within_asset_r2": -0.4593648224850968,
+   "corr": 0.4644101874968152,
+   "err": 0.37889174250555824
+  },
+  "naive: average of the last 6 hours": {
+   "r2": 0.29448098211369544,
+   "within_asset_r2": 0.03929319298072875,
+   "corr": 0.5537730875953956,
+   "err": 0.28965802690843145
+  },
+  "naive: usual level for this hour of the day": {
+   "r2": 0.5209887333616254,
+   "within_asset_r2": 0.3906488580895644,
+   "corr": 0.7265530859790013,
+   "err": 0.237106812839329
+  }
+ }
+}
