@@ -22,3 +22,10 @@ if __name__ == "__main__":
         print("dropped:", md.report["dropped"])
     if failed:
         print("FAILED downloads:", failed)
+    print("
+== Quarterly results (earnings calendar) ==")
+    try:
+        from ifit import earnings
+        print(earnings.download(verbose=False), "stocks")
+    except Exception as e:                      # the models still work without it (earnings features become 0)
+        print("earnings download failed:", e)

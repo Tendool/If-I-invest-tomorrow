@@ -47,29 +47,29 @@ Round 6 (section 9) replaced the fitted Ridge model in production with a fixed r
 
 | Model | R2 | within-asset R2 | avg. error | correlation |
 |---|---|---|---|---|
-| Ridge (production) | 0.583 | 0.192 | 24.7% | 0.765 |
-| Ridge alone (no blend) | 0.576 | 0.181 | 24.9% | 0.761 |
-| Elastic Net | 0.572 | 0.170 | 25.1% | 0.758 |
-| Huber regression | 0.579 | 0.182 | 24.0% | 0.762 |
-| Ridge, target = forward 63-day vol | 0.496 | 0.111 | 29.8% | 0.737 |
+| Ridge (production) | 0.589 | 0.206 | 24.4% | 0.769 |
+| Ridge alone (no blend) | 0.582 | 0.196 | 24.6% | 0.764 |
+| Elastic Net | 0.577 | 0.183 | 24.8% | 0.760 |
+| Huber regression | 0.584 | 0.198 | 23.7% | 0.766 |
+| Ridge, target = forward 63-day vol | 0.499 | 0.117 | 29.6% | 0.736 |
 
-Production = Ridge on realised, range-based, long-run-level, seasonal and asset-class features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6 and 7). Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. (Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.597 in the production meta file.)
+Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9). Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. (Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.603 in the production meta file.)
 
 | Year | model R2 | same as last quarter | same as last month | avg. error |
 |---|---|---|---|---|
-| 2021 | 0.609 | 0.521 | 0.440 | 25.8% |
-| 2022 | 0.521 | 0.465 | 0.338 | 24.4% |
-| 2023 | 0.475 | 0.454 | 0.274 | 25.6% |
-| 2024 | 0.429 | 0.241 | -0.046 | 24.4% |
-| 2025 | 0.653 | 0.581 | 0.459 | 24.5% |
-| 2026 | 0.548 | 0.274 | 0.277 | 22.2% |
+| 2021 | 0.608 | 0.521 | 0.440 | 25.7% |
+| 2022 | 0.527 | 0.465 | 0.338 | 24.0% |
+| 2023 | 0.492 | 0.454 | 0.274 | 25.0% |
+| 2024 | 0.437 | 0.241 | -0.046 | 24.1% |
+| 2025 | 0.657 | 0.581 | 0.459 | 24.5% |
+| 2026 | 0.559 | 0.274 | 0.277 | 21.9% |
 
 | Asset class | R2 within class | avg. error | n |
 |---|---|---|---|
-| stock | 0.266 | 24.2% | 33670 |
-| etf | 0.340 | 27.2% | 3327 |
-| gold | 0.302 | 29.7% | 1148 |
-| bond | 0.218 | 27.9% | 808 |
+| stock | 0.279 | 23.9% | 33670 |
+| etf | 0.342 | 27.0% | 3327 |
+| gold | 0.303 | 29.8% | 1148 |
+| bond | 0.228 | 27.9% | 808 |
 
 The model beats both naive rules in every year. Within a class, R2 is lower because much of the pooled R2 is knowing which assets are riskier.
 
@@ -141,18 +141,18 @@ The 2% production setting flags only 3 days in 2021-26 (too few to test). At the
 | Strategy | CAGR | Vol | Sharpe | Sortino | Max DD | Calmar | Turnover/yr | Cumulative costs (% of start) | Hit rate (months) | Downside dev | VaR95 1d | CVaR95 1d | vs NIFTY (CAGR) | Info ratio |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | A  Min-variance, trailing covariance | 11.5% | 5.7% | 0.96 | 0.92 | -6.1% | 1.87 | 0.8x | 0.6% | 74% | 5.9% | 0.51% | 0.82% | +1.1% | +0.03 |
-| B  Min-variance + volatility model | 11.1% | 5.3% | 0.95 | 0.91 | -5.8% | 1.90 | 2.5x | 1.9% | 75% | 5.5% | 0.52% | 0.77% | +0.7% | -0.01 |
-| B+ B + regime overlay | 10.1% | 4.4% | 0.93 | 0.89 | -4.9% | 2.06 | 3.0x | 2.2% | 77% | 4.6% | 0.45% | 0.63% | -0.3% | -0.11 |
+| B  Min-variance + volatility model | 11.2% | 5.3% | 0.97 | 0.93 | -5.8% | 1.91 | 2.6x | 2.0% | 77% | 5.6% | 0.52% | 0.78% | +0.8% | +0.00 |
+| B+ B + regime overlay | 10.2% | 4.5% | 0.95 | 0.91 | -4.9% | 2.08 | 3.1x | 2.4% | 78% | 4.6% | 0.44% | 0.63% | -0.1% | -0.09 |
 | C  Max-Sharpe, prior returns | 12.8% | 11.4% | 0.60 | 0.58 | -16.1% | 0.80 | 3.3x | 2.7% | 59% | 11.7% | 1.12% | 1.62% | +2.4% | +0.27 |
-| C+ C + volatility model | 15.0% | 11.4% | 0.79 | 0.78 | -15.6% | 0.96 | 4.5x | 4.3% | 62% | 11.6% | 1.11% | 1.62% | +4.6% | +0.56 |
-| D  C+ + return tilt | 13.7% | 10.5% | 0.73 | 0.71 | -17.5% | 0.78 | 5.9x | 5.2% | 65% | 10.9% | 1.05% | 1.54% | +3.3% | +0.38 |
-| E  Full system (D + regime overlay) | 12.6% | 8.7% | 0.75 | 0.73 | -13.1% | 0.96 | 6.0x | 5.1% | 64% | 8.9% | 0.84% | 1.24% | +2.2% | +0.20 |
-| B  Min-variance + volatility model (half-step rebalancing) | 10.8% | 5.4% | 0.88 | 0.83 | -6.0% | 1.80 | 1.3x | 1.0% | 75% | 5.7% | 0.55% | 0.80% | +0.4% | -0.04 |
-| E  Full system (D + regime overlay) (half-step rebalancing) | 12.3% | 8.7% | 0.72 | 0.69 | -13.2% | 0.93 | 3.0x | 2.5% | 64% | 9.1% | 0.87% | 1.27% | +1.9% | +0.17 |
+| C+ C + volatility model | 15.1% | 11.4% | 0.80 | 0.79 | -15.4% | 0.98 | 4.7x | 4.7% | 62% | 11.6% | 1.12% | 1.63% | +4.8% | +0.58 |
+| D  C+ + return tilt | 14.0% | 10.6% | 0.75 | 0.73 | -17.3% | 0.81 | 5.9x | 5.3% | 65% | 11.0% | 1.01% | 1.55% | +3.6% | +0.42 |
+| E  Full system (D + regime overlay) | 12.8% | 8.8% | 0.77 | 0.75 | -13.2% | 0.97 | 6.1x | 5.2% | 64% | 9.0% | 0.84% | 1.25% | +2.4% | +0.23 |
+| B  Min-variance + volatility model (half-step rebalancing) | 10.8% | 5.4% | 0.89 | 0.84 | -6.0% | 1.82 | 1.4x | 1.1% | 75% | 5.7% | 0.54% | 0.80% | +0.5% | -0.03 |
+| E  Full system (D + regime overlay) (half-step rebalancing) | 12.4% | 8.8% | 0.72 | 0.69 | -13.2% | 0.94 | 3.0x | 2.5% | 65% | 9.2% | 0.87% | 1.29% | +2.0% | +0.18 |
 | NIFTY 50 ETF (benchmark) | 10.4% | 12.8% | 0.34 | 0.34 | -16.1% | 0.64 | 0.2x | 0.1% | 59% | 13.0% | 1.30% | 1.86% | +0.0% |  |
 | Equal-weight stocks (monthly) | 16.6% | 13.0% | 0.82 | 0.80 | -15.0% | 1.11 | 0.7x | 0.7% | 68% | 13.4% | 1.25% | 1.84% | +6.3% | +1.20 |
 
-Reading it like-for-like (round-7 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.79; in the minimum-variance family it is about neutral (Sharpe 0.96 -> 0.95; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.79 -> 0.73: its reversal half flips every month, raising turnover from 4.5x to 5.9x a year and costs from 4.3% to 5.2% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown (full system Sharpe 0.75, max drawdown -13.1%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.
+Reading it like-for-like (round-9 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.80; in the minimum-variance family it now helps slightly (Sharpe 0.96 -> 0.97; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.80 -> 0.75: its reversal half flips every month, raising turnover from 4.7x to 5.9x a year and costs from 4.7% to 5.3% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown (full system Sharpe 0.77, max drawdown -13.2%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.
 
 ## 7. Round 4 (selection on a 2017-20 walk-forward validation; this protocol change was made after 2021-26 had been seen, so gains are tentative)
 
@@ -219,3 +219,31 @@ The 2017-20 validation years had been used in earlier rounds, so the bar was rai
 | Monte Carlo: uncertainty in the CAPM/history blend weight | gap 0.057 (no change) | 0.037 | rejected |
 
 Following the rule cost a little on the test years for returns (IC 0.052 -> 0.046) and gained over the full ten years (0.051 -> 0.052); the decision was not revisited. On 2016-18 origins the simulated bands were too wide (90% band held 98%), on 2019-25 too narrow (82%): the two periods disagree, so no change was made.
+
+## 11. Round 8: nested selection and ensembles (scripts/model_search_v7.py)
+
+Every candidate makes walk-forward predictions for 2017-26; for each test year the choice (best single, top-3 average, or non-negative stacking weights / IC weights) is learned from earlier years only, so the 2021-26 score stays honest however many candidates are tried.
+
+| Procedure | Volatility R2 (2021-26) | Return IC (2021-26) |
+|---|---|---|
+| Production, fixed (round 7) | 0.597 | 0.046 |
+| Best single candidate, chosen each year on earlier years | 0.594 | 0.046 (picks production every year) |
+| Top-3 average | 0.591 | 0.036 |
+| Stacking with non-negative weights / IC-weighted factor mix | 0.596 | 0.037 |
+| Best individual alternatives | Ridge + implied/log-VIX 0.598, Huber 0.594 (error 24.0%), LightGBM 0.52-0.56 | reversal + momentum 0.051, residual reversal 0.050 |
+
+No procedure beats the production models, so nothing changed: with this data (daily prices, VIX, macro series for 32 assets) the models are at the accuracy that an honest, automatic search can reach. Further gains would need new information (company fundamentals and earnings dates, options-implied volatility per stock, intraday prices with long history).
+
+## 12. Round 9: earnings data (scripts/download_earnings.py, ifit/earnings.py, scripts/model_search_v8.py)
+
+New information: every quarterly result of the 26 stocks since about 2005 (Yahoo Finance: date, EPS estimate, reported EPS, surprise). A result is used only from the first trading day after its announcement date; the next results date is projected from past dates (median gap), never read from the published schedule. A unit test checks that no feature sees a result early. Rules as in round 7: adopt only what beats the model in use on 2017-20.
+
+| Idea | Validation 2017-20 | Test 2021-26 | Decision |
+|---|---|---|---|
+| Volatility: + projected results window and the stock's typical result-day jump | R2 0.5375 -> 0.5411 | R2 0.597 -> 0.603, within-asset 0.202 -> 0.216, stocks 0.265 -> 0.278, error 24.9% -> 24.6%; better in 5 of 6 years | adopted |
+| Volatility: window x jump only | R2 0.5403 | R2 0.601 | rejected: below the full set |
+| Returns: earnings surprise (post-earnings drift) | IC 0.026 (t 1.2) | IC 0.003 | rejected |
+| Returns: earnings-announcement return | IC 0.036 (t 0.5) | IC -0.012 | rejected |
+| Returns: incumbent + surprise + announcement return | IC 0.074 (t 2.6) | IC 0.030 | rejected: validation t below the incumbent's 3.2 (and lower on test) |
+
+Post-earnings drift, one of the best-documented anomalies in US data, shows no skill on these large, heavily followed NSE stocks. The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. In the portfolio backtest every volatility-model strategy improves slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).

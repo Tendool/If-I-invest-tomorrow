@@ -353,6 +353,7 @@ _ANN = np.sqrt(C.TRADING_DAYS)
 VOL_ALPHA = 3000.0
 VOL_NAIVE_WEIGHT = 0.15       # forecast = 0.85 x Ridge + 0.15 x trailing 63-day vol (weight chosen on 2017-20 walk-forward validation, round 6)
 VOL_TEST_YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
+VOL_MODEL_VERSION = 6             # bump when features change; docker/entrypoint.sh retrains when the saved model is older
 
 
 def _load_ohlc(md):
@@ -445,6 +446,11 @@ def vol_panel(md: MarketData) -> pd.DataFrame:
     panel["rv_seas"] = seas.stack().reindex(panel.index)
     panel["rv_seas_vs_252"] = panel["rv_seas"] - panel["rv_252"]
     panel["results_season"] = _results_season_share(panel)
+    # earnings calendar (round 9, chosen on 2017-20 validation): projected next-results window and the stock's typical result-day jump
+    from . import earnings as _earn
+    ef = _earn.vol_features(md).reindex(panel.index).fillna(0.0)
+    for c in ef.columns:
+        panel[c] = ef[c]
     # asset-class effects (round 7, chosen on 2017-20 validation): ETFs, gold and bonds follow different volatility dynamics
     cls = np.array([C.UNIVERSE[s][2] for s in panel.index.get_level_values(1)])
     for c in ("etf", "gold", "bond"):
@@ -529,7 +535,8 @@ def train_vol_model(md: MarketData, save: bool = True) -> pd.Series:
     if save:
         joblib.dump(dict(model=model, features=feats, naive_weight=VOL_NAIVE_WEIGHT), C.MODELS_DIR / "vol_model.joblib")
         fc.to_csv(C.MODELS_DIR / "latest_vol_forecast.csv")
-        json.dump(dict(asof=str(last.date()), version=5, model="Ridge on realised, range-based, seasonal and asset-class volatility features, blended 85/15 with last quarter",
+        json.dump(dict(asof=str(last.date()), version=VOL_MODEL_VERSION,
+                       model="Ridge on realised, range-based, seasonal, asset-class and earnings-calendar volatility features, blended 85/15 with last quarter",
                        features=len(feats), **metrics), open(C.MODELS_DIR / "vol_model_meta.json", "w"), indent=2)
     return fc
 

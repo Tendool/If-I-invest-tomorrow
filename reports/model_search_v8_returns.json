@@ -1,0 +1,72 @@
+{
+ "results": {
+  "residual reversal + momentum (incumbent)": {
+   "val_ic": 0.061137946466119,
+   "val_t": 3.190773113938912,
+   "test_ic": 0.045495701239003726,
+   "test_t": 2.145111238631419,
+   "test_pct_pos": 0.5821428571428572
+  },
+  "earnings surprise (SUE)": {
+   "val_ic": 0.026098128723654215,
+   "val_t": 1.2407134449133745,
+   "test_ic": 0.003421496747218033,
+   "test_t": 0.7210135973565589,
+   "test_pct_pos": 0.5221428571428571
+  },
+  "earnings announcement return (EAR)": {
+   "val_ic": 0.035814598147390374,
+   "val_t": 0.49137484388804276,
+   "test_ic": -0.01235333525239489,
+   "test_t": -0.3652060358027962,
+   "test_pct_pos": 0.48928571428571427
+  },
+  "post-earnings drift: SUE + EAR": {
+   "val_ic": 0.028348379478004154,
+   "val_t": 0.7503533023529211,
+   "test_ic": 0.0038568292189379975,
+   "test_t": 0.4802905499425857,
+   "test_pct_pos": 0.525
+  },
+  "incumbent + SUE + EAR": {
+   "val_ic": 0.07403824159121265,
+   "val_t": 2.6168361363797668,
+   "test_ic": 0.030068373101375674,
+   "test_t": 1.9442341678625155,
+   "test_pct_pos": 0.5764285714285714
+  },
+  "incumbent + EAR": {
+   "val_ic": 0.08070919496080008,
+   "val_t": 2.924159796674,
+   "test_ic": 0.03105712498276552,
+   "test_t": 1.4315013646150103,
+   "test_pct_pos": 0.555
+  },
+  "incumbent + SUE": {
+   "val_ic": 0.06285712293963787,
+   "val_t": 2.800843276360968,
+   "test_ic": 0.03725664981716094,
+   "test_t": 2.1006840058315195,
+   "test_pct_pos": 0.5814285714285714
+  },
+  "stocks only: residual reversal + momentum (incumbent)": {
+   "val_ic": 0.06828601362932742,
+   "val_t": 3.308140382838173,
+   "test_ic": 0.050655556390505826,
+   "test_t": 2.2094225917192647
+  },
+  "stocks only: post-earnings drift: SUE + EAR": {
+   "val_ic": 0.03579272125884694,
+   "val_t": 0.9295402914974576,
+   "test_ic": -0.0005871524317100071,
+   "test_t": 0.31752789760173855
+  },
+  "stocks only: incumbent + SUE + EAR": {
+   "val_ic": 0.08015416958593244,
+   "val_t": 2.593921611256186,
+   "test_ic": 0.031098280219807366,
+   "test_t": 1.9703243092719436
+  }
+ },
+ "chosen": "residual reversal + momentum (incumbent)"
+}

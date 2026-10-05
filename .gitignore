@@ -26,3 +26,4 @@ web/.next/
 # experiment-only extended dataset (scripts/extended_data.py)
 data/raw_ext/
 data/intraday/
+reports/_v7_*.pkl

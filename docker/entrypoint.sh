@@ -15,12 +15,19 @@ for s in C.REGIME_LONG_SYMBOLS:
     data._download_one(s, 0, period='max').to_csv(C.DATA_RAW / ('long_' + data._fname(s) + '.csv'))" || true
 fi
 
+if [ ! -d data/earnings ]; then
+  echo "[ifit] downloading quarterly results (earnings calendar)..."
+  python scripts/download_earnings.py || true
+fi
+
 if [ ! -f data/processed/prices.csv ]; then
   python -c "from ifit import data; data.build_dataset()"
 fi
 
+# retrain when no model is saved or the saved volatility model is older than the code (ml.VOL_MODEL_VERSION)
+VOL_VERSION=$(python -c "from ifit import ml; print(ml.VOL_MODEL_VERSION)")
 if [ ! -f models/return_model_meta.json ] || [ ! -f models/vol_model_meta.json ] \
-   || ! grep -q '"version": 3' models/vol_model_meta.json; then
+   || ! grep -q "\"version\": ${VOL_VERSION}," models/vol_model_meta.json; then
   echo "[ifit] training and validating the ML models (about 2 min)..."
   python scripts/train_models.py
 fi

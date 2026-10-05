@@ -302,7 +302,7 @@
     \thd{Task} & \thd{Published result} & \thd{Our result} & \thd{Verdict}\\ \tabrule
     Monthly stock returns ($R^2$) & Best ML (neural net): \textbf{0.40\%}; plain regression: \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US stocks & Residual reversal + momentum: \textbf{+0.09\%} (same definition); our fitted Ridge: $-$0.24\% & Positive, in the range of top research\\ \tabrule
     Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{50.5\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
-    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.597} vs 0.50 for the best simple rule, ahead in every year & Works, as the literature predicts\\ \tabrule
+    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.603} vs 0.50 for the best simple rule, ahead in every year & Works, as the literature predicts\\ \tabrule
     Outcome ranges & No common published benchmark & 90\% band held \textbf{82\%} of 104 real outcomes & Checked and reported\\ \botrl
   \end{tabularx}\par\vspace{0.2cm}
   \begin{columns}[T]
@@ -311,7 +311,7 @@
       \footnotesize Monthly noise ($\sim$7\%) swamps the expected return ($\sim$1\%); professionals trade patterns away; 12 years is only $\sim$140 months.\par
     \column{0.47\textwidth}
       \begin{callout}
-        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model raises the Sharpe ratio from 0.60 to 0.79.
+        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model raises the Sharpe ratio from 0.60 to 0.80.
       \end{callout}
   \end{columns}
 \end{frame}
@@ -322,7 +322,7 @@
   \vspace{0.5cm}
   \centering
   \begin{tikzpicture}[node distance=0.55cm, every node/.append style={minimum height=1.25cm}]
-    \node[term, text width=2.2cm] (y) {\textbf{Yahoo Finance}\\\muted{37 series, 2014--26}};
+    \node[term, text width=2.2cm] (y) {\textbf{Yahoo Finance}\\\muted{37 series, 2014--26\\ + quarterly results}};
     \node[box, text width=2.4cm, right=of y] (c) {\textbf{Clean}\\\muted{bad ticks, gaps,\\ NSE calendar}};
     \node[box, text width=2.4cm, right=of c] (r) {\textbf{Repair}\\\muted{liquid fund rebuilt\\ from repo rate}};
     \node[box, text width=2.4cm, right=of r] (f) {\textbf{Features}\\\muted{returns, volatility,\\ beta, RSI, VIX}};
@@ -363,7 +363,7 @@
   \vspace{0.35cm}
   \raggedright
   \begin{callout}
-    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.60); for returns only a simple residual reversal + momentum signal shows skill (IC 0.05), so it gets only a 23\% weight.
+    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.603, helped by each stock's results dates); for returns only a simple residual reversal + momentum signal shows skill (IC 0.05), so it gets only a 23\% weight.
   \end{callout}
 \end{frame}
 

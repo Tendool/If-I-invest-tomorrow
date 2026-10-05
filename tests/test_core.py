@@ -257,3 +257,25 @@ def test_models_artifact_carries_skill_weight_and_volatility(engine, tmp_path):
     assert art["kind"] == "models"
     assert 0 < art["data"]["skill_weight"] < 0.5                 # the card must not fall back to "0%"
     assert art["data"]["volatility"]["r2"] > art["data"]["volatility"]["naive_63d_r2"]
+
+
+# ------------------------------------------------------------------ earnings data (point in time)
+def test_earnings_features_never_see_a_result_early():
+    from ifit import data, earnings as E
+    md = data.load()
+    events = E.load_events(md)
+    if not events:
+        pytest.skip("no earnings files (run scripts/download_earnings.py)")
+    rf = E.return_features(md)
+    idx = md.prices.index
+    sym, ev = next(iter(events.items()))
+    row = ev[ev["surprise_pct"].notna()].iloc[-5]
+    k = int(row["pos_known"])
+    after = rf.loc[(idx[k], sym), "surprise"]
+    before = rf.loc[(idx[k - 1], sym), "surprise"]
+    assert after == pytest.approx(float(np.clip(row["surprise_pct"], -100, 100)))
+    assert not (before == after and idx[k - 1] >= row["day"])        # not visible on the announcement day itself
+    assert idx[k] > row["day"]                                           # first used strictly after the announcement date
+    vf = E.vol_features(md)
+    assert vf["earn_in_window"].between(0, 1).all()
+    assert (vf.xs("NIFTYBEES.NS", level=1)[["earn_in_window", "earn_jump"]] == 0).all().all()    # non-stocks have no earnings

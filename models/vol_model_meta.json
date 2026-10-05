@@ -1,16 +1,16 @@
 {
   "asof": "2026-10-01",
-  "version": 5,
-  "model": "Ridge on realised, range-based, seasonal and asset-class volatility features, blended 85/15 with last quarter",
-  "features": 59,
+  "version": 6,
+  "model": "Ridge on realised, range-based, seasonal, asset-class and earnings-calendar volatility features, blended 85/15 with last quarter",
+  "features": 62,
   "rows": 40423,
   "years": "2021-2026",
-  "r2": 0.5964713344705725,
+  "r2": 0.6026765121620998,
   "naive_21d_r2": 0.38761771474374584,
   "naive_63d_r2": 0.5031858477372108,
-  "err": 0.24863737601254157,
+  "err": 0.24555544133768933,
   "naive_21d_err": 0.30586702837202984,
   "naive_63d_err": 0.28637956915296364,
-  "within_asset_r2": 0.20213450328272375,
-  "corr": 0.7746452533644339
+  "within_asset_r2": 0.21567036306849252,
+  "corr": 0.7776952075754983
 }

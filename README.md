@@ -12,7 +12,7 @@ strategies, and lets you "execute" it with **demo money**. The chat agent is **Q
 ```bash
 pip install -r requirements.txt
 ollama pull qwen3.5:4b                  # already installed on this machine
-python scripts/download_data.py         # datasets (Yahoo Finance) -> data/raw, data/processed
+python scripts/download_data.py         # datasets + quarterly results (Yahoo Finance) -> data/raw, data/earnings, data/processed
 python scripts/train_models.py --gru    # ML walk-forward validation + models -> models/, reports/
 start.bat                               # API on :8000 + Next.js UI on :3000  -> http://localhost:3000
 ```
@@ -105,8 +105,9 @@ tools.py -> agent.py (Qwen3.5-4B tool loop)  -> app.py (Streamlit)  viz.py (Plot
 3. **ML** - Gaussian-mixture *market regimes* (Bull/Calm, Neutral, Bear/Volatile), Isolation-Forest *anomaly detection*,
    *return estimation* and *volatility forecasting*, each with hyper-parameters tuned on 2019-20 only and scored on an untouched
    expanding-window walk-forward (2021-26, purged targets; `scripts/model_search.py`). **Volatility is forecastable**: a Ridge model on realised and
-   range-based (Parkinson / Garman-Klass / Rogers-Satchell from daily High-Low), long-run-level, seasonal (same window last year, results season) and
-   asset-class features, blended 85/15 with the trailing quarter's volatility, reaches walk-forward R2 0.60 on log volatility (0.597; error 24.9 %) against 0.50 (29 %) for the best "same as the last quarter" rule and 0.39 (31 %) for "same as last month"; it feeds the
+   range-based (Parkinson / Garman-Klass / Rogers-Satchell from daily High-Low), long-run-level, seasonal (same window last year, results season),
+   asset-class and earnings-calendar features (each stock's projected next results date and its typical result-day jump, from about 20 years of
+   quarterly results), blended 85/15 with the trailing quarter's volatility, reaches walk-forward R2 0.60 on log volatility (0.603; error 24.6 %) against 0.50 (29 %) for the best "same as the last quarter" rule and 0.39 (31 %) for "same as last month"; it feeds the
    next-month risk figures. (An earlier 0.72 figure counted the near-constant liquid-fund series and was overstated; it is excluded now. Random
    Forest, XGBoost and LightGBM scored lower than Ridge.) **Returns are barely forecastable**: every fitted model (Ridge, Random Forest, XGBoost,
    LightGBM, GRU) shows no skill on the 2017-20 validation years. What does is a fixed, documented composite of 1-month reversal and 12-1 month
@@ -135,14 +136,14 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
 
 - **Return signal** - residual reversal + momentum composite (round 7): IC 0.046 (t 2.2) on 2021-26, 0.061 (t 3.2) on the 2017-20 validation,
   0.052 over all ten years. Fitted models (Ridge IC 0.027, trees, GRU, LightGBM ranker) have no skill on validation.
-- **Volatility** - R2 0.597 vs 0.503 for the best naive rule (within-asset 0.202), ahead of it in every year; seasonal (round 6) and asset-class
-  (round 7) features. GARCH and implied-volatility features, log-VIX terms, recency weighting, Elastic Net, Huber, boosted trees and a 63-day target do not beat it on validation.
+- **Volatility** - R2 0.603 vs 0.503 for the best naive rule (within-asset 0.216), ahead of it in every year; seasonal (round 6), asset-class
+  (round 7) and earnings-calendar (round 9) features. Post-earnings drift was tested for returns and shows no skill here. GARCH and implied-volatility features, log-VIX terms, recency weighting, Elastic Net, Huber, boosted trees and a 63-day target do not beat it on validation.
 - **Monte Carlo** - 50/75/90/95/99% intervals hold 52/74/82/88/97% (44/69/81/84/93% before adding parameter and volatility uncertainty and the 2008- regime history); fatter tails or a block
   bootstrap do not fix the outer tails (the miss is the 2020 crash).
 - **Regimes / anomalies** - both act as risk labels: after a Neutral regime a 5% market drawdown within 21 days is 35% likely vs 13% after Calm;
   anomaly flags precede much higher volatility (21-23% vs 13%) but not lower returns.
-- **Portfolio (walk-forward, monthly, 0.10% costs)** - the volatility model improves risk-adjusted return (Sharpe 0.60 -> 0.79 in the max-Sharpe
-  family) and the regime overlay cuts drawdown (full system -13.1%); the return tilt costs more in turnover than it earns (Sharpe 0.79 -> 0.73). Half-step rebalancing halves turnover but lowers Sharpe. Every variant beats the NIFTY ETF on Sharpe, but an
+- **Portfolio (walk-forward, monthly, 0.10% costs)** - the volatility model improves risk-adjusted return (Sharpe 0.60 -> 0.80 in the max-Sharpe
+  family) and the regime overlay cuts drawdown (full system Sharpe 0.77, -13.2%); the return tilt costs more in turnover than it earns (Sharpe 0.80 -> 0.75). Half-step rebalancing halves turnover but lowers Sharpe. Every variant beats the NIFTY ETF on Sharpe, but an
   equal-weight basket of the 26 stocks matches the full system in this one bull-market sample.
 
 ## Assumptions & limitations (all in `ifit/config.py`)

@@ -109,9 +109,9 @@ def report(ret, vol, cal, reg, ano, port):
           "## 2. Volatility model", ""]
     L += [md_table([[k, f"{v['r2']:.3f}", f"{v['within_asset_r2']:.3f}", f"{v['err']:.1%}", f"{v['corr']:.3f}"] for k, v in vol["models"].items() if "Parkinson" not in k],
                    ["Model", "R2", "within-asset R2", "avg. error", "correlation"]), "",
-          "Production = Ridge on realised, range-based, long-run-level, seasonal and asset-class features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6 and 7). "
+          "Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9). "
           "Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. "
-          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.597 in the production meta file.)", "",
+          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.603 in the production meta file.)", "",
           md_table([[y, f"{v['r2']:.3f}", f"{v['naive_63d_r2']:.3f}", f"{v['naive_21d_r2']:.3f}", f"{v['err']:.1%}"] for y, v in vol["by_year"].items()],
                    ["Year", "model R2", "same as last quarter", "same as last month", "avg. error"]), "",
           md_table([[k, f"{v['r2']:.3f}", f"{v['err']:.1%}", v["n"]] for k, v in vol["by_class"].items()], ["Asset class", "R2 within class", "avg. error", "n"]), "",
@@ -153,10 +153,10 @@ def report(ret, vol, cal, reg, ano, port):
                      f"{v['vs_benchmark_cagr']:+.1%}", "" if v["info_ratio"] is None else f"{v['info_ratio']:+.2f}"])
     L += [md_table(rows, ["Strategy", "CAGR", "Vol", "Sharpe", "Sortino", "Max DD", "Calmar", "Turnover/yr", "Cumulative costs (% of start)", "Hit rate (months)", "Downside dev", "VaR95 1d", "CVaR95 1d",
                           "vs NIFTY (CAGR)", "Info ratio"]), "",
-          "Reading it like-for-like (round-7 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.79; in the minimum-variance family it is about neutral "
-          "(Sharpe 0.96 -> 0.95; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.79 -> 0.73: its reversal half flips every month, raising "
-          "turnover from 4.5x to 5.9x a year and costs from 4.3% to 5.2% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown "
-          "(full system Sharpe 0.75, max drawdown -13.1%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on "
+          "Reading it like-for-like (round-9 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.80; in the minimum-variance family it now helps slightly "
+          "(Sharpe 0.96 -> 0.97; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.80 -> 0.75: its reversal half flips every month, raising "
+          "turnover from 4.7x to 5.9x a year and costs from 4.7% to 5.3% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown "
+          "(full system Sharpe 0.77, max drawdown -13.2%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on "
           "risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, "
           "not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.", "",
           "## 7. Round 4 (selection on a 2017-20 walk-forward validation; this protocol change was made after 2021-26 had been seen, so gains are tentative)", "",
@@ -213,7 +213,32 @@ def report(ret, vol, cal, reg, ano, port):
           "| Monte Carlo: Student-t dof 4 or 8 | gap 0.057 -> 0.049 (identical for 4 and 8) | gap 0.037 / 0.033 | rejected: opposite tail changes score the same, a random-number effect |",
           "| Monte Carlo: uncertainty in the CAPM/history blend weight | gap 0.057 (no change) | 0.037 | rejected |", "",
           "Following the rule cost a little on the test years for returns (IC 0.052 -> 0.046) and gained over the full ten years (0.051 -> 0.052); the decision was not revisited. "
-          "On 2016-18 origins the simulated bands were too wide (90% band held 98%), on 2019-25 too narrow (82%): the two periods disagree, so no change was made.", ""]
+          "On 2016-18 origins the simulated bands were too wide (90% band held 98%), on 2019-25 too narrow (82%): the two periods disagree, so no change was made.", "",
+          "## 11. Round 8: nested selection and ensembles (scripts/model_search_v7.py)", "",
+          "Every candidate makes walk-forward predictions for 2017-26; for each test year the choice (best single, top-3 average, or non-negative stacking weights / IC weights) "
+          "is learned from earlier years only, so the 2021-26 score stays honest however many candidates are tried.", "",
+          "| Procedure | Volatility R2 (2021-26) | Return IC (2021-26) |", "|---|---|---|",
+          "| Production, fixed (round 7) | 0.597 | 0.046 |",
+          "| Best single candidate, chosen each year on earlier years | 0.594 | 0.046 (picks production every year) |",
+          "| Top-3 average | 0.591 | 0.036 |",
+          "| Stacking with non-negative weights / IC-weighted factor mix | 0.596 | 0.037 |",
+          "| Best individual alternatives | Ridge + implied/log-VIX 0.598, Huber 0.594 (error 24.0%), LightGBM 0.52-0.56 | reversal + momentum 0.051, residual reversal 0.050 |", "",
+          "No procedure beats the production models, so nothing changed: with this data (daily prices, VIX, macro series for 32 assets) the models are at the "
+          "accuracy that an honest, automatic search can reach. Further gains would need new information (company fundamentals and earnings dates, "
+          "options-implied volatility per stock, intraday prices with long history).", "",
+          "## 12. Round 9: earnings data (scripts/download_earnings.py, ifit/earnings.py, scripts/model_search_v8.py)", "",
+          "New information: every quarterly result of the 26 stocks since about 2005 (Yahoo Finance: date, EPS estimate, reported EPS, surprise). A result is "
+          "used only from the first trading day after its announcement date; the next results date is projected from past dates (median gap), never read from the "
+          "published schedule. A unit test checks that no feature sees a result early. Rules as in round 7: adopt only what beats the model in use on 2017-20.", "",
+          "| Idea | Validation 2017-20 | Test 2021-26 | Decision |", "|---|---|---|---|",
+          "| Volatility: + projected results window and the stock's typical result-day jump | R2 0.5375 -> 0.5411 | R2 0.597 -> 0.603, within-asset 0.202 -> 0.216, stocks 0.265 -> 0.278, error 24.9% -> 24.6%; better in 5 of 6 years | adopted |",
+          "| Volatility: window x jump only | R2 0.5403 | R2 0.601 | rejected: below the full set |",
+          "| Returns: earnings surprise (post-earnings drift) | IC 0.026 (t 1.2) | IC 0.003 | rejected |",
+          "| Returns: earnings-announcement return | IC 0.036 (t 0.5) | IC -0.012 | rejected |",
+          "| Returns: incumbent + surprise + announcement return | IC 0.074 (t 2.6) | IC 0.030 | rejected: validation t below the incumbent's 3.2 (and lower on test) |", "",
+          "Post-earnings drift, one of the best-documented anomalies in US data, shows no skill on these large, heavily followed NSE stocks. "
+          "The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. "
+          "In the portfolio backtest every volatility-model strategy improves slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).", ""]
     (R / "evaluation.md").write_text("\n".join(L), encoding="utf-8")
 
 
