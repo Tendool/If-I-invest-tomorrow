@@ -138,6 +138,8 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
   0.052 over all ten years. Fitted models (Ridge IC 0.027, trees, GRU, LightGBM ranker) have no skill on validation.
 - **Volatility** - R2 0.603 vs 0.503 for the best naive rule (within-asset 0.216), ahead of it in every year; seasonal (round 6), asset-class
   (round 7) and earnings-calendar (round 9) features. Post-earnings drift was tested for returns and shows no skill here. GARCH and implied-volatility features, log-VIX terms, recency weighting, Elastic Net, Huber, boosted trees and a 63-day target do not beat it on validation.
+- **Nested selection and ensembles** (round 8, re-checked after round 9) - choosing the best candidate, a top-3 average or stacking weights each year from
+  earlier years only does not beat the fixed models on 2021-26 (volatility R2 0.597-0.600 vs 0.603; return IC 0.036-0.046 vs 0.046).
 - **Monte Carlo** - 50/75/90/95/99% intervals hold 52/74/82/88/97% (44/69/81/84/93% before adding parameter and volatility uncertainty and the 2008- regime history); fatter tails or a block
   bootstrap do not fix the outer tails (the miss is the 2020 crash).
 - **Regimes / anomalies** - both act as risk labels: after a Neutral regime a 5% market drawdown within 21 days is 35% likely vs 13% after Calm;

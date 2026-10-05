@@ -216,15 +216,21 @@ def report(ret, vol, cal, reg, ano, port):
           "On 2016-18 origins the simulated bands were too wide (90% band held 98%), on 2019-25 too narrow (82%): the two periods disagree, so no change was made.", "",
           "## 11. Round 8: nested selection and ensembles (scripts/model_search_v7.py)", "",
           "Every candidate makes walk-forward predictions for 2017-26; for each test year the choice (best single, top-3 average, or non-negative stacking weights / IC weights) "
-          "is learned from earlier years only, so the 2021-26 score stays honest however many candidates are tried.", "",
+          "is learned from earlier years only, so the 2021-26 score stays honest however many candidates are tried. "
+          "Re-run after round 9 (every candidate now has the earnings-calendar features); the round-8 run against the round-7 model is in brackets. "
+          "Rule, fixed before the re-run: adopt a nested procedure only if it scores strictly higher than the fixed production model on 2021-26.", "",
           "| Procedure | Volatility R2 (2021-26) | Return IC (2021-26) |", "|---|---|---|",
-          "| Production, fixed (round 7) | 0.597 | 0.046 |",
-          "| Best single candidate, chosen each year on earlier years | 0.594 | 0.046 (picks production every year) |",
-          "| Top-3 average | 0.591 | 0.036 |",
-          "| Stacking with non-negative weights / IC-weighted factor mix | 0.596 | 0.037 |",
-          "| Best individual alternatives | Ridge + implied/log-VIX 0.598, Huber 0.594 (error 24.0%), LightGBM 0.52-0.56 | reversal + momentum 0.051, residual reversal 0.050 |", "",
-          "No procedure beats the production models, so nothing changed: with this data (daily prices, VIX, macro series for 32 assets) the models are at the "
-          "accuracy that an honest, automatic search can reach. Further gains would need new information (company fundamentals and earnings dates, "
+          "| Production, fixed | **0.603** (round 7: 0.597) | **0.046** (t 2.2) |",
+          "| Best single candidate, chosen each year on earlier years | 0.600 (0.594) | 0.046 (picks production every year: a tie, not a gain) |",
+          "| Top-3 average | 0.597 (0.591) | 0.036 |",
+          "| Stacking with non-negative weights / IC-weighted factor mix | 0.600 (0.596) | 0.037 |",
+          "| Best individual alternatives | Ridge + implied/log-VIX 0.603, Huber 0.599 (error 23.7%), LightGBM 0.53-0.56 | reversal + momentum 0.051, residual reversal 0.050 |", "",
+          "No nested procedure beats the production models in either run, so nothing changed. Choosing a single candidate by its 2021-26 score "
+          "(e.g. Ridge + implied/log-VIX, 0.6030 vs 0.6026, whose features were rejected on validation in rounds 6 and 7) would be selection on the test years and is not done. "
+          "The best-single choices are unblended Ridge forecasts, while production blends Ridge 85/15 with last quarter's volatility; stacking can learn "
+          "such a blend, but its weights move from year to year (LightGBM 0.16-0.30, EWMA volatility 0.16-0.25). "
+          "With this data (daily prices, VIX, macro series and quarterly results for 32 assets) the models are at the "
+          "accuracy that an honest, automatic search can reach; further gains would need new information (company fundamentals, "
           "options-implied volatility per stock, intraday prices with long history).", "",
           "## 12. Round 9: earnings data (scripts/download_earnings.py, ifit/earnings.py, scripts/model_search_v8.py)", "",
           "New information: every quarterly result of the 26 stocks since about 2005 (Yahoo Finance: date, EPS estimate, reported EPS, surprise). A result is "
