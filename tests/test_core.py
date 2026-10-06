@@ -279,3 +279,30 @@ def test_earnings_features_never_see_a_result_early():
     vf = E.vol_features(md)
     assert vf["earn_in_window"].between(0, 1).all()
     assert (vf.xs("NIFTYBEES.NS", level=1)[["earn_in_window", "earn_jump"]] == 0).all().all()    # non-stocks have no earnings
+
+
+# ---------------------------------------------------------------- round 10: costs and the sector-relative signal
+def test_trading_costs_per_asset_class():
+    from ifit import costs as K
+    buy, sell = K.per_side("stock")
+    assert buy == pytest.approx(0.001 + 0.00015 + 0.0000307 * 1.18 + 0.0005, rel=1e-3)     # STT + stamp + fees with GST + half spread
+    assert sell == pytest.approx(buy - 0.00015, rel=1e-6)                                  # no stamp duty on a sale
+    assert K.per_side("etf")[0] < K.per_side("stock")[0]                                   # equity ETFs pay almost no STT
+    w = pd.Series({"RELIANCE.NS": 0.10, "TCS.NS": -0.10, "GOLDBEES.NS": 0.0})
+    b, s = K.rates(w.index)
+    assert K.trade_cost(w, b, s) == pytest.approx(0.10 * buy + 0.10 * sell)
+    assert K.trade_cost(w, b, s, mult=2.0) == pytest.approx(2 * K.trade_cost(w, b, s))
+
+
+def test_sector_relative_reversal_is_zero_within_each_sector():
+    from ifit import data, ml
+    md = data.load()
+    fx = ml.residual_factors(md)
+    day = fx.index.get_level_values(0).unique().sort_values()[-30]
+    x = fx.xs(day, level=0).dropna()
+    sector = pd.Series({s: C.UNIVERSE[s][1] for s in x.index})
+    assert x["ind_rev"].groupby(sector).mean().abs().max() < 1e-12
+    single = sector.value_counts()[lambda v: v == 1].index                                  # alone in its sector: nothing to compare with
+    assert (x.loc[sector.isin(single), "ind_rev"].abs() < 1e-12).all()
+    z = ml.factor_score(fx.xs(day, level=0, drop_level=False))
+    assert z.mean() == pytest.approx(0.0, abs=1e-9) and z.std() == pytest.approx(1.0, abs=1e-6)

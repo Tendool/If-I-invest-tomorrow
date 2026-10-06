@@ -72,10 +72,13 @@ def run_calibration(n_paths=4000):
             vu = C.MC_VOL_UNCERTAINTY
             C.MC_VOL_UNCERTAINTY = 0.0
             prev = MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths, steps_per_year=252, seed=11, dof=5)[:, -1].astype(float) - 1
+            C.MC_VOL_UNCERTAINTY = 0.17
+            r9 = MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths, steps_per_year=252, seed=11, dof=5)[:, -1].astype(float) - 1
             C.MC_VOL_UNCERTAINTY = vu
             sims = {
                 "Production (Student-t dof 5, regime switching, parameter and volatility uncertainty)": MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1,
                                                                                 n_paths=n_paths, steps_per_year=252, seed=11, dof=5)[:, -1].astype(float) - 1,
+                "Round 9 (volatility uncertainty 0.17)": r9,
                 "Round 5 (no volatility uncertainty)": prev,
                 "Student-t dof 3 (fatter tails)": MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, 1, n_paths=n_paths,
                                                                    steps_per_year=252, seed=11, dof=3)[:, -1].astype(float) - 1,

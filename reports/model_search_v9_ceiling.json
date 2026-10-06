@@ -1,0 +1,20 @@
+{
+ "all assets": {
+  "split_half_corr": 0.7212836565171222,
+  "reliability": 0.8380764597237637,
+  "within_split_half_corr": 0.47124617906267185,
+  "within_reliability": 0.6406081942899616,
+  "n": 43400
+ },
+ "stocks": {
+  "split_half_corr": 0.45940536323462633,
+  "reliability": 0.6295788336921008,
+  "within_split_half_corr": 0.4131000938320058,
+  "within_reliability": 0.5846720917154176,
+  "n": 36400
+ },
+ "stocks_production_vs_close_to_close": 0.2780579571763122,
+ "stocks_production_vs_range_based": 0.3596801225488684,
+ "corr2_close_to_close": 0.2815230177677293,
+ "corr2_range_based": 0.37142112556037393
+}

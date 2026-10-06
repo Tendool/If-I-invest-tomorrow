@@ -1,0 +1,89 @@
+{
+ "results": {
+  "residual reversal + momentum (incumbent)": {
+   "val_ic": 0.061137946466119,
+   "val_t": 3.190773113938912,
+   "test_ic": 0.045495701239003726,
+   "test_t": 2.145111238631419
+  },
+  "1-week reversal": {
+   "val_ic": 0.014667409361802181,
+   "val_t": 0.9495524780105832,
+   "test_ic": 0.011272177419354839,
+   "test_t": 0.3988630023367208
+  },
+  "incumbent + 1-week reversal": {
+   "val_ic": 0.054013067652804184,
+   "val_t": 3.545800527829432,
+   "test_ic": 0.03955678937548395,
+   "test_t": 1.7372034929585296
+  },
+  "MAX effect (low max daily return)": {
+   "val_ic": -0.014895488550964486,
+   "val_t": 0.5593108234442825,
+   "test_ic": -0.007127592165898616,
+   "test_t": 0.3027623039149112
+  },
+  "incumbent + MAX effect (low max daily return)": {
+   "val_ic": 0.0360435663449253,
+   "val_t": 2.6381651120881773,
+   "test_ic": 0.028024837810559228,
+   "test_t": 1.426291474696948
+  },
+  "low idiosyncratic volatility": {
+   "val_ic": -0.013025425721442977,
+   "val_t": -0.5241904837253779,
+   "test_ic": -0.01508179723502305,
+   "test_t": -0.7323869036262086
+  },
+  "incumbent + low idiosyncratic volatility": {
+   "val_ic": 0.0353290566238648,
+   "val_t": 2.266734184976788,
+   "test_ic": 0.024244982232646574,
+   "test_t": 1.3277366775062565
+  },
+  "abnormal volume": {
+   "val_ic": -0.016541640666684752,
+   "val_t": -1.924257803481846,
+   "test_ic": -0.008111799909565318,
+   "test_t": -0.11744587351514868
+  },
+  "incumbent + abnormal volume": {
+   "val_ic": 0.039784282233331476,
+   "val_t": 1.6815358054180596,
+   "test_ic": 0.024384433592032344,
+   "test_t": 1.6520837713995649
+  },
+  "low beta": {
+   "val_ic": -0.03877593498195827,
+   "val_t": -0.8476229213708122,
+   "test_ic": -0.015007200460829496,
+   "test_t": -0.5159220299538672
+  },
+  "incumbent + low beta": {
+   "val_ic": 0.02976988664085532,
+   "val_t": 1.4015250403806987,
+   "test_ic": 0.02411483976332493,
+   "test_t": 1.1648146846137315
+  },
+  "within-sector residual reversal": {
+   "val_ic": 0.035855598060658696,
+   "val_t": 2.3999360780491443,
+   "test_ic": 0.043056849128543885,
+   "test_t": 1.7669074812972803
+  },
+  "incumbent + within-sector residual reversal": {
+   "val_ic": 0.06100323422071197,
+   "val_t": 3.9491005362788916,
+   "test_ic": 0.05712558440637807,
+   "test_t": 2.6821807870993064
+  },
+  "sector-adjusted reversal + residual momentum": {
+   "val_ic": 0.06146132541942259,
+   "val_t": 2.262834850532528,
+   "test_ic": 0.04203457540349505,
+   "test_t": 2.1093451616640415
+  }
+ },
+ "chosen": "incumbent + within-sector residual reversal"
+}

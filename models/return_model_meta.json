@@ -1,6 +1,6 @@
 {
-  "best": "Residual reversal + momentum",
-  "ic": 0.04552811823370302,
-  "skill_weight": 0.2276405911685151,
+  "best": "Residual reversal + momentum + sector-relative reversal",
+  "ic": 0.05718230509150184,
+  "skill_weight": 0.2859115254575092,
   "asof": "2026-10-01"
 }

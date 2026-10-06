@@ -5,9 +5,10 @@
 Every month-end from Jan-2021, using only data up to that date:
   * risk model (5y Ledoit-Wolf covariance, CAPM, history prior)           -> built from truncated data
   * volatility model (Ridge, retrained each year on pre-year data)        -> rescales each asset's volatility in the covariance
-  * return tilt (residual reversal + momentum, production; nothing fitted) -> expected return = prior + lambda x tilt
+  * return tilt (residual reversal + momentum + sector-relative reversal, production; nothing fitted) -> prior + lambda x tilt
   * regime (Gaussian mixture refit each year on pre-year data)             -> cuts risky exposure in non-calm regimes
-Weights are optimised long-only with the 'medium' risk-profile caps, held with daily drift, costs 0.10% of traded value.
+Weights are optimised long-only with the 'medium' risk-profile caps, held with daily drift, and traded at the rebalance date's close
+with realistic NSE costs per asset class (ifit/costs.py: STT, stamp duty, exchange fees + GST, half spread; stocks ~0.16% a side).
 
 Two families are compared like-for-like:  minimum variance  (A -> B -> B+regime)  and  maximum Sharpe  (C -> C+vol -> D -> E).
 """
@@ -28,12 +29,11 @@ from sklearn.linear_model import Ridge  # noqa: E402
 from sklearn.pipeline import make_pipeline  # noqa: E402
 from sklearn.preprocessing import StandardScaler  # noqa: E402
 
-from ifit import config as C, data, features as F, ml, optimizer as O, risk  # noqa: E402
+from ifit import config as C, costs as K, data, features as F, ml, optimizer as O, risk  # noqa: E402
 from eval_risk import PITRegime  # noqa: E402
 
 START = "2021-01-01"
 TD = C.TRADING_DAYS
-COST = C.BROKERAGE_RATE + C.SLIPPAGE_RATE
 LAMBDA = json.load(open(C.MODELS_DIR / "return_model_meta.json"))["skill_weight"]   # production skill weight
 PURGE = pd.Timedelta(days=int(F.FWD_DAYS * 1.5))
 RISK_PROFILE = "medium"
@@ -44,9 +44,10 @@ def trunc(md, t):
     return dataclasses.replace(md, prices=md.prices.loc[:t], volume=md.volume.loc[:t], market=md.market.loc[:t], macro=md.macro.loc[:t])
 
 
-def month_ends(idx):
+def month_ends(idx, start=START):
     s = pd.Series(idx, index=idx)
-    return list(s[s.index >= START].groupby([s.index[s.index >= START].year, s.index[s.index >= START].month]).last())
+    s = s[s.index >= start]
+    return list(s.groupby([s.index.year, s.index.month]).last())
 
 
 def pit_predictions(md, dates):
@@ -63,7 +64,7 @@ def pit_predictions(md, dates):
     for yr in sorted({d.year for d in dates}):
         a = pd.Timestamp(f"{yr}-01-01")
         cs_sd = float(rpanel[rd < a - PURGE]["target"].dropna().std())      # scale of the refined forecast, pre-year data only
-        tv = vpanel[vd < a - PURGE].dropna(subset=vfeats + ["y"]).iloc[::3]
+        tv = vpanel[vd < a - PURGE].dropna(subset=vfeats + ["y"]).iloc[::ml.VOL_TRAIN_STEP]
         mv = make_pipeline(StandardScaler(), Ridge(alpha=ml.VOL_ALPHA)).fit(tv[vfeats].values, tv["y"].values)
         pr = PITRegime(trunc(md, a - pd.Timedelta(days=1))).probs(md)
         for t in [d for d in dates if d.year == yr]:
@@ -93,15 +94,14 @@ def regime_overlay(w, probs):
     return out
 
 
-def run():
-    md = data.load()
-    idx = md.prices.index
-    dates = month_ends(idx)[:-1]
-    ret_fc, vol_fc, reg = pit_predictions(md, dates)
-    rets = md.prices.pct_change().fillna(0.0)
-
-    names = ["A  Min-variance, trailing covariance", "B  Min-variance + volatility model", "B+ B + regime overlay",
+NAMES = ["A  Min-variance, trailing covariance", "B  Min-variance + volatility model", "B+ B + regime overlay",
              "C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)"]
+
+
+def compute_targets(md, dates):
+    """Target weights of the seven strategies at each rebalance date, from data up to that date only."""
+    ret_fc, vol_fc, reg = pit_predictions(md, dates)
+    names = NAMES
     target_w = {n: {} for n in names}
     for t in dates:
         md_t = trunc(md, t)
@@ -126,6 +126,16 @@ def run():
         for n in names:
             target_w[n][t] = w[n].reindex(md.prices.columns).fillna(0.0)
         print("rebalance", t.date(), flush=True)
+    return target_w
+
+
+def run():
+    md = data.load()
+    idx = md.prices.index
+    dates = month_ends(idx)[:-1]
+    target_w = compute_targets(md, dates)
+    names = NAMES
+    rets = md.prices.pct_change().fillna(0.0)
 
     # ---- simulate with drift and costs
     day_idx = idx[(idx >= dates[0]) & (idx <= idx[-1])]
@@ -134,6 +144,7 @@ def run():
     HALF = " (half-step rebalancing)"
     sim_names = names + [names[1] + HALF, names[6] + HALF, "NIFTY 50 ETF (benchmark)", "Equal-weight stocks (monthly)"]
     stock_cols = [c for c in cols if C.UNIVERSE[c][2] == "stock"]
+    buy, sell = K.rates(cols)
     eqw = pd.Series(0.0, index=cols)
     eqw[stock_cols] = 1 / len(stock_cols)
     nb = pd.Series(0.0, index=cols)
@@ -146,23 +157,24 @@ def run():
         val, hold, out, turn, cost_paid = 1.0, pd.Series(0.0, index=cols), [], 0.0, 0.0
         first = True
         for d in day_idx:
-            if d in tw:
+            if not first:                                    # the day's return accrues to the holdings carried into it
+                hold = hold * (1 + rets.loc[d])
+                val = hold.sum()
+            if d in tw:                                      # then rebalance at the close (weights use data up to that close)
                 tgt = tw[d]
                 cur_w = hold / hold.sum() if hold.sum() > 0 else pd.Series(0.0, index=cols)
                 if half and not first:                       # trade only halfway to the new target (a-priori rule, halves turnover)
                     tgt = 0.5 * cur_w + 0.5 * tgt
-                trade = float((tgt - cur_w).abs().sum()) if not first else float(tgt.abs().sum())
+                tv = (tgt - cur_w) if not first else tgt
                 if n.startswith("NIFTY") and not first:
-                    trade = 0.0
-                fee = val * trade * COST
+                    tv = tv * 0.0
+                trade = float(tv.abs().sum())
+                fee = val * K.trade_cost(tv, buy, sell)
                 val -= fee
                 cost_paid += fee
                 turn += trade
                 hold = val * tgt
                 first = False
-            if not first:
-                hold = hold * (1 + rets.loc[d])
-                val = hold.sum()
             out.append(val)
         curves[n] = pd.Series(out, index=day_idx)
         turnover[n] = turn / (len(day_idx) / TD)                      # annualised one-way turnover (multiples of the portfolio)
@@ -190,10 +202,11 @@ def run():
                        total_return=float(s.iloc[-1] - 1))
     tab = pd.DataFrame(rows).T
     pd.set_option("display.width", 250)
-    print(f"\nwalk-forward {dates[0].date()} -> {idx[-1].date()}, {len(dates)} monthly rebalances, costs {COST * 100:.2f}% of traded value\n")
+    print(f"\nwalk-forward {dates[0].date()} -> {idx[-1].date()}, {len(dates)} monthly rebalances, realistic costs per asset class\n")
     print(tab[["cagr", "vol", "sharpe", "sortino", "max_drawdown", "calmar", "turnover_ann", "vs_benchmark_cagr", "info_ratio"]].round(3).to_string())
     print(tab[["downside_dev", "var95_1d", "cvar95_1d", "hit_rate_monthly", "costs_pct_of_start", "total_return"]].round(4).to_string())
-    json.dump(dict(start=str(dates[0].date()), end=str(idx[-1].date()), rebalances=len(dates), cost_rate=COST, table=rows),
+    json.dump(dict(start=str(dates[0].date()), end=str(idx[-1].date()), rebalances=len(dates), costs="realistic per asset class (ifit/costs.py)",
+                   cost_rates={c: dict(zip(("buy", "sell"), K.per_side(c))) for c in ("stock", "etf", "gold", "bond", "cash")}, table=rows),
               open(C.REPORTS_DIR / "eval_portfolio.json", "w"), indent=1)
     cdf.to_csv(C.REPORTS_DIR / "eval_portfolio_curves.csv")
 

@@ -192,10 +192,10 @@ def run_vol():
     for name, (tcol, mk) in models.items():
         parts = []
         for yr, trn, te in splits(d):
-            m = mk().fit(trn[feats].values[::3], trn[tcol].values[::3])
+            m = mk().fit(trn[feats].values[::ml.VOL_TRAIN_STEP], trn[tcol].values[::ml.VOL_TRAIN_STEP])      # production: every day (round 10)
             p = m.predict(te[feats].values)
             if name.startswith("Ridge (production"):
-                p = ml._blend(p, te["rv_63"].values)                  # production: 80/20 blend with trailing 63-day vol
+                p = ml._blend(p, te["rv_63"].values)                  # production: 85/15 blend with trailing 63-day vol
             parts.append(pd.DataFrame({"y": te["y"].values, "p": p}, index=te.index))
         df = pd.concat(parts)
         preds[name] = df

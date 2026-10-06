@@ -181,12 +181,13 @@ def _metrics(df: pd.DataFrame) -> dict:
 # Round 7 (scripts/model_search_v6.py, rule fixed in advance: beat the incumbent's validation t): the same two effects measured
 # on *residual* returns (after removing each stock's beta x market move; Blitz, Huij & Martens 2011) - validation IC 0.061
 # (t 3.2), test 0.046 (t 2.2); over all ten years 2017-26 IC 0.052 vs 0.051 for the round-6 signal.
-FACTOR_NAME = "Residual reversal + momentum"
+FACTOR_NAME = "Residual reversal + momentum + sector-relative reversal"
 FACTOR_VAL_IC = 0.061
 
 
 def residual_factors(md: MarketData) -> pd.DataFrame:
-    """(date, symbol) residual momentum (months t-12..t-1, risk-scaled) and residual 1-month return, point in time."""
+    """(date, symbol) residual momentum (months t-12..t-1, risk-scaled), residual 1-month return, and the residual 1-month
+    return relative to the asset's sector (round 10, chosen on 2017-20 validation; Da, Liu & Schaumburg 2014), point in time."""
     r = md.prices.pct_change()
     mr = md.market.pct_change().reindex(r.index)
     beta = r.rolling(252, min_periods=126).cov(mr).div(mr.rolling(252, min_periods=126).var(), axis=0)
@@ -194,15 +195,18 @@ def residual_factors(md: MarketData) -> pd.DataFrame:
     s231 = resid.rolling(231, min_periods=120)
     res_mom = s231.sum().shift(21) / (s231.std().shift(21) * np.sqrt(231))
     res_rev = resid.rolling(21).sum()
-    out = pd.concat([res_mom.stack().rename("res_mom"), res_rev.stack().rename("res_rev")], axis=1)
+    sector = pd.Series({s: C.UNIVERSE[s][1] for s in r.columns})
+    ind_rev = res_rev.sub(res_rev.T.groupby(sector).transform("mean").T)
+    out = pd.concat([res_mom.stack().rename("res_mom"), res_rev.stack().rename("res_rev"), ind_rev.stack().rename("ind_rev")], axis=1)
     out.index.names = ["date", "symbol"]
     return out.replace([np.inf, -np.inf], np.nan)
 
 
 def factor_score(fx: pd.DataFrame) -> pd.Series:
-    """Cross-sectional z-score of residual momentum + residual reversal (date by date; higher = expected to beat the rest)."""
+    """Cross-sectional z-score of residual momentum + residual reversal + sector-relative residual reversal
+    (date by date; higher = expected to beat the rest)."""
     rk = lambda x: x.groupby(level=0).rank(pct=True) - 0.5
-    raw = (rk(fx["res_mom"]) - rk(fx["res_rev"])) / 2
+    raw = (rk(fx["res_mom"]) - rk(fx["res_rev"]) - rk(fx["ind_rev"])) / 3
     sd = raw.groupby(level=0).transform("std").replace(0, np.nan)
     return ((raw - raw.groupby(level=0).transform("mean")) / sd).fillna(0.0)
 
@@ -283,8 +287,8 @@ class ReturnEstimator:
 
 def train_return_model(md: MarketData, include_gru: bool = False, save: bool = True) -> ReturnEstimator:
     table, _ = walk_forward(md, include_gru=include_gru)
-    # Production signal: the residual reversal + momentum composite, chosen on the 2017-20 validation (round 7). The fitted models
-    # (Ridge, RF, XGBoost, GRU) stay in the table for comparison.
+    # Production signal: the residual reversal + momentum composite (round 7) plus sector-relative reversal (round 10), each chosen
+    # on the 2017-20 validation. The fitted models (Ridge, RF, XGBoost, GRU) stay in the table for comparison.
     best = FACTOR_NAME
     ic = float(table.loc[best, "ic_cross_section"])
     # Skill weight: zero when the signal shows no cross-sectional skill, capped at 0.5.
@@ -297,7 +301,7 @@ def train_return_model(md: MarketData, include_gru: bool = False, save: bool = T
     pred = factor_forecast(fx.loc[[last_date]], cs_sd).droplevel(0).reindex(panel.xs(last_date, level=0).index).fillna(0.0)
     est = ReturnEstimator(best, table, lam, pred, None)
     if save:
-        joblib.dump(dict(model=None, kind="factor", features=["res_mom", "res_rev"], best=best, val_ic=FACTOR_VAL_IC, cs_sd=cs_sd),
+        joblib.dump(dict(model=None, kind="factor", features=["res_mom", "res_rev", "ind_rev"], best=best, val_ic=FACTOR_VAL_IC, cs_sd=cs_sd),
                     C.MODELS_DIR / "return_model.joblib")
         table.to_csv(C.REPORTS_DIR / "ml_walk_forward_metrics.csv")
         json.dump(dict(best=best, ic=ic, skill_weight=lam, asof=str(last_date.date())),
@@ -353,7 +357,8 @@ _ANN = np.sqrt(C.TRADING_DAYS)
 VOL_ALPHA = 3000.0
 VOL_NAIVE_WEIGHT = 0.15       # forecast = 0.85 x Ridge + 0.15 x trailing 63-day vol (weight chosen on 2017-20 walk-forward validation, round 6)
 VOL_TEST_YEARS = (2021, 2022, 2023, 2024, 2025, 2026)
-VOL_MODEL_VERSION = 6             # bump when features change; docker/entrypoint.sh retrains when the saved model is older
+VOL_TRAIN_STEP = 1               # train on every day (round 10, chosen on 2017-20 validation; was every 3rd day)
+VOL_MODEL_VERSION = 7             # bump when features change; docker/entrypoint.sh retrains when the saved model is older
 
 
 def _load_ohlc(md):
@@ -490,7 +495,7 @@ def vol_walk_forward(panel: pd.DataFrame) -> dict:
     parts = []
     for yr in VOL_TEST_YEARS:
         a, b = pd.Timestamp(f"{yr}-01-01"), pd.Timestamp(f"{yr}-12-31")
-        trn = panel[dates < a - purge].dropna(subset=feats + ["y"]).iloc[::3]
+        trn = panel[dates < a - purge].dropna(subset=feats + ["y"]).iloc[::VOL_TRAIN_STEP]
         te = panel[(dates >= a) & (dates <= b)].dropna(subset=feats + ["y"])
         if len(trn) < 2000 or te.empty:
             continue
@@ -522,7 +527,7 @@ def train_vol_model(md: MarketData, save: bool = True) -> pd.Series:
     panel = vol_panel(sub)
     feats = vol_features(panel)
     metrics = vol_walk_forward(panel)
-    train = panel.dropna(subset=feats + ["y"]).iloc[::3]
+    train = panel.dropna(subset=feats + ["y"]).iloc[::VOL_TRAIN_STEP]
     model = _vol_model().fit(train[feats].values, train["y"].values)
     last = panel.index.get_level_values(0).max()
     X = panel.xs(last, level=0)[feats]

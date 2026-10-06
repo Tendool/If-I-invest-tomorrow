@@ -154,8 +154,9 @@ HISTORICAL_CRASHES = {
 MC_PATHS = 10_000
 MC_T_DOF = 5                        # Student-t degrees of freedom for fat tails
 MC_PARAM_UNCERTAINTY = True        # draw a per-path error in the expected return (standard error sigma/sqrt(lookback years))
-MC_VOL_UNCERTAINTY = 0.17          # sd of a per-path log-normal volatility multiplier: sd of log(next-year vol / trailing-year vol),
-                                   # measured on pre-2018 data (scripts/model_search_v5.py mc: coverage gap 0.045 -> 0.039)
+MC_VOL_UNCERTAINTY = 0.35          # sd of a per-path log-normal volatility multiplier. Round 10: chosen on 1-year NIFTY forecasts from
+                                   # 2009-17 (scripts/model_search_v9.py mc; was 0.17). Next-year vol vs the trailing 5-year estimate
+                                   # varied with sd 0.25 (log) on 2009-17 origins and 0.45 on 2019-25.
 COV_LOOKBACK_YEARS = 5
 
 # --------------------------------------------------------------------------- #

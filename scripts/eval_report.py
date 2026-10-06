@@ -98,7 +98,7 @@ def report(ret, vol, cal, reg, ano, port):
           "(t 2.2 Newey-West, 1.6 on independent windows) and helps on all five targets (stacking cross-sectional ranks on top does not help consistently), but it is not significant at 5% on independent windows and was not confirmed "
           "by the validation window, so it is a candidate, not adopted. Sector-neutral targets are weaker: most of the little signal is cross-sector.", "",
           "Round 6 (section 9) replaced the fitted Ridge model in production with a fixed reversal + momentum composite, the first signal with skill on the 2017-20 validation; "
-          "round 7 (section 10) moved it to residual returns. "
+          "round 7 (section 10) moved it to residual returns and round 10 (section 13) added reversal relative to the asset's sector. "
           "The tables in this section are the study of fitted models (Ridge, alpha 300000) that led there.", "",
           "### By year (Ridge study model)", ""]
     rows = [[y, f"{v['ic']:+.3f}", "" if v["ic_t_nw"] is None else f"{v['ic_t_nw']:+.2f}", f"{v['rmse']:.4f}", f"{v['rmse_mean_baseline']:.4f}", f"{v['dir_acc']:.1%}"] for y, v in ret["by_year"].items()]
@@ -109,9 +109,9 @@ def report(ret, vol, cal, reg, ano, port):
           "## 2. Volatility model", ""]
     L += [md_table([[k, f"{v['r2']:.3f}", f"{v['within_asset_r2']:.3f}", f"{v['err']:.1%}", f"{v['corr']:.3f}"] for k, v in vol["models"].items() if "Parkinson" not in k],
                    ["Model", "R2", "within-asset R2", "avg. error", "correlation"]), "",
-          "Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9). "
+          "Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9; trained on every day since round 10). "
           "Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. "
-          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.603 in the production meta file.)", "",
+          "(Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.604 in the production meta file.)", "",
           md_table([[y, f"{v['r2']:.3f}", f"{v['naive_63d_r2']:.3f}", f"{v['naive_21d_r2']:.3f}", f"{v['err']:.1%}"] for y, v in vol["by_year"].items()],
                    ["Year", "model R2", "same as last quarter", "same as last month", "avg. error"]), "",
           md_table([[k, f"{v['r2']:.3f}", f"{v['err']:.1%}", v["n"]] for k, v in vol["by_class"].items()], ["Asset class", "R2 within class", "avg. error", "n"]), "",
@@ -121,9 +121,13 @@ def report(ret, vol, cal, reg, ano, port):
     L += [md_table([[m] + [f"{v[c]:.0%}" for c in cols] + [f"{v['cover90_excl_2020']:.0%}", f"{v['cover90_2020_origins']:.0%}", f"{v['mean_error']:+.1%}"] for m, v in cal.items()],
                    ["Simulator", "50% interval", "75%", "90%", "95%", "99%", "90% excl. 2020 origins", "90% for 2020 origins", "mean error of expected return"]), "",
           "The production simulator draws a per-path error in the expected return (standard error sigma/sqrt(5 years), not tuned), which moved coverage from 44/69/81/84/93% to 49/73/82/84/93%; letting the regime model learn from 2008- (not just 2014-) moved it to 53/74/81/88/96%. "
-          "Round 6 adds a per-path volatility level (log-normal, sd 0.17 = the spread of next-year vs trailing-year volatility measured on pre-2018 data, not tuned on these outcomes). "
+          "Round 6 added a per-path volatility level (log-normal, sd 0.17); round 10 raised it to 0.35, chosen on 1-year NIFTY forecasts from 2009-17 (section 13), which moved the 90% band "
+          "from 82% to 84% here. "
           "Fatter tails (dof 3) and a block bootstrap of the portfolio's own history do not fix the outer tails. The remaining miss is concentrated in forecasts made in 2020 (COVID crash and "
-          "rebound), and realised returns beat the expected return by about 6-7% on average, which shifts the whole distribution. Outside 2020 the 90% band holds 88%.", "",
+          "rebound), and realised returns beat the expected return by about 6-7% on average, which shifts the whole distribution. Outside 2020 the 90% band holds 89%. "
+          "Of the 17 forecasts outside the 90% band, 8 are gold (its 2019 and 2024-25 rallies; it beat its expected return by 17% a year and its band held 69%, "
+          "against 85-92% for the NIFTY ETF, the balanced portfolio and the 8 stocks), 7 are the rebound after the 2020 crash and 2 are falls (2019-20, 2025-26). "
+          "Closing the gap would mean raising expected returns to match 2019-25, i.e. fitting the test.", "",
           "## 4. Regime model", "",
           "Transition matrices (full-sample labels):", ""]
     T = reg["daily_transition"]
@@ -144,7 +148,9 @@ def report(ret, vol, cal, reg, ano, port):
     L += ["The 2% production setting flags only 3 days in 2021-26 (too few to test). At the 5% and 10% settings, flagged days are followed by much higher volatility "
           "(about 21-23% vs 13%) and a 5% drawdown 60-65% of the time against 21%, but not by lower returns (markets tended to rebound). So the detector is a volatility/drawdown warning, not a return signal. "
           "Flagged days cluster into 8-20 episodes, so the p-values overstate significance.", "",
-          "## 6. Portfolio backtest (walk-forward, monthly rebalance, 0.10% costs)", "",
+          "## 6. Portfolio backtest (walk-forward, monthly rebalance, realistic costs)", "",
+          "Costs per asset class (ifit/costs.py, approximate 2025 NSE schedule): stocks 0.17% to buy and 0.15% to sell (STT 0.1% each way, stamp duty, exchange "
+          "and SEBI fees with GST, half bid-ask spread 0.05%); equity ETFs about 0.06%; gold and gilt ETFs about 0.11%. Trades happen at the rebalance date's close.", "",
           f"{port['start']} to {port['end']}, {port['rebalances']} rebalances. Long-only, 'medium' risk caps. Annualised turnover is the sum of one-way trades.", ""]
     rows = []
     for n, v in port["table"].items():
@@ -153,12 +159,13 @@ def report(ret, vol, cal, reg, ano, port):
                      f"{v['vs_benchmark_cagr']:+.1%}", "" if v["info_ratio"] is None else f"{v['info_ratio']:+.2f}"])
     L += [md_table(rows, ["Strategy", "CAGR", "Vol", "Sharpe", "Sortino", "Max DD", "Calmar", "Turnover/yr", "Cumulative costs (% of start)", "Hit rate (months)", "Downside dev", "VaR95 1d", "CVaR95 1d",
                           "vs NIFTY (CAGR)", "Info ratio"]), "",
-          "Reading it like-for-like (round-9 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.80; in the minimum-variance family it now helps slightly "
-          "(Sharpe 0.96 -> 0.97; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.80 -> 0.75: its reversal half flips every month, raising "
-          "turnover from 4.7x to 5.9x a year and costs from 4.7% to 5.3% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown "
-          "(full system Sharpe 0.77, max drawdown -13.2%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on "
-          "risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, "
-          "not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.", "",
+          "Reading it like-for-like (round-10 models, realistic costs): in the max-Sharpe family the volatility model lifts Sharpe 0.54 -> 0.73; in the minimum-variance family it is "
+          "neutral (0.95 -> 0.95). The return tilt (residual reversal + momentum + sector-relative reversal, weight 0.29) adds 0.73 -> 0.80 although it raises turnover from 4.7x to "
+          "7.5x a year (costs 6.4% -> 9.3% of capital over the period). The regime overlay trades return for lower volatility and drawdown (full system Sharpe 0.80, max drawdown -12.2%). "
+          "Until round 10 this backtest credited each rebalance with that day's own return (weights chosen at a close earned the move into that close): the one-day look-ahead "
+          "flattered the max-Sharpe strategies by about 0.07 and penalised the reversal tilt, which is why earlier versions read 0.60 -> 0.80 and showed the tilt hurting. "
+          "Every strategy beats the NIFTY 50 ETF (0.36) on risk-adjusted return; an equal-weight basket of the 26 stocks (Sharpe 0.84, CAGR 16.9%) matches the full system. "
+          "Caveat: 5.7 years, one regime; section 14 tests other periods, cost levels and confidence intervals.", "",
           "## 7. Round 4 (selection on a 2017-20 walk-forward validation; this protocol change was made after 2021-26 had been seen, so gains are tentative)", "",
           "| Idea | Validation 2017-20 | Test 2021-26 | Decision |", "|---|---|---|---|",
           "| Volatility: + long-run level, blended 80/20 with last quarter | R2 0.504 -> 0.533 | R2 0.583 -> 0.589, within-asset 0.177 -> 0.189 | adopted |",
@@ -244,8 +251,93 @@ def report(ret, vol, cal, reg, ano, port):
           "| Returns: incumbent + surprise + announcement return | IC 0.074 (t 2.6) | IC 0.030 | rejected: validation t below the incumbent's 3.2 (and lower on test) |", "",
           "Post-earnings drift, one of the best-documented anomalies in US data, shows no skill on these large, heavily followed NSE stocks. "
           "The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. "
-          "In the portfolio backtest every volatility-model strategy improves slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).", ""]
+          "In the portfolio backtest (before the round-10 look-ahead fix) every volatility-model strategy improved slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).", ""]
+    L += round10_sections()
     (R / "evaluation.md").write_text("\n".join(L), encoding="utf-8")
+
+
+def round10_sections():
+    """Sections 13 (round-10 search) and 14 (robustness), built from the saved results."""
+    j = lambda n: json.loads((R / n).read_text(encoding="utf-8"))
+    sv, sc, ce, mc, rt = j("model_search_v9_vol.json"), j("model_search_v9_vol_combos.json"), j("model_search_v9_ceiling.json"), j("model_search_v9_mc.json"), j("model_search_v9_returns.json")
+    wf, pl = j("eval_robustness_walkforward.json"), j("eval_robustness_plans.json")
+    L = ["## 13. Round 10 (scripts/model_search_v9.py; rules fixed before running: beat the model in use on 2017-20)", "",
+         "### Volatility", "",
+         "| Idea | Validation R2 2017-20 | Test R2 2021-26 | within-asset | stocks | Decision |", "|---|---|---|---|---|---|"]
+    rows = dict(sv["results"])
+    rows.update({k: v for k, v in sc["results"].items() if k.startswith("C +")})
+    for k, v in rows.items():
+        dec = "in use" if k.startswith("A ") else ("adopted" if k == "C every day in training" else "rejected")
+        L.append(f"| {k} | {v['val_r2']:.4f} | {v['test_r2']:.4f} | {v['test_within']:.3f} | {v['test_stock_r2']:.3f} | {dec} |")
+    L += ["",
+          "Adopted: training on every day instead of every third (validation 0.541 -> 0.552, test 0.603 -> 0.604). The early validation years had little history, so three "
+          "times the rows helped there more than in the test years. Training on a cleaner range-based measure of the same 21 days (intraday Garman-Klass + overnight return, "
+          "stocks only, ETF high/low prints are unreliable) raised the test R2 to 0.606 but lowered validation, so it was rejected. Correcting each asset with its own past "
+          "errors added nothing out of sample.", "",
+          "**How high can R2 go?** The target, the volatility of the next 21 daily returns, is itself a noisy measurement. Splitting each window into odd and even days gives two "
+          f"independent measurements of the same month; their agreement (split-half reliability, Spearman-Brown) shows that only {ce['all assets']['reliability']:.0%} of the "
+          f"target's variation is true volatility for all assets and {ce['stocks']['reliability']:.0%} for single stocks. A forecaster that knew next month's true volatility "
+          "exactly would score about that; ours reaches 0.60 (all assets). Against the cleaner range-based measure of the same 21 days, our stock forecasts score "
+          f"R2 {ce['stocks_production_vs_range_based']:.2f} instead of {ce['stocks_production_vs_close_to_close']:.2f}: part of the apparent error is noise in the target "
+          "(Andersen & Bollerslev 1998). Reaching 0.65 would need new information (options-implied volatility per stock, intraday data), not a better fit.", "",
+          "### Monte Carlo (1-year NIFTY forecasts from the long 2007- history)", "",
+          "| Setting | 2009-17 origins: 50/75/90/95/99% bands held | error | 2019-25 origins | error |", "|---|---|---|---|---|"]
+    for k, v in mc["results"].items():
+        f = lambda c: "/".join(f"{c[q] * 100:.0f}" for q in ("0.5", "0.75", "0.9", "0.95", "0.99"))
+        L.append(f"| {k}{' (production before)' if k == mc['production'] else ''}{' (chosen)' if k == mc['chosen'] else ''} | {f(v['choice_coverage'])} | {v['choice_err']:.3f} | {f(v['report_coverage'])} | {v['report_err']:.3f} |")
+    L += ["",
+          "On 2009-17 origins the bands were too wide (90% band held 100%); on 2019-25 too narrow. Higher volatility uncertainty fits both better (its heavier tails "
+          "and narrower centre), extra drift uncertainty does not. Chosen: 0.35, in line with how much next-year NIFTY volatility moved against its trailing 5-year "
+          "estimate (sd of the log ratio 0.25 on 2009-17 origins, 0.45 on 2019-25). On the standard 104-forecast test (section 3) the 90% band moves from 82% to 84% "
+          "and the 99% band from 97% to 100%.", "",
+          "### Return signal", "",
+          "| Signal | Validation IC (t) 2017-20 | Test IC (t) 2021-26 |", "|---|---|---|"]
+    for k, v in rt["results"].items():
+        L.append(f"| {k}{' **(adopted)**' if k == rt['chosen'] else ''} | {v['val_ic']:+.4f} ({v['val_t']:+.2f}) | {v['test_ic']:+.4f} ({v['test_t']:+.2f}) |")
+    L += ["",
+          "Adopted: adding the residual 1-month return relative to the asset's own sector (a stock that fell more than its sector tends to recover; Da, Liu & Schaumburg 2014). "
+          "Validation t 3.19 -> 3.95 (same IC 0.061); test IC 0.046 -> 0.057, R2 against a zero forecast +0.22% (Gu-Kelly-Xiu definition; the round-7 signal had +0.09%, "
+          "fitted Ridge -0.24%), direction right 51.5% of the time. Skill weight 0.23 -> 0.29. The other documented signals (1-week reversal, MAX, idiosyncratic volatility, "
+          "abnormal volume, low beta) have no skill here on their own.", "",
+          "## 14. Robustness: other periods, realistic costs, confidence intervals (scripts/eval_robustness.py)", "",
+          f"Monthly walk-forward from {wf['start']} to {wf['end']} ({wf['rebalances']} rebalances), every model refit each year on earlier data. 2017-20 were the "
+          "validation years on which model choices were made, so they are not a clean test.", ""]
+    R0 = wf["results"]["realistic"]
+    show = ["C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)", "B  Min-variance + volatility model",
+            "NIFTY 50 ETF (buy and hold)", "Equal-weight stocks (monthly)"]
+    per = list(wf["periods"])
+    L += ["Sharpe ratio by period, realistic costs:", "", "| Strategy | " + " | ".join(per) + " |", "|---|" + "---|" * len(per)]
+    for n in show:
+        L.append(f"| {n} | " + " | ".join(f"{R0[n][q]['sharpe']:.2f}" for q in per) + " |")
+    L += ["", "Sharpe ratio 2021-26 by cost level (calendar years; the section-6 table starts at the first rebalance, end of January 2021):", "",
+          "| Strategy | " + " | ".join(wf["results"]) + " |", "|---|" + "---|" * len(wf["results"])]
+    for n in show:
+        L.append(f"| {n} | " + " | ".join(f"{wf['results'][sname][n]['2021-26 (test years)']['sharpe']:.2f}" for sname in wf["results"]) + " |")
+    L += ["", "90% intervals for Sharpe differences (stationary block bootstrap of daily returns, mean block 21 days, 2000 draws, realistic costs):", "",
+          "| Difference | 2021-26 point [90% interval], share > 0 | 2017-26 point [90% interval], share > 0 |", "|---|---|---|"]
+    for k in [x for x in wf["bootstrap"]["2021-26 (test years)"] if x.startswith("DIFF ")]:
+        a, b = wf["bootstrap"]["2021-26 (test years)"][k], wf["bootstrap"]["2017-26 (all)"][k]
+        L.append(f"| {k[5:]} | {a['point']:+.2f} [{a['lo']:+.2f}, {a['hi']:+.2f}], {a['share_above_0']:.0%} | {b['point']:+.2f} [{b['lo']:+.2f}, {b['hi']:+.2f}], {b['share_above_0']:.0%} |")
+    L += ["",
+          "What survives: every strategy keeps a higher Sharpe ratio than the NIFTY ETF in every cost scenario, and the full system beats NIFTY in every 2-year block; "
+          "over 2017-26 its advantage over NIFTY (+0.43) is the one difference whose 90% interval excludes zero (+0.01 to +0.83). "
+          "What does not: the volatility model's gain in the max-Sharpe family comes mostly from 2021-22 and its 90% interval includes zero; in the minimum-variance family "
+          "it gains nothing over 2017-26; the full system does not beat an equal-weight basket of the stocks with any confidence. A 5-6 year Sharpe ratio is also fragile: "
+          "starting the 2021-26 window one month later (end of January instead of 1 January) moves the max-Sharpe + volatility model from 0.62 to 0.73. Costs matter for "
+          "small accounts: the fixed depository charge (Rs 15.93 per security sold) costs a Rs 1 lakh account rebalanced monthly 0.04-0.15 of Sharpe.", "",
+          "### The app's plans from many start dates", "",
+          f"The five strategies chosen with data up to each quarter-end ({pl['profile']}, no ML, as in the app's backtest), held with quarterly rebalancing and realistic costs:", "",
+          "| Holding | Strategy | start dates | median return | median per year | worst | best | beat NIFTY ETF | median Sharpe |", "|---|---|---|---|---|---|---|---|---|"]
+    for k, v in pl["summary"].items():
+        h, name = k.split(" ", 1)
+        L.append(f"| {h} | {name} | {v['starts']} | {v['median_net']:+.0%} | {v['median_ann']:+.1%} | {v['worst_net']:+.0%} | {v['best_net']:+.0%} | "
+                 f"{'' if 'share_beat_nifty' not in v else format(v['share_beat_nifty'], '.0%')} | {'' if 'median_sharpe' not in v else format(v['median_sharpe'], '.2f')} |")
+    L += ["",
+          "Over 1 year every plan's median return beat the NIFTY ETF's (12.9-16.7% vs 11.2%) and their worst year was far milder (-12% to +6% vs -21%). "
+          "Over 3 years no plan lost money from any of the 26 start dates (worst +18% to +42%, NIFTY ETF worst +5%), but on return only Max Return clearly beat the "
+          "NIFTY ETF (median 18.0% vs 15.0% a year); the recommended Goal-Based plan beat it in 35% of the windows. The plans' edge is smaller losses, not higher returns. "
+          "The single Oct 2023 window in the slides (+55% vs +15%) was a favourable one.", ""]
+    return L
 
 
 if __name__ == "__main__":

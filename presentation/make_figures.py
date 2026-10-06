@@ -215,5 +215,35 @@ def main():
     print("wrote numbers.json")
 
 
+def robustness():
+    """Sharpe ratio by 2-year period (walk-forward 2017-26, realistic costs) from reports/eval_robustness_walkforward.json."""
+    wf = json.loads((ROOT / "reports" / "eval_robustness_walkforward.json").read_text(encoding="utf-8"))
+    res = wf["results"]["realistic"]
+    blocks = ["2017-18", "2019-20", "2021-22", "2023-24", "2025-26"]
+    show = {"E  Full system (D + regime overlay)": ("Full system", BRAND), "B  Min-variance + volatility model": ("Min-variance + vol. model", C1),
+            "Equal-weight stocks (monthly)": ("Equal-weight stocks", FAINT), "NIFTY 50 ETF (buy and hold)": ("NIFTY 50 ETF", MUTED)}
+    fig, ax = plt.subplots(figsize=(4.7, 2.15))
+    x = np.arange(len(blocks))
+    wdt = 0.8 / len(show)
+    for i, (k, (lab, col)) in enumerate(show.items()):
+        ax.bar(x + (i - (len(show) - 1) / 2) * wdt, [res[k][b]["sharpe"] for b in blocks], width=wdt * 0.92, color=col, label=lab)
+    ax.axhline(0, color=RULE, lw=0.8)
+    ax.set_xticks(x, blocks)
+    ax.set_ylabel("Sharpe ratio")
+    ax.grid(axis="x", visible=False)
+    ax.legend(loc="upper left", fontsize=6.3, ncol=2, frameon=False)
+    ax.set_ylim(min(-0.8, min(res[k][b]["sharpe"] for k in show for b in blocks) - 0.1), 2.6)
+    save(fig, "robustness")
+    pl = json.loads((ROOT / "reports" / "eval_robustness_plans.json").read_text(encoding="utf-8"))["summary"]
+    num = json.loads((OUT / "numbers.json").read_text(encoding="utf-8"))
+    num["robust"] = dict(periods={k: {b: res[k][b]["sharpe"] for b in list(wf["periods"])} for k in show},
+                         costs={sname: {k: wf["results"][sname][k]["2021-26 (test years)"]["sharpe"] for k in show} for sname in wf["results"]},
+                         bootstrap=wf["bootstrap"], plans=pl)
+    (OUT / "numbers.json").write_text(json.dumps(num, indent=1, default=float), encoding="utf-8")
+    print("wrote robustness")
+
+
 if __name__ == "__main__":
-    main()
+    if sys.argv[1:] != ["robustness"]:
+        main()
+    robustness()

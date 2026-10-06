@@ -395,7 +395,7 @@ export function ModelsView({ data, regimes, market }: { data: ModelsData; regime
         </Table>
         <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
           The target is each asset&apos;s return <em>relative to the others</em>. None of the fitted models (Ridge, Random Forest, XGBoost) showed skill
-          on the 2017-20 validation years; a fixed residual reversal + momentum rule, with nothing fitted, did. Even so the skill is
+          on the 2017-20 validation years; a fixed rule (residual reversal + momentum + reversal within the sector), with nothing fitted, did. Even so the skill is
           small, so the forecast is only a relative tilt on top of the CAPM and history prior, weighted at{" "}
           <span className="font-medium text-foreground">{pct(data.skill_weight ?? 0, 0)}</span> according to the measured information coefficient.
         </p>

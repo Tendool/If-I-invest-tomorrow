@@ -24,7 +24,7 @@ Everything is out-of-sample: settings chosen on 2019-20, scored on a 2021-26 exp
 
 The IC on the 2019-20 validation window is at or below zero for every configuration, so validation cannot pick a winner (it picked `base + RS + cross-sectional ranks / sector-neutral`, out-of-sample IC +0.014). Adding relative-strength features (vs index and vs sector) lifts the out-of-sample IC from 0.027 to 0.041 (t 2.2 Newey-West, 1.6 on independent windows) and helps on all five targets (stacking cross-sectional ranks on top does not help consistently), but it is not significant at 5% on independent windows and was not confirmed by the validation window, so it is a candidate, not adopted. Sector-neutral targets are weaker: most of the little signal is cross-sector.
 
-Round 6 (section 9) replaced the fitted Ridge model in production with a fixed reversal + momentum composite, the first signal with skill on the 2017-20 validation; round 7 (section 10) moved it to residual returns. The tables in this section are the study of fitted models (Ridge, alpha 300000) that led there.
+Round 6 (section 9) replaced the fitted Ridge model in production with a fixed reversal + momentum composite, the first signal with skill on the 2017-20 validation; round 7 (section 10) moved it to residual returns and round 10 (section 13) added reversal relative to the asset's sector. The tables in this section are the study of fitted models (Ridge, alpha 300000) that led there.
 
 ### By year (Ridge study model)
 
@@ -47,29 +47,29 @@ Round 6 (section 9) replaced the fitted Ridge model in production with a fixed r
 
 | Model | R2 | within-asset R2 | avg. error | correlation |
 |---|---|---|---|---|
-| Ridge (production) | 0.589 | 0.206 | 24.4% | 0.769 |
-| Ridge alone (no blend) | 0.582 | 0.196 | 24.6% | 0.764 |
-| Elastic Net | 0.577 | 0.183 | 24.8% | 0.760 |
-| Huber regression | 0.584 | 0.198 | 23.7% | 0.766 |
-| Ridge, target = forward 63-day vol | 0.499 | 0.117 | 29.6% | 0.736 |
+| Ridge (production) | 0.591 | 0.208 | 24.5% | 0.771 |
+| Ridge alone (no blend) | 0.583 | 0.194 | 24.7% | 0.765 |
+| Elastic Net | 0.585 | 0.198 | 24.7% | 0.767 |
+| Huber regression | 0.586 | 0.195 | 23.9% | 0.767 |
+| Ridge, target = forward 63-day vol | 0.494 | 0.114 | 29.9% | 0.737 |
 
-Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9). Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. (Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.603 in the production meta file.)
+Production = Ridge on realised, range-based, long-run-level, seasonal, asset-class and earnings-calendar features, blended 85/15 with trailing 63-day volatility (features and blend weight chosen on a 2017-20 walk-forward validation, rounds 4, 6, 7 and 9; trained on every day since round 10). Elastic Net and Huber regression are statistically tied with plain Ridge, so the simpler model stays; a 63-day target is a worse predictor of the next 21 days. (Rows here need a full 63-day look-ahead, so the final weeks of 2026 drop out and R2 reads slightly lower than the 0.604 in the production meta file.)
 
 | Year | model R2 | same as last quarter | same as last month | avg. error |
 |---|---|---|---|---|
-| 2021 | 0.608 | 0.521 | 0.440 | 25.7% |
-| 2022 | 0.527 | 0.465 | 0.338 | 24.0% |
-| 2023 | 0.492 | 0.454 | 0.274 | 25.0% |
-| 2024 | 0.437 | 0.241 | -0.046 | 24.1% |
-| 2025 | 0.657 | 0.581 | 0.459 | 24.5% |
-| 2026 | 0.559 | 0.274 | 0.277 | 21.9% |
+| 2021 | 0.622 | 0.521 | 0.440 | 25.2% |
+| 2022 | 0.517 | 0.465 | 0.338 | 24.5% |
+| 2023 | 0.475 | 0.454 | 0.274 | 25.8% |
+| 2024 | 0.442 | 0.241 | -0.046 | 23.8% |
+| 2025 | 0.655 | 0.581 | 0.459 | 24.6% |
+| 2026 | 0.584 | 0.274 | 0.277 | 21.3% |
 
 | Asset class | R2 within class | avg. error | n |
 |---|---|---|---|
-| stock | 0.279 | 23.9% | 33670 |
-| etf | 0.342 | 27.0% | 3327 |
-| gold | 0.303 | 29.8% | 1148 |
-| bond | 0.228 | 27.9% | 808 |
+| stock | 0.281 | 24.1% | 33670 |
+| etf | 0.340 | 26.9% | 3327 |
+| gold | 0.369 | 26.5% | 1148 |
+| bond | 0.202 | 28.1% | 808 |
 
 The model beats both naive rules in every year. Within a class, R2 is lower because much of the pooled R2 is knowing which assets are riskier.
 
@@ -78,11 +78,12 @@ The model beats both naive rules in every year. Within a class, R2 is lower beca
 | Simulator | 50% interval | 75% | 90% | 95% | 99% | 90% excl. 2020 origins | 90% for 2020 origins | mean error of expected return |
 |---|---|---|---|---|---|---|---|---|
 | Block bootstrap of own history (21-day blocks) | 50% | 70% | 81% | 84% | 91% | 88% | 50% | +6.3% |
-| Production (Student-t dof 5, regime switching, parameter and volatility uncertainty) | 52% | 74% | 82% | 88% | 97% | 88% | 55% | +6.6% |
+| Production (Student-t dof 5, regime switching, parameter and volatility uncertainty) | 49% | 74% | 84% | 89% | 100% | 89% | 60% | +6.6% |
 | Round 5 (no volatility uncertainty) | 53% | 74% | 81% | 88% | 96% | 88% | 50% | +6.6% |
-| Student-t dof 3 (fatter tails) | 49% | 74% | 81% | 88% | 99% | 88% | 50% | +6.3% |
+| Round 9 (volatility uncertainty 0.17) | 52% | 74% | 82% | 88% | 97% | 88% | 55% | +6.6% |
+| Student-t dof 3 (fatter tails) | 49% | 72% | 82% | 89% | 100% | 88% | 55% | +6.3% |
 
-The production simulator draws a per-path error in the expected return (standard error sigma/sqrt(5 years), not tuned), which moved coverage from 44/69/81/84/93% to 49/73/82/84/93%; letting the regime model learn from 2008- (not just 2014-) moved it to 53/74/81/88/96%. Round 6 adds a per-path volatility level (log-normal, sd 0.17 = the spread of next-year vs trailing-year volatility measured on pre-2018 data, not tuned on these outcomes). Fatter tails (dof 3) and a block bootstrap of the portfolio's own history do not fix the outer tails. The remaining miss is concentrated in forecasts made in 2020 (COVID crash and rebound), and realised returns beat the expected return by about 6-7% on average, which shifts the whole distribution. Outside 2020 the 90% band holds 88%.
+The production simulator draws a per-path error in the expected return (standard error sigma/sqrt(5 years), not tuned), which moved coverage from 44/69/81/84/93% to 49/73/82/84/93%; letting the regime model learn from 2008- (not just 2014-) moved it to 53/74/81/88/96%. Round 6 added a per-path volatility level (log-normal, sd 0.17); round 10 raised it to 0.35, chosen on 1-year NIFTY forecasts from 2009-17 (section 13), which moved the 90% band from 82% to 84% here. Fatter tails (dof 3) and a block bootstrap of the portfolio's own history do not fix the outer tails. The remaining miss is concentrated in forecasts made in 2020 (COVID crash and rebound), and realised returns beat the expected return by about 6-7% on average, which shifts the whole distribution. Outside 2020 the 90% band holds 89%. Of the 17 forecasts outside the 90% band, 8 are gold (its 2019 and 2024-25 rallies; it beat its expected return by 17% a year and its band held 69%, against 85-92% for the NIFTY ETF, the balanced portfolio and the 8 stocks), 7 are the rebound after the 2020 crash and 2 are falls (2019-20, 2025-26). Closing the gap would mean raising expected returns to match 2019-25, i.e. fitting the test.
 
 ## 4. Regime model
 
@@ -134,25 +135,27 @@ Regime probabilities as extra inputs to the volatility model change R2 from 0.58
 
 The 2% production setting flags only 3 days in 2021-26 (too few to test). At the 5% and 10% settings, flagged days are followed by much higher volatility (about 21-23% vs 13%) and a 5% drawdown 60-65% of the time against 21%, but not by lower returns (markets tended to rebound). So the detector is a volatility/drawdown warning, not a return signal. Flagged days cluster into 8-20 episodes, so the p-values overstate significance.
 
-## 6. Portfolio backtest (walk-forward, monthly rebalance, 0.10% costs)
+## 6. Portfolio backtest (walk-forward, monthly rebalance, realistic costs)
+
+Costs per asset class (ifit/costs.py, approximate 2025 NSE schedule): stocks 0.17% to buy and 0.15% to sell (STT 0.1% each way, stamp duty, exchange and SEBI fees with GST, half bid-ask spread 0.05%); equity ETFs about 0.06%; gold and gilt ETFs about 0.11%. Trades happen at the rebalance date's close.
 
 2021-01-29 to 2026-10-01, 69 rebalances. Long-only, 'medium' risk caps. Annualised turnover is the sum of one-way trades.
 
 | Strategy | CAGR | Vol | Sharpe | Sortino | Max DD | Calmar | Turnover/yr | Cumulative costs (% of start) | Hit rate (months) | Downside dev | VaR95 1d | CVaR95 1d | vs NIFTY (CAGR) | Info ratio |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| A  Min-variance, trailing covariance | 11.5% | 5.7% | 0.96 | 0.92 | -6.1% | 1.87 | 0.8x | 0.6% | 74% | 5.9% | 0.51% | 0.82% | +1.1% | +0.03 |
-| B  Min-variance + volatility model | 11.2% | 5.3% | 0.97 | 0.93 | -5.8% | 1.91 | 2.6x | 2.0% | 77% | 5.6% | 0.52% | 0.78% | +0.8% | +0.00 |
-| B+ B + regime overlay | 10.2% | 4.5% | 0.95 | 0.91 | -4.9% | 2.08 | 3.1x | 2.4% | 78% | 4.6% | 0.44% | 0.63% | -0.1% | -0.09 |
-| C  Max-Sharpe, prior returns | 12.8% | 11.4% | 0.60 | 0.58 | -16.1% | 0.80 | 3.3x | 2.7% | 59% | 11.7% | 1.12% | 1.62% | +2.4% | +0.27 |
-| C+ C + volatility model | 15.1% | 11.4% | 0.80 | 0.79 | -15.4% | 0.98 | 4.7x | 4.7% | 62% | 11.6% | 1.12% | 1.63% | +4.8% | +0.58 |
-| D  C+ + return tilt | 14.0% | 10.6% | 0.75 | 0.73 | -17.3% | 0.81 | 5.9x | 5.3% | 65% | 11.0% | 1.01% | 1.55% | +3.6% | +0.42 |
-| E  Full system (D + regime overlay) | 12.8% | 8.8% | 0.77 | 0.75 | -13.2% | 0.97 | 6.1x | 5.2% | 64% | 9.0% | 0.84% | 1.25% | +2.4% | +0.23 |
-| B  Min-variance + volatility model (half-step rebalancing) | 10.8% | 5.4% | 0.89 | 0.84 | -6.0% | 1.82 | 1.4x | 1.1% | 75% | 5.7% | 0.54% | 0.80% | +0.5% | -0.03 |
-| E  Full system (D + regime overlay) (half-step rebalancing) | 12.4% | 8.8% | 0.72 | 0.69 | -13.2% | 0.94 | 3.0x | 2.5% | 65% | 9.2% | 0.87% | 1.29% | +2.0% | +0.18 |
-| NIFTY 50 ETF (benchmark) | 10.4% | 12.8% | 0.34 | 0.34 | -16.1% | 0.64 | 0.2x | 0.1% | 59% | 13.0% | 1.30% | 1.86% | +0.0% |  |
-| Equal-weight stocks (monthly) | 16.6% | 13.0% | 0.82 | 0.80 | -15.0% | 1.11 | 0.7x | 0.7% | 68% | 13.4% | 1.25% | 1.84% | +6.3% | +1.20 |
+| A  Min-variance, trailing covariance | 11.5% | 5.7% | 0.95 | 0.90 | -7.0% | 1.64 | 0.8x | 0.7% | 74% | 6.1% | 0.51% | 0.83% | +0.8% | +0.01 |
+| B  Min-variance + volatility model | 11.1% | 5.4% | 0.95 | 0.91 | -6.0% | 1.84 | 2.7x | 2.3% | 77% | 5.6% | 0.52% | 0.79% | +0.5% | -0.02 |
+| B+ B + regime overlay | 10.2% | 4.5% | 0.93 | 0.89 | -5.1% | 2.00 | 3.1x | 2.3% | 78% | 4.7% | 0.46% | 0.65% | -0.4% | -0.11 |
+| C  Max-Sharpe, prior returns | 12.2% | 11.5% | 0.54 | 0.53 | -16.7% | 0.73 | 3.3x | 3.8% | 61% | 11.7% | 1.12% | 1.63% | +1.6% | +0.17 |
+| C+ C + volatility model | 14.3% | 11.4% | 0.73 | 0.72 | -14.9% | 0.96 | 4.7x | 6.4% | 64% | 11.5% | 1.13% | 1.63% | +3.6% | +0.43 |
+| D  C+ + return tilt | 14.4% | 10.4% | 0.80 | 0.77 | -16.2% | 0.89 | 7.5x | 9.3% | 67% | 10.8% | 1.03% | 1.54% | +3.7% | +0.43 |
+| E  Full system (D + regime overlay) | 13.0% | 8.6% | 0.80 | 0.78 | -12.2% | 1.06 | 7.4x | 8.0% | 67% | 9.0% | 0.84% | 1.24% | +2.3% | +0.22 |
+| B  Min-variance + volatility model (half-step rebalancing) | 10.9% | 5.5% | 0.90 | 0.85 | -6.2% | 1.77 | 1.4x | 1.2% | 75% | 5.8% | 0.55% | 0.81% | +0.3% | -0.04 |
+| E  Full system (D + regime overlay) (half-step rebalancing) | 12.7% | 8.7% | 0.78 | 0.75 | -12.2% | 1.04 | 3.5x | 3.7% | 65% | 9.0% | 0.86% | 1.26% | +2.1% | +0.20 |
+| NIFTY 50 ETF (benchmark) | 10.6% | 12.8% | 0.36 | 0.36 | -16.1% | 0.66 | 0.2x | 0.1% | 59% | 13.0% | 1.30% | 1.86% | +0.0% |  |
+| Equal-weight stocks (monthly) | 16.9% | 13.0% | 0.84 | 0.82 | -15.1% | 1.12 | 0.7x | 1.1% | 68% | 13.4% | 1.25% | 1.84% | +6.3% | +1.19 |
 
-Reading it like-for-like (round-9 models): in the max-Sharpe family the volatility model lifts Sharpe 0.60 -> 0.80; in the minimum-variance family it now helps slightly (Sharpe 0.96 -> 0.97; it was 0.89 before round 6). The return tilt (residual reversal + momentum, weight 0.23) lowers Sharpe 0.80 -> 0.75: its reversal half flips every month, raising turnover from 4.7x to 5.9x a year and costs from 4.7% to 5.3% of capital, which outweighs its small gross gain. The regime overlay trades return for lower volatility and drawdown (full system Sharpe 0.77, max drawdown -13.2%). App plans are bought and held rather than rebalanced monthly, so the turnover cost applies less there. Every strategy beats the NIFTY 50 ETF on risk-adjusted return, but an equal-weight basket of the 26 stocks (Sharpe 0.82, CAGR 16.6%) matches or beats the full system, so in this one bull-market sample the models add risk control, not return. Caveat: 5.7 years, one regime; nothing here is statistically significant.
+Reading it like-for-like (round-10 models, realistic costs): in the max-Sharpe family the volatility model lifts Sharpe 0.54 -> 0.73; in the minimum-variance family it is neutral (0.95 -> 0.95). The return tilt (residual reversal + momentum + sector-relative reversal, weight 0.29) adds 0.73 -> 0.80 although it raises turnover from 4.7x to 7.5x a year (costs 6.4% -> 9.3% of capital over the period). The regime overlay trades return for lower volatility and drawdown (full system Sharpe 0.80, max drawdown -12.2%). Until round 10 this backtest credited each rebalance with that day's own return (weights chosen at a close earned the move into that close): the one-day look-ahead flattered the max-Sharpe strategies by about 0.07 and penalised the reversal tilt, which is why earlier versions read 0.60 -> 0.80 and showed the tilt hurting. Every strategy beats the NIFTY 50 ETF (0.36) on risk-adjusted return; an equal-weight basket of the 26 stocks (Sharpe 0.84, CAGR 16.9%) matches the full system. Caveat: 5.7 years, one regime; section 14 tests other periods, cost levels and confidence intervals.
 
 ## 7. Round 4 (selection on a 2017-20 walk-forward validation; this protocol change was made after 2021-26 had been seen, so gains are tentative)
 
@@ -246,4 +249,124 @@ New information: every quarterly result of the 26 stocks since about 2005 (Yahoo
 | Returns: earnings-announcement return | IC 0.036 (t 0.5) | IC -0.012 | rejected |
 | Returns: incumbent + surprise + announcement return | IC 0.074 (t 2.6) | IC 0.030 | rejected: validation t below the incumbent's 3.2 (and lower on test) |
 
-Post-earnings drift, one of the best-documented anomalies in US data, shows no skill on these large, heavily followed NSE stocks. The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. In the portfolio backtest every volatility-model strategy improves slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).
+Post-earnings drift, one of the best-documented anomalies in US data, shows no skill on these large, heavily followed NSE stocks. The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. In the portfolio backtest (before the round-10 look-ahead fix) every volatility-model strategy improved slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).
+
+## 13. Round 10 (scripts/model_search_v9.py; rules fixed before running: beat the model in use on 2017-20)
+
+### Volatility
+
+| Idea | Validation R2 2017-20 | Test R2 2021-26 | within-asset | stocks | Decision |
+|---|---|---|---|---|---|
+| A production (round 9) | 0.5411 | 0.6027 | 0.216 | 0.278 | in use |
+| B train on 25% range-based target | 0.5408 | 0.6038 | 0.219 | 0.280 | rejected |
+| B train on 50% range-based target | 0.5401 | 0.6052 | 0.223 | 0.282 | rejected |
+| B train on 75% range-based target | 0.5389 | 0.6059 | 0.226 | 0.284 | rejected |
+| B train on 100% range-based target | 0.5372 | 0.6062 | 0.228 | 0.284 | rejected |
+| C every day in training | 0.5524 | 0.6040 | 0.217 | 0.279 | adopted |
+| D error correction on [A production (round 9)] | 0.5419 | 0.6027 | 0.209 | 0.276 | rejected |
+| D error correction on [B train on 25% range-based target] | 0.5427 | 0.6041 | 0.213 | 0.279 | rejected |
+| C + B 25% range-based target | 0.5491 | 0.6057 | 0.222 | 0.282 | rejected |
+| C + B 50% range-based target | 0.5439 | 0.6070 | 0.227 | 0.284 | rejected |
+| C + D error correction | 0.5499 | 0.6040 | 0.211 | 0.277 | rejected |
+
+Adopted: training on every day instead of every third (validation 0.541 -> 0.552, test 0.603 -> 0.604). The early validation years had little history, so three times the rows helped there more than in the test years. Training on a cleaner range-based measure of the same 21 days (intraday Garman-Klass + overnight return, stocks only, ETF high/low prints are unreliable) raised the test R2 to 0.606 but lowered validation, so it was rejected. Correcting each asset with its own past errors added nothing out of sample.
+
+**How high can R2 go?** The target, the volatility of the next 21 daily returns, is itself a noisy measurement. Splitting each window into odd and even days gives two independent measurements of the same month; their agreement (split-half reliability, Spearman-Brown) shows that only 84% of the target's variation is true volatility for all assets and 63% for single stocks. A forecaster that knew next month's true volatility exactly would score about that; ours reaches 0.60 (all assets). Against the cleaner range-based measure of the same 21 days, our stock forecasts score R2 0.36 instead of 0.28: part of the apparent error is noise in the target (Andersen & Bollerslev 1998). Reaching 0.65 would need new information (options-implied volatility per stock, intraday data), not a better fit.
+
+### Monte Carlo (1-year NIFTY forecasts from the long 2007- history)
+
+| Setting | 2009-17 origins: 50/75/90/95/99% bands held | error | 2019-25 origins | error |
+|---|---|---|---|---|
+| vol_unc 0.17, extra drift 0.00 (production before) | 63/95/100/100/100 | 0.099 | 60/80/86/94/100 | 0.042 |
+| vol_unc 0.17, extra drift 0.03 | 64/95/100/100/100 | 0.100 | 60/80/86/95/100 | 0.040 |
+| vol_unc 0.17, extra drift 0.06 | 65/95/100/100/100 | 0.102 | 62/80/88/95/100 | 0.042 |
+| vol_unc 0.25, extra drift 0.00 | 61/95/100/100/100 | 0.095 | 56/80/86/95/100 | 0.032 |
+| vol_unc 0.25, extra drift 0.03 | 61/95/100/100/100 | 0.095 | 60/80/86/95/100 | 0.040 |
+| vol_unc 0.25, extra drift 0.06 | 64/95/100/100/100 | 0.100 | 61/81/88/96/100 | 0.045 |
+| vol_unc 0.35, extra drift 0.00 (chosen) | 60/95/100/100/100 | 0.093 | 55/80/86/95/100 | 0.030 |
+| vol_unc 0.35, extra drift 0.03 | 60/95/100/100/100 | 0.093 | 56/80/86/95/100 | 0.032 |
+| vol_unc 0.35, extra drift 0.06 | 61/95/100/100/100 | 0.095 | 61/80/88/98/100 | 0.045 |
+
+On 2009-17 origins the bands were too wide (90% band held 100%); on 2019-25 too narrow. Higher volatility uncertainty fits both better (its heavier tails and narrower centre), extra drift uncertainty does not. Chosen: 0.35, in line with how much next-year NIFTY volatility moved against its trailing 5-year estimate (sd of the log ratio 0.25 on 2009-17 origins, 0.45 on 2019-25). On the standard 104-forecast test (section 3) the 90% band moves from 82% to 84% and the 99% band from 97% to 100%.
+
+### Return signal
+
+| Signal | Validation IC (t) 2017-20 | Test IC (t) 2021-26 |
+|---|---|---|
+| residual reversal + momentum (incumbent) | +0.0611 (+3.19) | +0.0455 (+2.15) |
+| 1-week reversal | +0.0147 (+0.95) | +0.0113 (+0.40) |
+| incumbent + 1-week reversal | +0.0540 (+3.55) | +0.0396 (+1.74) |
+| MAX effect (low max daily return) | -0.0149 (+0.56) | -0.0071 (+0.30) |
+| incumbent + MAX effect (low max daily return) | +0.0360 (+2.64) | +0.0280 (+1.43) |
+| low idiosyncratic volatility | -0.0130 (-0.52) | -0.0151 (-0.73) |
+| incumbent + low idiosyncratic volatility | +0.0353 (+2.27) | +0.0242 (+1.33) |
+| abnormal volume | -0.0165 (-1.92) | -0.0081 (-0.12) |
+| incumbent + abnormal volume | +0.0398 (+1.68) | +0.0244 (+1.65) |
+| low beta | -0.0388 (-0.85) | -0.0150 (-0.52) |
+| incumbent + low beta | +0.0298 (+1.40) | +0.0241 (+1.16) |
+| within-sector residual reversal | +0.0359 (+2.40) | +0.0431 (+1.77) |
+| incumbent + within-sector residual reversal **(adopted)** | +0.0610 (+3.95) | +0.0571 (+2.68) |
+| sector-adjusted reversal + residual momentum | +0.0615 (+2.26) | +0.0420 (+2.11) |
+
+Adopted: adding the residual 1-month return relative to the asset's own sector (a stock that fell more than its sector tends to recover; Da, Liu & Schaumburg 2014). Validation t 3.19 -> 3.95 (same IC 0.061); test IC 0.046 -> 0.057, R2 against a zero forecast +0.22% (Gu-Kelly-Xiu definition; the round-7 signal had +0.09%, fitted Ridge -0.24%), direction right 51.5% of the time. Skill weight 0.23 -> 0.29. The other documented signals (1-week reversal, MAX, idiosyncratic volatility, abnormal volume, low beta) have no skill here on their own.
+
+## 14. Robustness: other periods, realistic costs, confidence intervals (scripts/eval_robustness.py)
+
+Monthly walk-forward from 2017-01-31 to 2026-10-01 (117 rebalances), every model refit each year on earlier data. 2017-20 were the validation years on which model choices were made, so they are not a clean test.
+
+Sharpe ratio by period, realistic costs:
+
+| Strategy | 2017-18 | 2019-20 | 2021-22 | 2023-24 | 2025-26 | 2017-20 (validation years) | 2021-26 (test years) | 2017-26 (all) |
+|---|---|---|---|---|---|---|---|---|
+| C  Max-Sharpe, prior returns | 1.37 | 0.76 | 0.00 | 1.79 | -0.20 | 0.92 | 0.45 | 0.66 |
+| C+ C + volatility model | 1.20 | 0.75 | 0.48 | 1.77 | -0.17 | 0.87 | 0.62 | 0.73 |
+| D  C+ + return tilt | 1.39 | 0.54 | 0.67 | 1.70 | -0.09 | 0.81 | 0.70 | 0.74 |
+| E  Full system (D + regime overlay) | 1.35 | 0.76 | 0.70 | 1.66 | -0.12 | 1.01 | 0.71 | 0.84 |
+| B  Min-variance + volatility model | 1.18 | 1.05 | 0.67 | 2.09 | 0.11 | 1.03 | 0.84 | 0.91 |
+| NIFTY 50 ETF (buy and hold) | 0.86 | 0.44 | 0.62 | 0.92 | -0.64 | 0.53 | 0.31 | 0.41 |
+| Equal-weight stocks (monthly) | 1.13 | 0.65 | 1.12 | 1.58 | -0.52 | 0.74 | 0.76 | 0.75 |
+
+Sharpe ratio 2021-26 by cost level (calendar years; the section-6 table starts at the first rebalance, end of January 2021):
+
+| Strategy | flat 0.10% (previous assumption) | realistic | realistic x2 (stress) | realistic x3 (stress) | realistic + DP charges, Rs 10 lakh | realistic + DP charges, Rs 1 lakh |
+|---|---|---|---|---|---|---|
+| C  Max-Sharpe, prior returns | 0.46 | 0.45 | 0.41 | 0.37 | 0.45 | 0.40 |
+| C+ C + volatility model | 0.64 | 0.62 | 0.56 | 0.49 | 0.61 | 0.58 |
+| D  C+ + return tilt | 0.73 | 0.70 | 0.59 | 0.48 | 0.70 | 0.65 |
+| E  Full system (D + regime overlay) | 0.74 | 0.71 | 0.60 | 0.48 | 0.71 | 0.64 |
+| B  Min-variance + volatility model | 0.85 | 0.84 | 0.78 | 0.72 | 0.83 | 0.73 |
+| NIFTY 50 ETF (buy and hold) | 0.31 | 0.31 | 0.31 | 0.31 | 0.31 | 0.31 |
+| Equal-weight stocks (monthly) | 0.76 | 0.76 | 0.75 | 0.74 | 0.75 | 0.69 |
+
+90% intervals for Sharpe differences (stationary block bootstrap of daily returns, mean block 21 days, 2000 draws, realistic costs):
+
+| Difference | 2021-26 point [90% interval], share > 0 | 2017-26 point [90% interval], share > 0 |
+|---|---|---|
+| volatility model, max-Sharpe (C+ - C) | +0.17 [-0.04, +0.41], 90% | +0.07 [-0.07, +0.23], 79% |
+| volatility model, min-variance (B - A) | +0.00 [-0.22, +0.24], 54% | -0.05 [-0.19, +0.09], 29% |
+| full system vs NIFTY ETF (E - NIFTY) | +0.40 [-0.08, +0.87], 92% | +0.43 [+0.01, +0.83], 95% |
+| max-Sharpe + vol model vs NIFTY ETF (C+ - NIFTY) | +0.30 [-0.16, +0.78], 86% | +0.32 [-0.03, +0.69], 93% |
+| full system vs equal weight (E - EW) | -0.05 [-0.49, +0.43], 42% | +0.10 [-0.31, +0.50], 64% |
+
+What survives: every strategy keeps a higher Sharpe ratio than the NIFTY ETF in every cost scenario, and the full system beats NIFTY in every 2-year block; over 2017-26 its advantage over NIFTY (+0.43) is the one difference whose 90% interval excludes zero (+0.01 to +0.83). What does not: the volatility model's gain in the max-Sharpe family comes mostly from 2021-22 and its 90% interval includes zero; in the minimum-variance family it gains nothing over 2017-26; the full system does not beat an equal-weight basket of the stocks with any confidence. A 5-6 year Sharpe ratio is also fragile: starting the 2021-26 window one month later (end of January instead of 1 January) moves the max-Sharpe + volatility model from 0.62 to 0.73. Costs matter for small accounts: the fixed depository charge (Rs 15.93 per security sold) costs a Rs 1 lakh account rebalanced monthly 0.04-0.15 of Sharpe.
+
+### The app's plans from many start dates
+
+The five strategies chosen with data up to each quarter-end (Rs 1 lakh, medium risk, 12% target, no ML, as in the app's backtest), held with quarterly rebalancing and realistic costs:
+
+| Holding | Strategy | start dates | median return | median per year | worst | best | beat NIFTY ETF | median Sharpe |
+|---|---|---|---|---|---|---|---|---|
+| 1y | Crash-Resistant | 34 | +14% | +13.9% | +5% | +30% | 62% | 1.35 |
+| 1y | Goal-Based | 34 | +14% | +14.4% | +2% | +37% | 62% | 1.01 |
+| 1y | Max Return | 34 | +16% | +16.2% | -12% | +82% | 79% | 0.68 |
+| 1y | Max Sharpe | 34 | +17% | +16.7% | -3% | +36% | 59% | 0.94 |
+| 1y | Min Risk | 34 | +13% | +12.9% | +6% | +30% | 56% | 1.25 |
+| 3y | Crash-Resistant | 26 | +51% | +14.8% | +42% | +66% | 54% | 1.11 |
+| 3y | Goal-Based | 26 | +47% | +13.8% | +27% | +70% | 35% | 0.73 |
+| 3y | Max Return | 26 | +64% | +18.0% | +18% | +106% | 65% | 0.58 |
+| 3y | Max Sharpe | 26 | +53% | +15.2% | +27% | +76% | 58% | 0.61 |
+| 3y | Min Risk | 26 | +50% | +14.5% | +42% | +61% | 50% | 1.14 |
+| 1y | NIFTY 50 ETF | 34 | +11% | +11.2% | -21% | +73% |  |  |
+| 3y | NIFTY 50 ETF | 26 | +52% | +15.0% | +5% | +110% |  |  |
+
+Over 1 year every plan's median return beat the NIFTY ETF's (12.9-16.7% vs 11.2%) and their worst year was far milder (-12% to +6% vs -21%). Over 3 years no plan lost money from any of the 26 start dates (worst +18% to +42%, NIFTY ETF worst +5%), but on return only Max Return clearly beat the NIFTY ETF (median 18.0% vs 15.0% a year); the recommended Goal-Based plan beat it in 35% of the windows. The plans' edge is smaller losses, not higher returns. The single Oct 2023 window in the slides (+55% vs +15%) was a favourable one.

@@ -81,6 +81,29 @@ class Evaluation:
 # --------------------------------------------------------------------------- #
 # Engine
 # --------------------------------------------------------------------------- #
+def backtest_weights(md: D.MarketData, start: pd.Timestamp, p: UserProfile) -> tuple[risk.RiskModel, dict[str, pd.Series]]:
+    """The five strategies' weights chosen with data up to `start` only (prior = CAPM + history, no ML)."""
+    rm0 = risk.build_risk_model(md, asof=start)
+    mu0 = ml.expected_returns(rm0, None)["expected"]
+    b = O.build_bounds(rm0.symbols, p.risk, p.preferred_sectors)
+    ws = {
+        "Max Return": O.max_return(mu0, b),
+        "Min Risk": O.min_variance(mu0, rm0.cov, b),
+        "Max Sharpe": O.max_sharpe(mu0, rm0.cov, b),
+    }
+    front = O.efficient_frontier(mu0, rm0.cov, b, 18)
+    goal = None
+    for w in front:
+        if float(w @ mu0.loc[w.index]) >= p.target_return:
+            goal = w
+            break
+    ws["Goal-Based"] = goal if goal is not None else front[-1]
+    rets0 = rm0.rets[rm0.symbols].values
+    scen = rets0 - rets0.mean(axis=0) + mu0.loc[rm0.symbols].values / C.TRADING_DAYS
+    ws["Crash-Resistant"] = O.min_cvar(scen, b, mu0, C.RISK_FREE + 0.01)
+    return rm0, ws
+
+
 class Engine:
     def __init__(self, md: D.MarketData | None = None, estimator: ml.ReturnEstimator | None = None):
         self.md = md or D.load()
@@ -364,24 +387,7 @@ class Engine:
         md = self.md
         end = md.last_date
         start = md.prices.index[md.prices.index.get_indexer([end - pd.DateOffset(years=years)], method="nearest")[0]]
-        rm0 = risk.build_risk_model(md, asof=start)
-        mu0 = ml.expected_returns(rm0, None)["expected"]
-        b = O.build_bounds(rm0.symbols, p.risk, p.preferred_sectors)
-        ws = {
-            "Max Return": O.max_return(mu0, b),
-            "Min Risk": O.min_variance(mu0, rm0.cov, b),
-            "Max Sharpe": O.max_sharpe(mu0, rm0.cov, b),
-        }
-        front = O.efficient_frontier(mu0, rm0.cov, b, 18)
-        goal = None
-        for w in front:
-            if float(w @ mu0.loc[w.index]) >= p.target_return:
-                goal = w
-                break
-        ws["Goal-Based"] = goal if goal is not None else front[-1]
-        rets0 = rm0.rets[rm0.symbols].values
-        scen = rets0 - rets0.mean(axis=0) + mu0.loc[rm0.symbols].values / C.TRADING_DAYS
-        ws["Crash-Resistant"] = O.min_cvar(scen, b, mu0, C.RISK_FREE + 0.01)
+        rm0, ws = backtest_weights(md, start, p)
 
         r = md.prices[rm0.symbols].loc[start:].pct_change().dropna(how="all").fillna(0.0)
         curves = {}

@@ -300,18 +300,18 @@
   \begin{tabularx}{\textwidth}{@{}P{2.5cm}P{4.2cm}LP{3.2cm}@{}}
     \toprl
     \thd{Task} & \thd{Published result} & \thd{Our result} & \thd{Verdict}\\ \tabrule
-    Monthly stock returns ($R^2$) & Best ML (neural net): \textbf{0.40\%}; plain regression: \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US stocks & Residual reversal + momentum: \textbf{+0.09\%} (same definition); our fitted Ridge: $-$0.24\% & Positive, in the range of top research\\ \tabrule
-    Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{50.5\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
-    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.603} vs 0.50 for the best simple rule, ahead in every year & Works, as the literature predicts\\ \tabrule
-    Outcome ranges & No common published benchmark & 90\% band held \textbf{82\%} of 104 real outcomes & Checked and reported\\ \botrl
+    Monthly returns: out-of-sample $R^2$ & Best ML (neural net) $R^2$ \textbf{0.40\%}; plain regression \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US & Price-pattern signal: $R^2$ \textbf{+0.22\%}; fitted Ridge $-$0.24\% (same definition) & Positive, in the range of top research\\ \tabrule
+    Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{51.5\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
+    Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.604} vs 0.50 for the best simple rule, ahead in every year & Works; target noise caps $R^2$ near 0.84\\ \tabrule
+    Outcome ranges & No common published benchmark & 90\% band held \textbf{84\%} of 104 real outcomes & Checked and reported\\ \botrl
   \end{tabularx}\par\vspace{0.2cm}
   \begin{columns}[T]
     \column{0.47\textwidth}
       \eyebrow{Why nobody does much better}\par\vspace{2pt}\hair\par\vspace{4pt}
-      \footnotesize Monthly noise ($\sim$7\%) swamps the expected return ($\sim$1\%); professionals trade patterns away; 12 years is only $\sim$140 months.\par
+      \footnotesize $R^2$ +0.22\% means the forecast explains 0.22\% of the month-to-month variation in returns; it is not a 0.22\% return. Monthly noise ($\sim$7\%) swamps the expected return ($\sim$1\%).\par
     \column{0.47\textwidth}
       \begin{callout}
-        Our edge is not a magic forecast but \textbf{honest risk modelling}: the volatility model raises the Sharpe ratio from 0.60 to 0.80.
+        Our edge is not a magic forecast but \textbf{honest risk modelling}: after realistic trading costs the volatility model raises the Sharpe ratio from 0.54 to 0.73, and the full system reaches 0.80 (NIFTY 0.36).
       \end{callout}
   \end{columns}
 \end{frame}
@@ -348,7 +348,7 @@
     \node[box, text width=2.0cm] (f) at (0, -1.6) {\textbf{Features}};
     \node[box, text width=2.6cm] (g) at (3.6, 0.6)   {\textbf{Regime}\\\muted{Gaussian mixture}};
     \node[box, text width=2.6cm] (i) at (3.6, -0.75) {\textbf{Anomalies}\\\muted{Isolation Forest}};
-    \node[box, text width=2.6cm] (m) at (3.6, -2.1)  {\textbf{Return signal}\\\muted{residual reversal + momentum}};
+    \node[box, text width=2.6cm] (m) at (3.6, -2.1)  {\textbf{Return signal}\\\muted{reversal + momentum rules}};
     \node[box, text width=2.6cm] (v) at (3.6, -3.45) {\textbf{Volatility}\\\muted{Ridge regression}};
     \node[box, text width=2.9cm] (mu) at (7.9, -0.75) {\textbf{Expected return}\\\muted{0.6 CAPM + 0.4 history + tilt}};
     \node[box, text width=2.9cm] (cov) at (7.9, -2.75) {\textbf{Risk}\\\muted{Ledoit--Wolf covariance}};
@@ -363,7 +363,7 @@
   \vspace{0.35cm}
   \raggedright
   \begin{callout}
-    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.603, helped by each stock's results dates); for returns only a simple residual reversal + momentum signal shows skill (IC 0.05), so it gets only a 23\% weight.
+    Every model is tested walk-forward on data it never saw (2021--26). Volatility is predictable ($R^2$ 0.604, helped by each stock's results dates); for returns only a simple price-pattern signal (reversal, momentum, reversal within the sector) shows skill (IC 0.06), so it gets only a 29\% weight.
   \end{callout}
 \end{frame}
 
@@ -416,7 +416,7 @@
       {\small Each path also draws its own expected return and volatility level, to include estimation error. A \textbf{stress test} starts the paths with a day-0 shock in the bear regime.}
     \column{0.47\textwidth}
       \begin{callout}
-        Checked against reality: of 104 past forecasts, 82\% of outcomes fell inside the 90\% band.
+        Checked against reality: of 104 past forecasts, 84\% fell inside the 90\% band; most misses are gold's rallies and the 2020 rebound.
       \end{callout}
   \end{columns}
 \end{frame}
@@ -520,10 +520,33 @@
       \eyebrow{Backtest: chosen Oct 2023, held to Oct 2026}\par\vspace{2pt}
       \includegraphics[width=\linewidth]{backtest.pdf}\par\vspace{0.3cm}
       \begin{columns}[T]
-        \column{0.33\linewidth}\kpi{14.1\%}{Expected return}\par\vspace{8pt}\kpi[pos]{+55\%}{Backtest, 3 yrs}
-        \column{0.33\linewidth}\kpi{54\%}{Reach target}\par\vspace{8pt}\kpi{+15\%}{NIFTY, 3 yrs}
+        \column{0.33\linewidth}\kpi{14.0\%}{Expected return}\par\vspace{8pt}\kpi[pos]{+55\%}{Backtest, 3 yrs}
+        \column{0.33\linewidth}\kpi{53\%}{Reach target}\par\vspace{8pt}\kpi{+15\%}{NIFTY, 3 yrs}
         \column{0.33\linewidth}\kpi{8 of 9}{Stress tests}\par\vspace{8pt}\kpi{$-$8\%}{Worst fall}
       \end{columns}
+  \end{columns}
+\end{frame}
+
+% ------------------------------------------------------------------ 15b robustness
+\begin{frame}{Results: does it hold up?}
+  \framesubtitle{Walk-forward 2017--2026, models refit every year \;·\; realistic Indian trading costs (STT, stamp duty, fees, spread)}
+  \vspace{0.05cm}
+  \begin{columns}[T]
+    \column{0.55\textwidth}
+      \eyebrow{Sharpe ratio by period, after costs}\par\vspace{2pt}
+      \includegraphics[width=\linewidth]{robustness.pdf}\par\vspace{2pt}
+      {\footnotesize The full system beats the NIFTY ETF in all five periods. 2025--26 runs to October 2026.\par}
+    \column{0.41\textwidth}
+      \begin{columns}[T]
+        \column{0.5\linewidth}\kpi{0.80}{Sharpe 2021--26}\par\vspace{8pt}\kpi[pos]{+2\%}{Worst 1-yr plan}
+        \column{0.5\linewidth}\kpi{+0.43}{Edge over NIFTY}\par\vspace{8pt}\kpi{35\%}{3-yr wins vs NIFTY}
+      \end{columns}
+      \vspace{4pt}
+      {\footnotesize\muted{NIFTY ETF: Sharpe 0.36, worst 1-yr $-$21\%. Edge measured 2017--26 (90\% interval +0.01 to +0.83); plans from 26--34 start dates.}\par}
+      \vspace{6pt}
+      \begin{callout}
+        The edge is \textbf{lower risk}, not higher return. Doubling costs cuts the Sharpe ratio by 0.11; starting one month later moves it by 0.1.
+      \end{callout}
   \end{columns}
 \end{frame}
 
@@ -548,7 +571,7 @@
     {\normalsize Key finding: next month's returns cannot be predicted reliably, but risk can --- so the system's value is in measuring risk, comparing strategies and showing the full range of outcomes.}
   \end{callout}
   \vspace{0.3cm}
-  {\footnotesize\muted{Future work: taxes and costs, news sentiment, mutual funds, larger local language models.}}
+  {\footnotesize\muted{Future work: taxes, per-asset trading costs in the demo wallet, news sentiment, mutual funds, larger local language models.}}
 \end{frame}
 
 % ------------------------------------------------------------------ 17 references
