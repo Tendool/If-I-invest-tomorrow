@@ -370,3 +370,36 @@ The five strategies chosen with data up to each quarter-end (Rs 1 lakh, medium r
 | 3y | NIFTY 50 ETF | 26 | +52% | +15.0% | +5% | +110% |  |  |
 
 Over 1 year every plan's median return beat the NIFTY ETF's (12.9-16.7% vs 11.2%) and their worst year was far milder (-12% to +6% vs -21%). Over 3 years no plan lost money from any of the 26 start dates (worst +18% to +42%, NIFTY ETF worst +5%), but on return only Max Return clearly beat the NIFTY ETF (median 18.0% vs 15.0% a year); the recommended Goal-Based plan beat it in 35% of the windows. The plans' edge is smaller losses, not higher returns. The single Oct 2023 window in the slides (+55% vs +15%) was a favourable one.
+
+## 15. Why 84% and not 90%? (scripts/eval_calibration_check.py)
+
+Scores that reward calibration and sharpness together (Gneiting & Raftery 2007): the 90% interval score (band width + 20 x the distance of an outcome outside the band; lower is better, so a band that is too wide pays for its width) and the CRPS. Rule fixed before running: adopt a candidate only if it lowers the interval score on origins before 2019 in both samples.
+
+| Sample | Candidate | n | 90% band held | 50% band held | mean 90% width | interval score | CRPS | mean error |
+|---|---|---|---|---|---|---|---|---|
+| 4 portfolios, before 2019 | + drift uncertainty 0.03 | 48 | 98% | 56% | 0.491 | 0.496 | 0.0711 | +7.5% |
+| 4 portfolios, before 2019 | + drift uncertainty 0.06 | 48 | 100% | 60% | 0.523 | 0.523 | 0.0722 | +7.5% |
+| 4 portfolios, before 2019 | + drift uncertainty 0.10 | 48 | 100% | 65% | 0.595 | 0.595 | 0.0751 | +7.5% |
+| 4 portfolios, before 2019 | production | 48 | 98% | 56% | 0.478 | 0.487 | 0.0708 | +7.5% |
+| 4 portfolios, before 2019 | recentred by past errors (point in time) | 48 | 98% | 52% | 0.499 | 0.508 | 0.0660 | +2.5% |
+| 4 portfolios, 2019-25 | + drift uncertainty 0.03 | 104 | 84% | 51% | 0.595 | 1.052 | 0.1180 | +6.6% |
+| 4 portfolios, 2019-25 | + drift uncertainty 0.06 | 104 | 86% | 54% | 0.625 | 1.032 | 0.1180 | +6.6% |
+| 4 portfolios, 2019-25 | + drift uncertainty 0.10 | 104 | 87% | 61% | 0.691 | 1.004 | 0.1186 | +6.5% |
+| 4 portfolios, 2019-25 | production | 104 | 84% | 49% | 0.584 | 1.061 | 0.1181 | +6.6% |
+| 4 portfolios, 2019-25 | recentred by past errors (point in time) | 104 | 84% | 49% | 0.625 | 0.926 | 0.1159 | -1.3% |
+| NIFTY, 2009-17 origins | + drift uncertainty 0.03 | 103 | 100% | 60% | 0.938 | 0.938 | 0.1064 | +6.3% |
+| NIFTY, 2009-17 origins | + drift uncertainty 0.06 | 103 | 100% | 61% | 0.955 | 0.955 | 0.1073 | +6.3% |
+| NIFTY, 2009-17 origins | + drift uncertainty 0.10 | 103 | 100% | 68% | 0.995 | 0.995 | 0.1095 | +6.3% |
+| NIFTY, 2009-17 origins | production | 103 | 100% | 60% | 0.931 | 0.931 | 0.1061 | +6.3% |
+| NIFTY, 2009-17 origins | recentred by past errors (point in time) | 103 | 98% | 63% | 1.002 | 1.015 | 0.1126 | -1.9% |
+| NIFTY, 2018-25 origins | + drift uncertainty 0.03 | 92 | 88% | 59% | 0.715 | 0.905 | 0.1075 | +1.1% |
+| NIFTY, 2018-25 origins | + drift uncertainty 0.06 | 92 | 89% | 64% | 0.740 | 0.893 | 0.1079 | +1.1% |
+| NIFTY, 2018-25 origins | + drift uncertainty 0.10 | 92 | 92% | 68% | 0.797 | 0.900 | 0.1090 | +1.1% |
+| NIFTY, 2018-25 origins | production | 92 | 88% | 58% | 0.706 | 0.909 | 0.1074 | +1.1% |
+| NIFTY, 2018-25 origins | recentred by past errors (point in time) | 92 | 90% | 52% | 0.739 | 0.911 | 0.1151 | -4.4% |
+
+1. **84% is within sampling error of 90%.** The 104 outcomes come from 26 overlapping 1-year windows of 4 portfolios that move together; a block bootstrap over the origin dates (blocks of one year) puts the 90% band's coverage between 72% and 94%.
+2. **The misses are about location, not width.** 8 of the 17 misses are gold (it beat its expected return by 17% a year in 2019-25) and 7 are the rebound after the 2020 crash; without gold the band held 69 of 78 outcomes (88%).
+3. **Earlier periods show the opposite error.** On 2016-18 origins the same bands held 98% of outcomes and on 2009-17 NIFTY origins 100%: they were too wide. Adding drift uncertainty raises 2019-25 coverage (up to 87%) but worsens the interval score before 2019; recentring on past forecast errors fixes the 2019-25 bias (interval score 1.061 -> 0.926) but worsens it before 2019 (0.487 -> 0.508; NIFTY 0.931 -> 1.015), i.e. it chases the last regime.
+
+Decision: no change. The models are frozen at the round-10 settings; closing the gap further would mean tuning to 2019-25.

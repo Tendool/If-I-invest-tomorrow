@@ -303,7 +303,7 @@
     Monthly returns: out-of-sample $R^2$ & Best ML (neural net) $R^2$ \textbf{0.40\%}; plain regression \textbf{$-$3.46\%} --- Gu, Kelly \& Xiu, US & Price-pattern signal: $R^2$ \textbf{+0.22\%}; fitted Ridge $-$0.24\% (same definition) & Positive, in the range of top research\\ \tabrule
     Stock direction & LSTM \textbf{54.3\%} --- Fischer \& Krauss; daily, only the 10 most extreme picks a day, before costs & \textbf{51.5\%} monthly on all 32 assets, vs 47.5\% for the average & Not like for like; both near 50\%\\ \tabrule
     Next-month volatility & Volatility is known to be forecastable from past volatility --- Corsi (HAR model) & $R^2$ \textbf{0.604} vs 0.50 for the best simple rule, ahead in every year & Works; target noise caps $R^2$ near 0.84\\ \tabrule
-    Outcome ranges & No common published benchmark & 90\% band held \textbf{84\%} of 104 real outcomes & Checked and reported\\ \botrl
+    Outcome ranges & No common published benchmark & 90\% band held \textbf{84\%} of 104 real outcomes (sampling range 72--94\%) & Consistent with 90\%\\ \botrl
   \end{tabularx}\par\vspace{0.2cm}
   \begin{columns}[T]
     \column{0.47\textwidth}
@@ -416,7 +416,7 @@
       {\small Each path also draws its own expected return and volatility level, to include estimation error. A \textbf{stress test} starts the paths with a day-0 shock in the bear regime.}
     \column{0.47\textwidth}
       \begin{callout}
-        Checked against reality: of 104 past forecasts, 84\% fell inside the 90\% band; most misses are gold's rallies and the 2020 rebound.
+        Reality check: 84\% of 104 past outcomes fell in the 90\% band, within sampling error (72--94\%). Misses: gold, 2020 rebound.
       \end{callout}
   \end{columns}
 \end{frame}

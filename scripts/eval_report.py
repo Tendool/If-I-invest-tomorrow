@@ -253,7 +253,38 @@ def report(ret, vol, cal, reg, ano, port):
           "The earnings calendar does help volatility: the model now knows when each stock's next results are due and how much that stock usually moves on them. "
           "In the portfolio backtest (before the round-10 look-ahead fix) every volatility-model strategy improved slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).", ""]
     L += round10_sections()
+    L += calibration_check_section()
     (R / "evaluation.md").write_text("\n".join(L), encoding="utf-8")
+
+
+def calibration_check_section():
+    """Section 15: why the 90% band holds 84%, and whether it can be fixed without needlessly wide bands."""
+    j = lambda n: json.loads((R / n).read_text(encoding="utf-8"))
+    pf, nf = j("calibration_check_portfolios.json"), j("calibration_check_nifty.json")
+    L = ["## 15. Why 84% and not 90%? (scripts/eval_calibration_check.py)", "",
+         "Scores that reward calibration and sharpness together (Gneiting & Raftery 2007): the 90% interval score (band width + 20 x the distance "
+         "of an outcome outside the band; lower is better, so a band that is too wide pays for its width) and the CRPS. Rule fixed before running: "
+         "adopt a candidate only if it lowers the interval score on origins before 2019 in both samples.", "",
+         "| Sample | Candidate | n | 90% band held | 50% band held | mean 90% width | interval score | CRPS | mean error |", "|---|---|---|---|---|---|---|---|---|"]
+    for lab, src in (("4 portfolios", pf), ("NIFTY", nf)):
+        for period, d in src.items():
+            if not isinstance(d, dict) or not all(isinstance(v, dict) and "n" in v for v in d.values()):
+                continue
+            for c, v in d.items():
+                L.append(f"| {lab}, {period} | {c} | {v['n']} | {v['cover90']:.0%} | {v['cover50']:.0%} | {v['width90']:.3f} | {v['is90']:.3f} | {v['crps']:.4f} | {v['mean_error']:+.1%} |")
+    lo, hi = pf["production_2019_25_cover90_ci"]
+    L += ["",
+          f"1. **84% is within sampling error of 90%.** The 104 outcomes come from 26 overlapping 1-year windows of 4 portfolios that move together; a "
+          f"block bootstrap over the origin dates (blocks of one year) puts the 90% band's coverage between {lo:.0%} and {hi:.0%}.",
+          "2. **The misses are about location, not width.** 8 of the 17 misses are gold (it beat its expected return by 17% a year in 2019-25) and 7 "
+          "are the rebound after the 2020 crash; without gold the band held 69 of 78 outcomes (88%).",
+          "3. **Earlier periods show the opposite error.** On 2016-18 origins the same bands held 98% of outcomes and on 2009-17 NIFTY origins 100%: "
+          "they were too wide. Adding drift uncertainty raises 2019-25 coverage (up to 87%) but worsens the interval score before 2019; recentring on "
+          "past forecast errors fixes the 2019-25 bias (interval score 1.061 -> 0.926) but worsens it before 2019 (0.487 -> 0.508; NIFTY 0.931 -> 1.015), "
+          "i.e. it chases the last regime.",
+          "",
+          "Decision: no change. The models are frozen at the round-10 settings; closing the gap further would mean tuning to 2019-25.", ""]
+    return L
 
 
 def round10_sections():

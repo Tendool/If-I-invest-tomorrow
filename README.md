@@ -144,7 +144,9 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
 - **Nested selection and ensembles** (round 8, re-checked after round 9) - choosing the best candidate, a top-3 average or stacking weights each year from
   earlier years only does not beat the fixed models on 2021-26 (volatility R2 0.597-0.600 vs 0.603; return IC 0.036-0.046 vs 0.046).
 - **Monte Carlo** - 50/75/90/95/99% intervals hold 49/74/84/89/100% (52/74/82/88/97% with the round-9 volatility uncertainty; 44/69/81/84/93% before adding
-  parameter and volatility uncertainty and the 2008- regime history); the remaining miss is gold's rallies and the 2020 rebound, i.e. expected returns, not band width.
+  parameter and volatility uncertainty and the 2008- regime history); the remaining miss is gold's rallies and the 2020 rebound, i.e. expected returns, not band width. 84 % is within sampling error of 90 % (block bootstrap
+  72-94 %). Wider bands and recentring on past errors were tested with the interval score (`scripts/eval_calibration_check.py`) and rejected: before 2019
+  the same bands were already too wide (98 % and 100 % held), so the models are frozen at the round-10 settings.
 - **Regimes / anomalies** - both act as risk labels: after a Neutral regime a 5% market drawdown within 21 days is 35% likely vs 13% after Calm;
   anomaly flags precede much higher volatility (21-23% vs 13%) but not lower returns.
 - **Portfolio (walk-forward, monthly, realistic NSE costs per asset class: STT, stamp duty, fees, spread; `ifit/costs.py`)** - the volatility model
