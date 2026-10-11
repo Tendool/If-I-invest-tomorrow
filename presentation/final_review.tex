@@ -550,42 +550,6 @@
   \end{columns}
 \end{frame}
 
-% ------------------------------------------------------------------ 15c evidence quality
-\begin{frame}{Results: how far can the numbers be trusted?}
-  \framesubtitle{2017--20 chose the models \;·\; 2021--26 evaluated them, inspected repeatedly \;·\; forward test since Oct 2026}
-  \vspace{0.25cm}
-  \begin{columns}[T]
-    \column{0.30\textwidth}
-      \eyebrow{Return signal, after costs}\par\vspace{2pt}\hair\par\vspace{5pt}
-      \kpi{+0.07}{Sharpe added, 2021--26}\par\vspace{4pt}
-      {\footnotesize 90\% interval $-$0.12 to +0.28; +0.04 over 2017--26. Net value \textbf{unproven}, so it keeps a small 29\% weight.\par}
-    \column{0.30\textwidth}
-      \eyebrow{Monte Carlo by horizon}\par\vspace{2pt}\hair\par\vspace{5pt}
-      {\footnotesize\renewcommand{\arraystretch}{1.25}
-      \begin{tabular}{@{}lrr@{}}
-        \thd{Horizon} & \thd{90\% band} & \thd{interval}\\
-        1 month & \textbf{89\%} & 85--92\%\\
-        3 months & \textbf{90\%} & 84--95\%\\
-        1 year & \textbf{85\%} & 75--94\%\\
-      \end{tabular}\par\vspace{4pt}
-      Calibrated where outcomes are many; 1 year rests on $\sim$7 independent windows.\par}
-    \column{0.32\textwidth}
-      \eyebrow{What moves P(target) = 53\%}\par\vspace{2pt}\hair\par\vspace{5pt}
-      {\footnotesize\renewcommand{\arraystretch}{1.25}
-      \begin{tabular}{@{}lr@{}}
-        Tails, regimes, vol.\ uncertainty & 53\%\\
-        Crisis correlations & 49\%\\
-        Expected return $-$2 points & 44\%\\
-        CAPM only / history only & 28 / 80\%\\
-      \end{tabular}\par\vspace{4pt}
-      Sensitivity range, not a confidence interval: \textbf{44--61\%} under plausible alternatives.\par}
-  \end{columns}
-  \vspace{0.45cm}
-  \begin{callout}
-    Deflated Sharpe ratio (allowing for up to 300 trials): 0.81--0.89 on 2021--26 alone, 0.95--0.98 over 2017--26. Strong over ten years, suggestive on the evaluation years alone.
-  \end{callout}
-\end{frame}
-
 % ------------------------------------------------------------------ 16 conclusion
 \begin{frame}{Conclusion}
   \vspace{0.3cm}
@@ -607,7 +571,7 @@
     {\normalsize Key finding: next month's returns cannot be predicted reliably, but risk can --- so the system's value is in measuring risk, comparing strategies and showing the full range of outcomes.}
   \end{callout}
   \vspace{0.3cm}
-  {\footnotesize\muted{Future work: score the forward test as new data arrives, taxes, news sentiment, mutual funds, larger local language models.}}
+  {\footnotesize\muted{Future work: taxes, per-asset trading costs in the demo wallet, news sentiment, mutual funds, larger local language models.}}
 \end{frame}
 
 % ------------------------------------------------------------------ 17 references
