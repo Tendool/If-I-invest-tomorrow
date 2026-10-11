@@ -32,6 +32,29 @@ def per_side(cls: str) -> tuple[float, float]:
     return stt_b + STAMP_BUY + fees + _SPREAD[cls], stt_s + fees + _SPREAD[cls]
 
 
+def _cls(symbol: str) -> str:
+    return C.UNIVERSE.get(symbol, ("", "", "stock"))[2]
+
+
+def buy_rate(symbol: str) -> float:
+    """Proportional cost of buying `symbol`, as a fraction of the traded value."""
+    return per_side(_cls(symbol))[0]
+
+
+def sell_rate(symbol: str) -> float:
+    return per_side(_cls(symbol))[1]
+
+
+def buy_fee(symbol: str, value: float) -> float:
+    """Rupee cost of a buy order of `value` rupees."""
+    return value * buy_rate(symbol)
+
+
+def sell_fee(symbol: str, value: float) -> float:
+    """Rupee cost of a sell order of `value` rupees: proportional costs plus the fixed depository charge."""
+    return value * sell_rate(symbol) + DP_CHARGE_RS
+
+
 def rates(symbols) -> tuple[pd.Series, pd.Series]:
     """Buy and sell cost rates per symbol."""
     b = {s: per_side(C.UNIVERSE[s][2])[0] for s in symbols}

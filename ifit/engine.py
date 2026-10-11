@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from . import config as C
+from . import costs as K
 from . import data as D
 from . import ml, risk, optimizer as O, montecarlo as MC
 
@@ -306,9 +307,8 @@ class Engine:
             rows.append(dict(symbol=s, ticker=D.short(s), name=name, sector=sector, asset_class=cls,
                              weight=float(wt), target_amount=float(wt * p.amount), price=float(px[s])))
         df = pd.DataFrame(rows)
-        # keep room for trading costs
-        cost = 1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE
-        budget = p.amount / cost
+        # keep room for trading costs (realistic per asset class: STT, stamp duty, fees, spread; ifit/costs.py)
+        cost = 1 + df.symbol.map(K.buy_rate)
         # a position too small for half a share cannot be bought: give its money to the rest of the plan, pro rata
         alloc = df.target_amount.copy()
         for _ in range(len(df)):
@@ -318,20 +318,19 @@ class Engine:
             alloc[tiny] = 0.0
             alloc *= p.amount / alloc.sum()
         df["shares"] = np.floor(alloc / cost / df.price).astype(int)
-        spent = float((df.shares * df.price).sum())
-        left = budget - spent
+        left = p.amount - float((df.shares * df.price * cost).sum())
         # hand out the leftover cash one share at a time to the most under-allocated asset that still deserves a share
         for _ in range(500):
             gap = alloc / cost - df.shares * df.price
-            ok = (df.price <= left) & (gap >= 0.5 * df.price)
+            ok = (df.price * cost <= left) & (gap >= 0.5 * df.price)
             if not ok.any():
                 break
             i = gap.where(ok).idxmax()
             df.loc[i, "shares"] += 1
-            left -= df.price[i]
+            left -= df.price[i] * cost[i]
         df["invested"] = df.shares * df.price
         df["actual_weight"] = df.invested / p.amount
-        df.attrs["cash_left"] = float(p.amount - df.invested.sum() * (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE))
+        df.attrs["cash_left"] = float(p.amount - (df.invested * cost).sum())
         return df
 
     # -------------------------------------------------------- extra analyses

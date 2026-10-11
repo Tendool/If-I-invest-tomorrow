@@ -10,6 +10,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage[hidelinks]{hyperref}
+\usepackage{balance}
 \graphicspath{{../presentation/figures/}}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
@@ -39,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-Retail investors are usually given either a single price forecast or a static allocation, without the probability of reaching their goal or the loss they should expect in a crash. We present \emph{If I Invest Tomorrow}, an end-to-end decision simulator for Indian markets that turns an investor's amount, horizon, risk tolerance, target return and preferred sectors into a concrete plan for the next trading day, in rupees and whole shares. The engine combines a CAPM and history prior for expected returns, a fixed cross-sectional price-pattern signal, a Ridge model for next-month volatility, a Gaussian-mixture market-regime model, Isolation-Forest anomaly detection, five optimised strategies, a regime-switching Student-$t$ Monte Carlo simulation and nine stress scenarios. A locally hosted language model acts as an agent that calls 29 engine tools and manages a demo portfolio under rules enforced in code. All models are evaluated with an expanding-window walk-forward design on 32 assets (2014--2026): model choices are made on 2017--20 and reported on 2021--26. The volatility model reaches an out-of-sample $R^2$ of 0.604 on log volatility against 0.503 for the best naive rule; the return signal has an information coefficient of 0.057 and an out-of-sample $R^2$ of $+0.22\%$, small but positive where fitted models are negative. In a monthly walk-forward backtest with realistic NSE trading costs the full system reaches a Sharpe ratio of 0.80 against 0.36 for a NIFTY 50 ETF, and over 2017--26 it beats the ETF in every two-year period. We also report what does not hold: the return signal's net value is small, Monte Carlo bands held 84\% of outcomes at a nominal 90\%, and the system's edge is lower risk rather than higher return.
+Retail investors are usually given either a single price forecast or a static allocation, without the probability of reaching their goal or the loss they should expect in a crash. We present \emph{If I Invest Tomorrow}, an end-to-end decision simulator for Indian markets that turns an investor's amount, horizon, risk tolerance, target return and preferred sectors into a concrete plan for the next trading day, in rupees and whole shares. The engine combines a CAPM and history prior for expected returns, a fixed cross-sectional price-pattern signal, a Ridge model for next-month volatility, a Gaussian-mixture market-regime model, Isolation-Forest anomaly detection, five optimised strategies, a regime-switching Student-$t$ Monte Carlo simulation and nine stress scenarios. A locally hosted language model acts as an agent that calls 29 engine tools and manages a demo portfolio under rules enforced in code. All models are evaluated with an expanding-window walk-forward design on 32 assets (2014--2026): model choices are made on 2017--20 and reported on 2021--26. The volatility model reaches an out-of-sample $R^2$ of 0.604 on log volatility against 0.503 for the best naive rule; the return signal has an information coefficient of 0.057 and an out-of-sample $R^2$ of $+0.22\%$, small but positive where fitted models are negative. In a monthly walk-forward backtest with realistic NSE trading costs the full system reaches a Sharpe ratio of 0.80 against 0.36 for a NIFTY 50 ETF, and over 2017--26 it beats the ETF in every two-year period. We also report what does not hold: the return signal's net contribution is not distinguishable from zero, the deflated Sharpe ratio is convincing over 2017--26 but only suggestive on 2021--26 alone, one-year Monte Carlo bands held 84\% of outcomes at a nominal 90\% (1-month and 3-month bands hold 89--90\%), and the system's edge is lower risk rather than higher return.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -258,6 +259,36 @@ Extending the walk-forward to January 2017 -- October 2026 (117 rebalances; 2017
 \label{fig:robust}
 \end{figure}
 
+\subsection{How far the evidence goes}
+Because the 2017--20 years chose the models and the 2021--26 years were inspected during development, we test the headline results further; no model was changed by these tests. First, the return signal: the full system with and without it differs by $+0.07$ Sharpe on 2021--26 (90\% block-bootstrap interval $-0.12$ to $+0.28$), $+0.04$ over 2017--26 and $-0.01$ on 2017--20, so its net value after costs is not distinguishable from zero. Second, the deflated Sharpe ratio \cite{bailey2014}, which asks whether the Sharpe ratio exceeds the best that $N$ skill-free trials would produce, using the skewness and kurtosis of daily returns and the variance of the Sharpe ratios of the strategy variants actually tested: for the full system it is 0.81--0.89 on 2021--26 alone and 0.95--0.98 over 2017--26, for $N$ between 9 (the portfolio variants) and 300 (every model candidate counted as independent). Third, calibration by horizon on monthly forecast dates: the 90\% band holds 89\% of 1-month outcomes (interval 85--92\%, about 81 independent windows), 90\% at 3 months and 85\% at one year (75--94\%, about 7 windows), so the simulator is well calibrated where outcomes are numerous. Finally, Table~\ref{tab:sens} varies the simulation's assumptions for the recommended plan. Tails, regime dynamics and volatility uncertainty barely matter; expected returns and crisis correlations dominate, and under them the rule's recommendation can change. The probability of reaching the target is therefore best stated with an assumption-sensitivity range, 53\% (44--61\%), which is not a statistical confidence interval.
+
+\begin{table}[t]
+\caption{Sensitivity of the recommended plan to simulation assumptions (sampling error of P(target) about $\pm 0.5$ points)}
+\label{tab:sens}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Assumption & P(target) & 5\% worst & Rule picks \\
+\midrule
+Production & 53\% & 92,364 & Goal-Based \\
+Normal shocks & 53\% & 92,930 & Goal-Based \\
+Student-$t$, 3 d.o.f. & 53\% & 92,647 & Goal-Based \\
+Bootstrap of own history & 61\% & 1,08,371 & Goal-Based \\
+Crisis correlations & 49\% & 77,202 & Max Sharpe \\
+No regime switching & 53\% & 92,995 & Goal-Based \\
+Regimes twice as persistent & 53\% & 91,983 & Goal-Based \\
+No volatility uncertainty & 53\% & 94,218 & Goal-Based \\
+Volatility uncertainty 0.5 & 53\% & 91,184 & Goal-Based \\
+No return signal & 50\% & 91,075 & Max Return \\
+Expected return $-2$ points & 44\% & 87,572 & Goal-Based \\
+CAPM-only returns & 28\% & 78,810 & Goal-Based \\
+History-only returns & 80\% & 1,11,797 & Max Return \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Case study}
 For an investor with Rs~1,00,000, a three-year horizon, medium risk and a 12\% target, the engine recommends the Goal-Based plan: an expected return of 14.0\% with 11.6\% volatility, a 53\% probability of reaching the target, a 92\% probability of a gain, a median final value of Rs~1.43 lakh (5th--95th percentile Rs~0.92--2.19 lakh), and survival of 8 of 9 stress tests (Fig.~\ref{fig:dist}). Chosen with data up to October 2023 and held to October 2026, the same strategy returned 55\% against 15\% for the NIFTY 50 index; the robustness analysis above shows that this window was a favourable one.
 
@@ -270,13 +301,14 @@ For an investor with Rs~1,00,000, a three-year horizon, medium risk and a 12\% t
 
 % =====================================================================
 \section{Discussion and Limitations}
-The system's value lies in risk modelling, not in return forecasting. Volatility is forecastable and improves risk-adjusted performance; returns are barely forecastable, so the signal receives only a 29\% weight and its net contribution is small. In the deployed planner the volatility forecast reports next-month risk, while plans held for one to five years use the long-run Ledoit--Wolf covariance; the monthly-rebalanced backtest uses the forecast to scale the covariance. The main limitations are: (i) the 2021--26 results were inspected over several model-search rounds, so they carry some selection bias, and only a frozen forward test can remove it; (ii) 12 years contain few independent market regimes, and a five-year Sharpe ratio is sensitive to the start date; (iii) the probability of reaching a target depends on expected-return assumptions that are hard to estimate; (iv) the demo wallet charges a flat 0.10\% per trade rather than the per-asset costs used in the backtests; (v) taxes are not modelled. The system is a simulation with demo money and is not investment advice.
+The system's value lies in risk modelling, not in return forecasting. Volatility is forecastable and improves risk-adjusted performance; returns are barely forecastable, so the signal receives only a 29\% weight and its net contribution is small. In the deployed planner the volatility forecast reports next-month risk, while plans held for one to five years use the long-run Ledoit--Wolf covariance; the monthly-rebalanced backtest uses the forecast to scale the covariance. The main limitations are: (i) the 2021--26 results were inspected over several model-search rounds, so they carry some selection bias; a forward test of the frozen models, which logs each forecast with the code version that produced it, started in October 2026 and is the only untouched evidence; (ii) 12 years contain few independent market regimes, and a five-year Sharpe ratio is sensitive to the start date; (iii) the probability of reaching a target depends on expected-return and correlation assumptions that are hard to estimate; (iv) taxes are not modelled. The demo wallet, auto-trade and plan sizing use the same per-asset trading costs as the backtests. The system is a simulation with demo money and is not investment advice.
 
 % =====================================================================
 \section{Conclusion}
-\emph{If I Invest Tomorrow} turns an investor's profile into a whole-share plan for the next trading day, together with the probability of reaching the goal, the range of outcomes and the loss in a crash, and lets the investor act on it through a tool-grounded AI agent. Its models are validated walk-forward with rules fixed in advance, and the paper reports the weaker findings alongside the strong ones. Future work includes per-asset trading costs and taxes in the demo wallet, a prospective test of the frozen models, news sentiment, mutual funds and larger local language models.
+\emph{If I Invest Tomorrow} turns an investor's profile into a whole-share plan for the next trading day, together with the probability of reaching the goal, the range of outcomes and the loss in a crash, and lets the investor act on it through a tool-grounded AI agent. Its models are validated walk-forward with rules fixed in advance, and the paper reports the weaker findings alongside the strong ones. Future work includes scoring the forward test as new data arrives, taxes, news sentiment, mutual funds and larger local language models.
 
 % =====================================================================
+\balance
 \begin{thebibliography}{00}
 \bibitem{markowitz1952} H. Markowitz, ``Portfolio selection,'' \emph{J. Finance}, vol. 7, no. 1, pp. 77--91, 1952.
 \bibitem{sharpe1964} W. F. Sharpe, ``Capital asset prices: A theory of market equilibrium under conditions of risk,'' \emph{J. Finance}, vol. 19, no. 3, pp. 425--442, 1964.
@@ -303,6 +335,7 @@ The system's value lies in risk modelling, not in return forecasting. Volatility
 \bibitem{schick2023} T. Schick \emph{et al.}, ``Toolformer: Language models can teach themselves to use tools,'' in \emph{Adv. Neural Inf. Process. Syst. (NeurIPS)}, 2023.
 \bibitem{politis1994} D. N. Politis and J. P. Romano, ``The stationary bootstrap,'' \emph{J. Amer. Statist. Assoc.}, vol. 89, no. 428, pp. 1303--1313, 1994.
 \bibitem{gneiting2007} T. Gneiting and A. E. Raftery, ``Strictly proper scoring rules, prediction, and estimation,'' \emph{J. Amer. Statist. Assoc.}, vol. 102, no. 477, pp. 359--378, 2007.
+\bibitem{bailey2014} D. H. Bailey and M. L{\'o}pez de Prado, ``The deflated Sharpe ratio: Correcting for selection bias, backtest overfitting, and non-normality,'' \emph{J. Portfolio Manage.}, vol. 40, no. 5, pp. 94--107, 2014.
 \end{thebibliography}
 
 \end{document}

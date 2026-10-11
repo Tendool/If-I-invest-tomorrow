@@ -1,0 +1,465 @@
+{
+ "profile": "Rs 1 lakh, 3 years, medium risk, 12% target",
+ "plan": "Goal-Based",
+ "n_paths": 10000,
+ "scenarios": {
+  "Production (Student-t dof 5, regime switching, parameter + volatility uncertainty)": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5267,
+   "p5": 92364.33446407318,
+   "med": 142802.3874759674,
+   "mdd": 0.14130376279354095,
+   "ppos": 0.9175,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5381,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1278,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4584,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5267,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1536,
+     "ok": true
+    }
+   }
+  },
+  "Tails: normal shocks": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5297,
+   "p5": 92930.36043643951,
+   "med": 143006.95657730103,
+   "mdd": 0.1430896669626236,
+   "ppos": 0.9187,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5403,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1249,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4573,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5297,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.158,
+     "ok": true
+    }
+   }
+  },
+  "Tails: fatter (Student-t dof 3)": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5296,
+   "p5": 92646.75974845886,
+   "med": 143080.40142059326,
+   "mdd": 0.1357637643814087,
+   "ppos": 0.9165,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5393,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1248,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4594,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5296,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1555,
+     "ok": true
+    }
+   }
+  },
+  "Tails: block bootstrap of the plan's own history": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.6085,
+   "p5": 108370.54193019865,
+   "med": 147836.71498298645,
+   "mdd": 0.1262999176979065,
+   "ppos": 0.9801,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.6243,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.0918,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.5225,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.6085,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.0986,
+     "ok": true
+    }
+   }
+  },
+  "Correlations: equity correlations halfway to 1 (crisis)": {
+   "recommended": "Max Sharpe",
+   "plan": "Goal-Based",
+   "ptgt": 0.4897,
+   "p5": 77202.13323831558,
+   "med": 139254.10509109497,
+   "mdd": 0.20080293715000153,
+   "ppos": 0.8372,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.4973,
+     "ok": false
+    },
+    "Min Risk": {
+     "ptgt": 0.1764,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4502,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.4897,
+     "ok": false
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1794,
+     "ok": true
+    }
+   }
+  },
+  "Regimes: no regime switching": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5306,
+   "p5": 92994.58980560303,
+   "med": 143176.41258239746,
+   "mdd": 0.13673153519630432,
+   "ppos": 0.921,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5409,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1255,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4618,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5306,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1563,
+     "ok": true
+    }
+   }
+  },
+  "Regimes: twice as persistent": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5273,
+   "p5": 91983.29627513885,
+   "med": 142922.8961467743,
+   "mdd": 0.14169828593730927,
+   "ppos": 0.917,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5403,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1225,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.459,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5273,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1521,
+     "ok": true
+    }
+   }
+  },
+  "Volatility uncertainty: none": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5292,
+   "p5": 94218.48684549332,
+   "med": 143143.4988975525,
+   "mdd": 0.1409631371498108,
+   "ppos": 0.9207,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5392,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1303,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4606,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5292,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1601,
+     "ok": true
+    }
+   }
+  },
+  "Volatility uncertainty: 0.5": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5256,
+   "p5": 91183.56853723526,
+   "med": 142778.06282043457,
+   "mdd": 0.1413138210773468,
+   "ppos": 0.9145,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5372,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1214,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4593,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5256,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1512,
+     "ok": true
+    }
+   }
+  },
+  "Expected return: prior (CAPM + history), no return signal": {
+   "recommended": "Max Return",
+   "plan": "Goal-Based",
+   "ptgt": 0.5039,
+   "p5": 91075.0299692154,
+   "med": 140825.25372505188,
+   "mdd": 0.14296604692935944,
+   "ppos": 0.9101,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5267,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1121,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4292,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5039,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1521,
+     "ok": true
+    }
+   }
+  },
+  "Expected return: CAPM only": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.2795,
+   "p5": 78809.71789360046,
+   "med": 121771.78859710693,
+   "mdd": 0.16461527347564697,
+   "ppos": 0.7896,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.2957,
+     "ok": false
+    },
+    "Min Risk": {
+     "ptgt": 0.0765,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.2107,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.2795,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.0926,
+     "ok": true
+    }
+   }
+  },
+  "Expected return: history only": {
+   "recommended": "Max Return",
+   "plan": "Goal-Based",
+   "ptgt": 0.8004,
+   "p5": 111797.48594760895,
+   "med": 172979.91514205933,
+   "mdd": 0.12387541681528091,
+   "ppos": 0.9771,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.8164,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1755,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.7609,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.8004,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.2939,
+     "ok": true
+    }
+   }
+  },
+  "Expected return: production minus 2% a year": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.4444,
+   "p5": 87572.26407527924,
+   "med": 135416.71633720398,
+   "mdd": 0.14796988666057587,
+   "ppos": 0.8854,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.4607,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.0517,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.3418,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.4444,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.0728,
+     "ok": true
+    }
+   }
+  },
+  "Stress (not an assumption): start in the bear regime": {
+   "recommended": "Goal-Based",
+   "plan": "Goal-Based",
+   "ptgt": 0.5275,
+   "p5": 90662.91362047197,
+   "med": 142939.12649154663,
+   "mdd": 0.15056347846984863,
+   "ppos": 0.9121,
+   "all": {
+    "Max Return": {
+     "ptgt": 0.5374,
+     "ok": true
+    },
+    "Min Risk": {
+     "ptgt": 0.1364,
+     "ok": true
+    },
+    "Max Sharpe": {
+     "ptgt": 0.4594,
+     "ok": true
+    },
+    "Goal-Based": {
+     "ptgt": 0.5275,
+     "ok": true
+    },
+    "Crash-Resistant": {
+     "ptgt": 0.1653,
+     "ok": true
+    }
+   }
+  }
+ },
+ "sensitivity_range": {
+  "ptgt": [
+   0.2795,
+   0.8004
+  ],
+  "p5": [
+   77202.13323831558,
+   111797.48594760895
+  ],
+  "med": [
+   121771.78859710693,
+   172979.91514205933
+  ],
+  "mdd": [
+   0.12387541681528091,
+   0.20080293715000153
+  ]
+ },
+ "recommendations": [
+  "Goal-Based",
+  "Max Return",
+  "Max Sharpe"
+ ],
+ "mc_sampling_se_ptgt": 0.004992866010619552
+}

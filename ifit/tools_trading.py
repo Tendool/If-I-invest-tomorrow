@@ -8,6 +8,7 @@ from __future__ import annotations
 import re
 
 from . import config as C
+from . import costs as K
 from . import data as D
 from .session import Session
 from .tools import _inr, _r, _resolve_strategy, get_investment_plan, resolve_amount
@@ -110,7 +111,7 @@ def trade(s: Session, side: str, asset: str, quantity: int | None = None, amount
     if side == "SELL" and (quantity is None or str(quantity).lower() == "all") and amount_rs is None:
         quantity = held.get(sym, 0)                      # "sell TCS" = sell the whole position
     if quantity is None and amount_rs is not None:
-        quantity = int(float(amount_rs) // (price * (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE)))
+        quantity = int(float(amount_rs) // (price * (1 + K.buy_rate(sym))))
     if not quantity or int(quantity) <= 0:
         return dict(error="quantity is zero - no holding, amount too small for one share, or no quantity given")
     return _place(s, [dict(symbol=sym, side=side, qty=int(quantity), price=price)], f"{side.lower()} {D.short(sym)}")

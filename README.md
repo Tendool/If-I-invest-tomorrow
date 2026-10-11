@@ -156,6 +156,18 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
 - **Robustness** (`scripts/eval_robustness.py`, 2017-26) - the full system beats the NIFTY ETF in every 2-year period and at 2-3x costs; over 2017-26 by
   +0.43 Sharpe (90 % bootstrap interval +0.01 to +0.83). The volatility model's gain is not significant and a one-month shift of the start date moves a
   5-year Sharpe by 0.1. The app's plans chosen at 26-34 quarter-ends lost far less than NIFTY in their worst year but clearly beat it over 3 years only for Max Return.
+- **How far the numbers can be trusted** (round 11, report section 16; no model changed) - 2017-20 are the model-selection years and 2021-26
+  evaluation years that were inspected during development, so neither is a fully untouched test.
+  - *Return signal:* with and without it, the full system's Sharpe differs by +0.07 on 2021-26 (90 % interval -0.12 to +0.28) and +0.04 over
+    2017-26: its net value is unproven.
+  - *Deflated Sharpe ratio* (allowing for 9-300 trials): 0.81-0.89 on 2021-26, 0.95-0.98 over 2017-26.
+  - *Monte Carlo by horizon:* the 90 % band holds 89 % at 1 month (interval 85-92 %, ~81 independent windows), 90 % at 3 months and
+    85 % at 1 year (75-94 %, ~7 windows).
+  - *Assumption sensitivity:* the sample plan's P(target) is 53 %, 44-61 % under alternative tails, crisis correlations, regimes or a
+    2-point lower return; tails, regimes and volatility uncertainty barely matter, expected returns and correlations do
+    (`scripts/eval_mc_sensitivity.py`).
+- **Forward test** - `python scripts/forward_test.py log` records the frozen models' forecasts with the git commit (first entry: 1 Oct 2026);
+  `python scripts/forward_test.py score` scores them once 21 more trading days of data exist. This is the only untouched evidence.
 
 ## Assumptions & limitations (all in `ifit/config.py`)
 
@@ -163,7 +175,9 @@ Full, reproducible out-of-sample evaluation of every layer is in [`reports/evalu
 - Rate-shock sensitivities per sector and G-Sec duration (8) are assumptions; oil/market betas are estimated.
 - The Liquid-fund series is rebuilt from the approximate RBI repo path (Yahoo's NAV excludes distributions);
   the G-Sec ETF is thinly traded, so tight bad-print filtering is applied.
-- Prices are Yahoo's adjusted closes; demo orders fill at the latest close with 0.05 % brokerage + 0.05 % slippage. Backtests use the per-asset-class
-  NSE cost model in `ifit/costs.py` (approximate 2025 fee schedule; stocks ~0.16 % a side).
+- Prices are Yahoo's adjusted closes; demo orders fill at the latest close. The demo wallet, auto-trade, plan sizing and the backtests all use the
+  per-asset-class NSE cost model in `ifit/costs.py` (approximate 2025 fee schedule: STT, stamp duty, exchange and SEBI fees with GST, half spread;
+  stocks ~0.17 % to buy and ~0.15 % to sell, plus a Rs 15.93 depository charge per security sold). Auto-trade skips rebalancing trades below
+  1 % of capital or Rs 1,000. Taxes are not modelled.
 - Index (`^NSEI`) vs ETF timing noise gives NIFTYBEES a beta of ~0.89 instead of 1.
 - Qwen3.5-4B is small: it occasionally mislabels a ticker in prose. The structured tables/charts under each answer are authoritative.

@@ -174,5 +174,56 @@ def show(res):
             print(f"  {c:44s} n {v['n']:3d}  90% {v['cover90']:.0%}  50% {v['cover50']:.0%}  width90 {v['width90']:.3f}  IS90 {v['is90']:.3f}  CRPS {v['crps']:.4f}  mean err {v['mean_error']:+.3f}")
 
 
+HORIZONS = {"1 month": 21, "3 months": 63, "1 year": 252}
+
+
+def run_horizons():
+    """Production simulator only: 90% band coverage by forecast horizon, portfolio and regime at the forecast date, for monthly
+    origins 2019-25. Intervals are moving-block bootstraps over origin dates with the block as long as the horizon (1, 3 or 12
+    monthly origins), so overlapping forecasts and the four portfolios of one date are resampled together."""
+    md = data.load()
+    idx = md.prices.index
+    rows = []
+    for q in pd.date_range("2019-01-31", "2025-09-30", freq="ME"):
+        pos = idx.searchsorted(q, side="right") - 1
+        t = idx[pos]
+        md_t = truncate(md, t)
+        rm = risk.build_risk_model(md_t)
+        mu = ml.expected_returns(rm, None)["expected"]
+        regime = ml.fit_regimes(md_t)
+        for name, wd in PORTFOLIOS.items():
+            w = pd.Series(wd).reindex(rm.symbols).fillna(0.0)
+            if w.sum() < 0.999:
+                continue
+            st = risk.portfolio_stats(w, mu, rm.cov, rm.beta)
+            for hname, h in HORIZONS.items():
+                if pos + h >= len(idx):
+                    continue
+                rets = md.prices.pct_change().iloc[pos + 1: pos + 1 + h]
+                real = float((1 + (rets * w.reindex(rets.columns).fillna(0.0)).sum(axis=1)).prod() - 1)
+                sim = MC.simulate_paths(st["exp_return"], st["volatility"], st["beta"], regime, h / C.TRADING_DAYS, n_paths=4000,
+                                        steps_per_year=252, seed=11, dof=C.MC_T_DOF)[:, -1].astype(float) - 1
+                lo, hi = np.quantile(sim, [0.05, 0.95])
+                rows.append(dict(date=t, horizon=hname, portfolio=name, regime=regime.current_name, in90=bool(lo <= real <= hi),
+                                 below=bool(real < lo), above=bool(real > hi)))
+        print("origin", t.date(), regime.current_name, flush=True)
+    df = pd.DataFrame(rows)
+    df.to_csv(C.REPORTS_DIR / "calibration_by_horizon_raw.csv", index=False)
+    out = {}
+    for hname, h in HORIZONS.items():
+        g = df[df.horizon == hname]
+        blk = max(1, round(h / 21))
+        lo, hi = block_ci(g, block=blk)
+        out[hname] = dict(n=int(len(g)), origins=int(g.date.nunique()), independent_windows=round(g.date.nunique() / blk, 1),
+                          cover90=float(g.in90.mean()), ci=(lo, hi), below=float(g.below.mean()), above=float(g.above.mean()),
+                          by_portfolio={p_: float(x.in90.mean()) for p_, x in g.groupby("portfolio")},
+                          by_regime={r: dict(n=int(len(x)), cover90=float(x.in90.mean())) for r, x in g.groupby("regime")})
+        v = out[hname]
+        print(f"{hname:9s} n {v['n']:4d} (~{v['independent_windows']} independent windows) 90% band {v['cover90']:.0%} [{lo:.0%}, {hi:.0%}]"
+              f" below {v['below']:.0%} above {v['above']:.0%} | " + " ".join(f"{k}:{x:.0%}" for k, x in v["by_portfolio"].items())
+              + " | " + " ".join(f"{k}:{x['cover90']:.0%} (n {x['n']})" for k, x in v["by_regime"].items()), flush=True)
+    (C.REPORTS_DIR / "calibration_by_horizon.json").write_text(json.dumps(out, indent=1, default=str), encoding="utf-8")
+
+
 if __name__ == "__main__":
-    {"portfolios": run_portfolios, "nifty": run_nifty, "summarise": summarise_portfolios}[sys.argv[1]]()
+    {"portfolios": run_portfolios, "nifty": run_nifty, "summarise": summarise_portfolios, "horizons": run_horizons}[sys.argv[1]]()

@@ -29,7 +29,7 @@ TD = C.TRADING_DAYS
 RF = C.RISK_FREE
 NIFTY = "NIFTYBEES.NS"
 PERIODS = {"2017-18": ("2017", "2018"), "2019-20": ("2019", "2020"), "2021-22": ("2021", "2022"), "2023-24": ("2023", "2024"),
-           "2025-26": ("2025", "2026"), "2017-20 (validation years)": ("2017", "2020"), "2021-26 (test years)": ("2021", "2026"),
+           "2025-26": ("2025", "2026"), "2017-20 (model-selection years)": ("2017", "2020"), "2021-26 (evaluation years, inspected repeatedly)": ("2021", "2026"),
            "2017-26 (all)": ("2017", "2026")}
 CACHE = C.REPORTS_DIR / "_robust_targets.pkl"
 
@@ -81,6 +81,33 @@ def block_bootstrap_idx(n, n_boot=2000, mean_block=21, seed=7):
     return out
 
 
+TRIAL_COUNTS = (9, 30, 100, 300)
+
+
+def deflated_sharpe(dr: dict, name: str) -> dict:
+    """Deflated Sharpe ratio (Bailey & Lopez de Prado 2014): the probability that the strategy's true Sharpe ratio exceeds the
+    best Sharpe ratio that N independent trials of no skill would produce by luck. Inputs, all in daily units of excess return:
+      SR      the strategy's daily Sharpe ratio; T its number of daily returns; skew and kurtosis of those returns
+      V       the variance of the Sharpe ratios of the trials actually run at portfolio level (the strategy variants in this backtest)
+      N       the number of effectively independent trials - unknown, so reported for N = 9 (the portfolio variants) up to 300
+              (every model candidate tried in rounds 4-10 counted as independent, which overstates it because they are correlated)."""
+    from scipy.stats import kurtosis, norm, skew
+    rfd = RF / TD
+    srs = {n: (v - rfd).mean() / (v - rfd).std() for n, v in dr.items() if n.split()[0] in ("A", "B", "B+", "C", "C+", "D", "E", "E0")}
+    V = float(np.var(list(srs.values()), ddof=1))
+    x = dr[name] - rfd
+    sr, T, g3, g4 = float(x.mean() / x.std()), len(x), float(skew(x)), float(kurtosis(x, fisher=False))
+    denom = np.sqrt(1 - g3 * sr + (g4 - 1) / 4 * sr ** 2)
+    em = 0.5772156649
+    out = dict(sr_daily=sr, sr_annual=sr * np.sqrt(TD), T=T, skew=g3, kurtosis=g4, trial_sr_var=V, n_variants=len(srs),
+               psr_vs_zero=float(norm.cdf(sr * np.sqrt(T - 1) / denom)))
+    for N in TRIAL_COUNTS:
+        sr0 = np.sqrt(V) * ((1 - em) * norm.ppf(1 - 1 / N) + em * norm.ppf(1 - 1 / (N * np.e)))
+        out[f"dsr_N{N}"] = float(norm.cdf((sr - sr0) * np.sqrt(T - 1) / denom))
+        out[f"sr0_annual_N{N}"] = float(sr0 * np.sqrt(TD))
+    return out
+
+
 def boot_sharpe(dr: np.ndarray, idx: np.ndarray) -> np.ndarray:
     x = dr[idx]
     cagr = np.exp(np.log1p(x).sum(axis=1) * TD / x.shape[1]) - 1
@@ -128,7 +155,7 @@ def run_walkforward():
 
     # bootstrap confidence intervals (realistic costs), test years and all years
     cis = {}
-    for pname in ("2021-26 (test years)", "2017-26 (all)"):
+    for pname in ("2017-20 (model-selection years)", "2021-26 (evaluation years, inspected repeatedly)", "2017-26 (all)"):
         a, b = PERIODS[pname]
         dr = {n: c.loc[a:b].pct_change().dropna().values for n, c in curves_real.items()}
         n_obs = len(next(iter(dr.values())))
@@ -141,24 +168,32 @@ def run_walkforward():
                  "volatility model, min-variance (B - A)": ("B  Min-variance + volatility model", "A  Min-variance, trailing covariance"),
                  "full system vs NIFTY ETF (E - NIFTY)": ("E  Full system (D + regime overlay)", "NIFTY 50 ETF (buy and hold)"),
                  "max-Sharpe + vol model vs NIFTY ETF (C+ - NIFTY)": ("C+ C + volatility model", "NIFTY 50 ETF (buy and hold)"),
-                 "full system vs equal weight (E - EW)": ("E  Full system (D + regime overlay)", "Equal-weight stocks (monthly)")}
+                 "full system vs equal weight (E - EW)": ("E  Full system (D + regime overlay)", "Equal-weight stocks (monthly)"),
+                 "return tilt, max-Sharpe + vol model (D - C+)": ("D  C+ + return tilt", "C+ C + volatility model"),
+                 "return tilt inside the full system (E - E0)": ("E  Full system (D + regime overlay)", "E0 Full system without the return tilt (C+ + regime overlay)")}
         for lab, (x, y) in pairs.items():
             d = bs[x] - bs[y]
             out["DIFF " + lab] = dict(point=float(metrics(curves_real[x].loc[a:b])["sharpe"] - metrics(curves_real[y].loc[a:b])["sharpe"]),
                                       lo=float(np.quantile(d, 0.05)), hi=float(np.quantile(d, 0.95)), share_above_0=float((d > 0).mean()))
+        out["DEFLATED SHARPE"] = {n: deflated_sharpe(dr, n) for n in ("E  Full system (D + regime overlay)", "D  C+ + return tilt", "C+ C + volatility model")}
         cis[pname] = out
         print("bootstrap done:", pname, flush=True)
 
     # print the key tables
-    show = ["C  Max-Sharpe, prior returns", "C+ C + volatility model", "E  Full system (D + regime overlay)", "B  Min-variance + volatility model",
+    show = ["C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)",
+            "E0 Full system without the return tilt (C+ + regime overlay)", "B  Min-variance + volatility model",
             "NIFTY 50 ETF (buy and hold)", "Equal-weight stocks (monthly)"]
     print("\nSharpe by period, realistic costs")
     print(pd.DataFrame({n: {p: res["realistic"][n][p]["sharpe"] for p in PERIODS} for n in show}).round(2).to_string())
     print("\nSharpe 2021-26 by cost scenario")
-    print(pd.DataFrame({s: {n: res[s][n]["2021-26 (test years)"]["sharpe"] for n in show} for s in scen}).round(2).to_string())
+    print(pd.DataFrame({s: {n: res[s][n]["2021-26 (evaluation years, inspected repeatedly)"]["sharpe"] for n in show} for s in scen}).round(2).to_string())
     for pname, out in cis.items():
         print("\n90% bootstrap intervals,", pname)
         for k, v in out.items():
+            if k == "DEFLATED SHARPE":
+                for n, d in v.items():
+                    print(f"  DSR {n:56s} " + " ".join(f"{a}={b:.3f}" for a, b in d.items() if a.startswith(("dsr", "psr", "sr_annual", "sr0"))))
+                continue
             print(f"  {k:60s} " + " ".join(f"{a}={b:+.2f}" for a, b in v.items()))
     json.dump(dict(start=str(dates[0].date()), end=str(idx[-1].date()), rebalances=len(dates), periods=PERIODS,
                    cost_rates={c: dict(zip(("buy", "sell"), K.per_side(c))) for c in ("stock", "etf", "gold", "bond", "cash")},

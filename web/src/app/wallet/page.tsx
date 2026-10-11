@@ -93,7 +93,7 @@ export default function WalletPage() {
       <PageHeader
         eyebrow="Portfolio · demo money"
         title="Your portfolio"
-        description="Orders fill at the latest close with 0.05% brokerage and 0.05% slippage. Nothing here touches a real account."
+        description="Orders fill at the latest close with realistic NSE costs: about 0.17% to buy and 0.15% to sell a stock (STT, stamp duty, fees, spread), less for ETFs, plus Rs 15.93 per security sold. Nothing here touches a real account."
         actions={
           <>
             <Button variant="ghost" className="h-9" onClick={() => setFundsOpen(true)}>

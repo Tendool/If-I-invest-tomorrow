@@ -14,6 +14,7 @@ from datetime import datetime
 import pandas as pd
 
 from . import config as C
+from . import costs as K
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS account (id INTEGER PRIMARY KEY CHECK (id = 1), cash REAL NOT NULL,
@@ -83,15 +84,21 @@ class Wallet:
 
     # ---------------------------------------------------------------- trading
     @staticmethod
-    def _cost_rate() -> float:
-        return C.BROKERAGE_RATE + C.SLIPPAGE_RATE
+    def _buy_total(orders: list[dict]) -> float:
+        """Cash needed for the BUY orders, including realistic costs per asset class (ifit/costs.py)."""
+        return sum(o["qty"] * o["price"] + K.buy_fee(o["symbol"], o["qty"] * o["price"]) for o in orders if o["side"] == "BUY")
+
+    @staticmethod
+    def _sell_total(orders: list[dict]) -> float:
+        """Cash received from the SELL orders after costs, including the fixed depository charge per sale."""
+        return sum(o["qty"] * o["price"] - K.sell_fee(o["symbol"], o["qty"] * o["price"]) for o in orders if o["side"] == "SELL")
 
     def buy(self, symbol: str, qty: int, price: float, note: str = "", _c=None) -> dict:
         qty = int(qty)
         if qty <= 0:
             raise WalletError("quantity must be positive")
         gross = qty * price
-        fee = gross * self._cost_rate()
+        fee = K.buy_fee(symbol, gross)
         total = gross + fee
 
         def run(c):
@@ -121,7 +128,7 @@ class Wallet:
         if qty <= 0:
             raise WalletError("quantity must be positive")
         gross = qty * price
-        fee = gross * self._cost_rate()
+        fee = K.sell_fee(symbol, gross)
         proceeds = gross - fee
 
         def run(c):
@@ -153,8 +160,7 @@ class Wallet:
             raise WalletError("nothing to stage: all quantities are zero")
         cash = self.cash()
         held = {r.symbol: r.qty for r in self.holdings().itertuples()}
-        buys = sum(o["qty"] * o["price"] for o in orders if o["side"] == "BUY") * (1 + self._cost_rate())
-        sells = sum(o["qty"] * o["price"] for o in orders if o["side"] == "SELL") * (1 - self._cost_rate())
+        buys, sells = self._buy_total(orders), self._sell_total(orders)
         for o in orders:
             if o["side"] == "SELL" and held.get(o["symbol"], 0) < o["qty"]:
                 raise WalletError(f"cannot sell {o['qty']} {o['symbol']}: only {held.get(o['symbol'], 0)} held")
@@ -176,9 +182,7 @@ class Wallet:
         if not row:
             return None
         orders = json.loads(row["orders"])
-        cr = self._cost_rate()
-        buys = sum(o["qty"] * o["price"] for o in orders if o["side"] == "BUY") * (1 + cr)
-        sells = sum(o["qty"] * o["price"] for o in orders if o["side"] == "SELL") * (1 - cr)
+        buys, sells = self._buy_total(orders), self._sell_total(orders)
         return dict(created=row["created"], label=row["strategy"], orders=orders, buy_cost=buys, sell_proceeds=sells)
 
     def cancel_pending(self) -> bool:

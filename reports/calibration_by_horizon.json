@@ -1,0 +1,98 @@
+{
+ "1 month": {
+  "n": 324,
+  "origins": 81,
+  "independent_windows": 81.0,
+  "cover90": 0.8858024691358025,
+  "ci": [
+   0.845679012345679,
+   0.9228395061728395
+  ],
+  "below": 0.040123456790123455,
+  "above": 0.07407407407407407,
+  "by_portfolio": {
+   "8 large stocks, equal weight": 0.9012345679012346,
+   "Balanced (60 index / 20 gold / 20 liquid)": 0.9135802469135802,
+   "Gold": 0.8518518518518519,
+   "NIFTY 50 ETF": 0.8765432098765432
+  },
+  "by_regime": {
+   "Bear / Volatile": {
+    "n": 28,
+    "cover90": 1.0
+   },
+   "Bull / Calm": {
+    "n": 196,
+    "cover90": 0.8469387755102041
+   },
+   "Neutral / Sideways": {
+    "n": 100,
+    "cover90": 0.93
+   }
+  }
+ },
+ "3 months": {
+  "n": 324,
+  "origins": 81,
+  "independent_windows": 27.0,
+  "cover90": 0.8981481481481481,
+  "ci": [
+   0.8364197530864198,
+   0.9476851851851851
+  ],
+  "below": 0.024691358024691357,
+  "above": 0.07716049382716049,
+  "by_portfolio": {
+   "8 large stocks, equal weight": 0.9382716049382716,
+   "Balanced (60 index / 20 gold / 20 liquid)": 0.9135802469135802,
+   "Gold": 0.8148148148148148,
+   "NIFTY 50 ETF": 0.9259259259259259
+  },
+  "by_regime": {
+   "Bear / Volatile": {
+    "n": 28,
+    "cover90": 0.8571428571428571
+   },
+   "Bull / Calm": {
+    "n": 196,
+    "cover90": 0.8979591836734694
+   },
+   "Neutral / Sideways": {
+    "n": 100,
+    "cover90": 0.91
+   }
+  }
+ },
+ "1 year": {
+  "n": 320,
+  "origins": 80,
+  "independent_windows": 6.7,
+  "cover90": 0.846875,
+  "ci": [
+   0.746875,
+   0.940625
+  ],
+  "below": 0.01875,
+  "above": 0.134375,
+  "by_portfolio": {
+   "8 large stocks, equal weight": 0.875,
+   "Balanced (60 index / 20 gold / 20 liquid)": 0.95,
+   "Gold": 0.7,
+   "NIFTY 50 ETF": 0.8625
+  },
+  "by_regime": {
+   "Bear / Volatile": {
+    "n": 28,
+    "cover90": 0.7142857142857143
+   },
+   "Bull / Calm": {
+    "n": 192,
+    "cover90": 0.90625
+   },
+   "Neutral / Sideways": {
+    "n": 100,
+    "cover90": 0.77
+   }
+  }
+ }
+}

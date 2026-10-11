@@ -150,6 +150,7 @@ Costs per asset class (ifit/costs.py, approximate 2025 NSE schedule): stocks 0.1
 | C+ C + volatility model | 14.3% | 11.4% | 0.73 | 0.72 | -14.9% | 0.96 | 4.7x | 6.4% | 64% | 11.5% | 1.13% | 1.63% | +3.6% | +0.43 |
 | D  C+ + return tilt | 14.4% | 10.4% | 0.80 | 0.77 | -16.2% | 0.89 | 7.5x | 9.3% | 67% | 10.8% | 1.03% | 1.54% | +3.7% | +0.43 |
 | E  Full system (D + regime overlay) | 13.0% | 8.6% | 0.80 | 0.78 | -12.2% | 1.06 | 7.4x | 8.0% | 67% | 9.0% | 0.84% | 1.24% | +2.3% | +0.22 |
+| E0 Full system without the return tilt (C+ + regime overlay) | 13.1% | 9.6% | 0.74 | 0.73 | -11.7% | 1.12 | 5.0x | 5.6% | 64% | 9.7% | 0.93% | 1.34% | +2.4% | +0.24 |
 | B  Min-variance + volatility model (half-step rebalancing) | 10.9% | 5.5% | 0.90 | 0.85 | -6.2% | 1.77 | 1.4x | 1.2% | 75% | 5.8% | 0.55% | 0.81% | +0.3% | -0.04 |
 | E  Full system (D + regime overlay) (half-step rebalancing) | 12.7% | 8.7% | 0.78 | 0.75 | -12.2% | 1.04 | 3.5x | 3.7% | 65% | 9.0% | 0.86% | 1.26% | +2.1% | +0.20 |
 | NIFTY 50 ETF (benchmark) | 10.6% | 12.8% | 0.36 | 0.36 | -16.1% | 0.66 | 0.2x | 0.1% | 59% | 13.0% | 1.30% | 1.86% | +0.0% |  |
@@ -316,7 +317,7 @@ Monthly walk-forward from 2017-01-31 to 2026-10-01 (117 rebalances), every model
 
 Sharpe ratio by period, realistic costs:
 
-| Strategy | 2017-18 | 2019-20 | 2021-22 | 2023-24 | 2025-26 | 2017-20 (validation years) | 2021-26 (test years) | 2017-26 (all) |
+| Strategy | 2017-18 | 2019-20 | 2021-22 | 2023-24 | 2025-26 | 2017-20 (model-selection years) | 2021-26 (evaluation years, inspected repeatedly) | 2017-26 (all) |
 |---|---|---|---|---|---|---|---|---|
 | C  Max-Sharpe, prior returns | 1.37 | 0.76 | 0.00 | 1.79 | -0.20 | 0.92 | 0.45 | 0.66 |
 | C+ C + volatility model | 1.20 | 0.75 | 0.48 | 1.77 | -0.17 | 0.87 | 0.62 | 0.73 |
@@ -347,6 +348,8 @@ Sharpe ratio 2021-26 by cost level (calendar years; the section-6 table starts a
 | full system vs NIFTY ETF (E - NIFTY) | +0.40 [-0.08, +0.87], 92% | +0.43 [+0.01, +0.83], 95% |
 | max-Sharpe + vol model vs NIFTY ETF (C+ - NIFTY) | +0.30 [-0.16, +0.78], 86% | +0.32 [-0.03, +0.69], 93% |
 | full system vs equal weight (E - EW) | -0.05 [-0.49, +0.43], 42% | +0.10 [-0.31, +0.50], 64% |
+| return tilt, max-Sharpe + vol model (D - C+) | +0.08 [-0.11, +0.28], 74% | +0.01 [-0.11, +0.16], 57% |
+| return tilt inside the full system (E - E0) | +0.07 [-0.12, +0.28], 72% | +0.04 [-0.09, +0.18], 68% |
 
 What survives: every strategy keeps a higher Sharpe ratio than the NIFTY ETF in every cost scenario, and the full system beats NIFTY in every 2-year block; over 2017-26 its advantage over NIFTY (+0.43) is the one difference whose 90% interval excludes zero (+0.01 to +0.83). What does not: the volatility model's gain in the max-Sharpe family comes mostly from 2021-22 and its 90% interval includes zero; in the minimum-variance family it gains nothing over 2017-26; the full system does not beat an equal-weight basket of the stocks with any confidence. A 5-6 year Sharpe ratio is also fragile: starting the 2021-26 window one month later (end of January instead of 1 January) moves the max-Sharpe + volatility model from 0.62 to 0.73. Costs matter for small accounts: the fixed depository charge (Rs 15.93 per security sold) costs a Rs 1 lakh account rebalanced monthly 0.04-0.15 of Sharpe.
 
@@ -403,3 +406,72 @@ Scores that reward calibration and sharpness together (Gneiting & Raftery 2007):
 3. **Earlier periods show the opposite error.** On 2016-18 origins the same bands held 98% of outcomes and on 2009-17 NIFTY origins 100%: they were too wide. Adding drift uncertainty raises 2019-25 coverage (up to 87%) but worsens the interval score before 2019; recentring on past forecast errors fixes the 2019-25 bias (interval score 1.061 -> 0.926) but worsens it before 2019 (0.487 -> 0.508; NIFTY 0.931 -> 1.015), i.e. it chases the last regime.
 
 Decision: no change. The models are frozen at the round-10 settings; closing the gap further would mean tuning to 2019-25.
+
+## 16. How far can the numbers be trusted? (round 11; no model changed)
+
+**Which years are evidence of what.** 2014-16 is training history only. 2017-20 are the *model-selection years*: every choice since round 4 was made there, so results on them are in-sample for the selection. 2021-26 are *evaluation years*: models never trained on them, but they were reported in every round from 4 to 10 and one signal (round 6) was chosen after seeing them, so they carry some selection bias and are not a fully untouched test. The only untouched evidence is prospective: `scripts/forward_test.py log` records the frozen models' forecasts (with the git commit) from October 2026 and `score` evaluates them once the next 21 trading days have passed.
+
+### Does the return signal pay after costs?
+
+Same portfolios with and without the signal, realistic costs, stationary block bootstrap of daily returns (mean block 21 days, 2000 draws):
+
+| Comparison | 2017-20 (model-selection years) | 2021-26 (evaluation years, inspected repeatedly) | 2017-26 (all) |
+|---|---|---|---|
+| return tilt inside the full system (E - E0) | -0.01 [-0.19, +0.18], 43% > 0 | +0.07 [-0.12, +0.28], 72% > 0 | +0.04 [-0.09, +0.18], 68% > 0 |
+| return tilt, max-Sharpe + vol model (D - C+) | -0.07 [-0.22, +0.15], 30% > 0 | +0.08 [-0.11, +0.28], 74% > 0 | +0.01 [-0.11, +0.16], 57% > 0 |
+
+The signal's contribution is not distinguishable from zero in any period (it helps in 2021-26, is flat over 2017-26 and slightly negative in the selection years). It stays in production with its small 29% weight, but its net value is reported as unproven.
+
+### Deflated Sharpe ratio
+
+Probability that the true Sharpe ratio exceeds the best one that N skill-free trials would show by luck (Bailey & Lopez de Prado 2014). Inputs: daily excess returns over 6% (Sharpe in this table is the arithmetic annualised one, so it differs slightly from the CAGR-based Sharpe elsewhere), their skewness and kurtosis, the number of days T, and the variance of the Sharpe ratios of the strategy variants actually backtested. N is the number of effectively independent trials, which is unknown: 9 counts the portfolio variants, 300 treats every model candidate of rounds 4-10 as independent (an overstatement, as candidates were correlated).
+
+| Strategy | Period | Sharpe (arith.) | P(SR > 0) | DSR, N=9 | N=30 | N=100 | N=300 |
+|---|---|---|---|---|---|---|---|
+| E  Full system (D + regime overlay) | 2021-26 | 0.68 | 0.94 | 0.89 | 0.86 | 0.83 | 0.81 |
+| D  C+ + return tilt | 2021-26 | 0.68 | 0.94 | 0.89 | 0.86 | 0.83 | 0.81 |
+| C+ C + volatility model | 2021-26 | 0.61 | 0.92 | 0.85 | 0.82 | 0.79 | 0.76 |
+| E  Full system (D + regime overlay) | 2017-26 | 0.80 | 0.99 | 0.98 | 0.97 | 0.96 | 0.95 |
+| D  C+ + return tilt | 2017-26 | 0.72 | 0.98 | 0.96 | 0.95 | 0.93 | 0.92 |
+| C+ C + volatility model | 2017-26 | 0.71 | 0.98 | 0.96 | 0.95 | 0.93 | 0.92 |
+
+On 2021-26 alone the full system's DSR is 0.81-0.89, below the usual 0.95 bar; over 2017-26 it is 0.95-0.98. The evidence that the system beats luck is good over ten years and suggestive, not conclusive, on the evaluation years alone.
+
+### Calibration by horizon, portfolio and regime
+
+Production simulator, monthly origins 2019-25, four reference portfolios. Intervals: moving-block bootstrap over origin dates with the block as long as the horizon, so overlapping forecasts and the four portfolios of a date are resampled together.
+
+| Horizon | outcomes | ~independent windows | 90% band held | 90% interval | below / above | Gold | Bull / Neutral / Bear regime at origin |
+|---|---|---|---|---|---|---|---|
+| 1 month | 324 | 81.0 | 89% | 85%-92% | 4% / 7% | 85% | 85% (n 196) / 93% (n 100) / 100% (n 28) |
+| 3 months | 324 | 27.0 | 90% | 84%-95% | 2% / 8% | 81% | 90% (n 196) / 91% (n 100) / 86% (n 28) |
+| 1 year | 320 | 6.7 | 85% | 75%-94% | 2% / 13% | 70% | 91% (n 192) / 77% (n 100) / 71% (n 28) |
+
+At 1 and 3 months, where there are many independent outcomes, the 90% band holds 89-90% with tight intervals: the simulator is well calibrated at short horizons. The 1-year shortfall (85%) rests on about 7 independent windows, comes from outcomes above the band (gold, the 2020 rebound) and is within its interval. Bear-regime origins are too few (one episode) to judge.
+
+### How much do the simulation's answers depend on its assumptions?
+
+Sample investor (Rs 1 lakh, 3 years, medium risk, 12% target), the five strategies' weights fixed; 10,000 paths, so the simulation's own sampling error on P(target) is about +-0.5 points. The spread across assumptions is an assumption-sensitivity range, not a confidence interval.
+
+| Assumption | P(target) of Goal-Based | 5% worst (Rs) | median (Rs) | expected max drawdown | rule would recommend |
+|---|---|---|---|---|---|
+| Production (Student-t dof 5, regime switching, parameter + volatility uncertainty) | 53% | 92,364 | 142,802 | 14.1% | Goal-Based |
+| Tails: normal shocks | 53% | 92,930 | 143,007 | 14.3% | Goal-Based |
+| Tails: fatter (Student-t dof 3) | 53% | 92,647 | 143,080 | 13.6% | Goal-Based |
+| Tails: block bootstrap of the plan's own history | 61% | 108,371 | 147,837 | 12.6% | Goal-Based |
+| Correlations: equity correlations halfway to 1 (crisis) | 49% | 77,202 | 139,254 | 20.1% | Max Sharpe |
+| Regimes: no regime switching | 53% | 92,995 | 143,176 | 13.7% | Goal-Based |
+| Regimes: twice as persistent | 53% | 91,983 | 142,923 | 14.2% | Goal-Based |
+| Volatility uncertainty: none | 53% | 94,218 | 143,143 | 14.1% | Goal-Based |
+| Volatility uncertainty: 0.5 | 53% | 91,184 | 142,778 | 14.1% | Goal-Based |
+| Expected return: prior (CAPM + history), no return signal | 50% | 91,075 | 140,825 | 14.3% | Max Return |
+| Expected return: CAPM only | 28% | 78,810 | 121,772 | 16.5% | Goal-Based |
+| Expected return: history only | 80% | 111,797 | 172,980 | 12.4% | Max Return |
+| Expected return: production minus 2% a year | 44% | 87,572 | 135,417 | 14.8% | Goal-Based |
+| Stress (not an assumption): start in the bear regime | 53% | 90,663 | 142,939 | 15.1% | Goal-Based |
+
+Student-t versus normal tails, regime dynamics and volatility uncertainty barely move the answer (53%); resampling the plan's own last five years instead raises it to 61%, because those years were calmer than the model assumes. What moves it most is the expected return (28% if returns are CAPM-only, 80% if history-only, 44% if 2 points lower) and correlations (49% and a much worse 5% case if equity correlations rise towards 1 in a crisis). The recommendation is stable to the simulation's structure but changes when expected returns or correlations change, so P(target) is best quoted with its range: 53% (44-61% under alternative tails, correlations, regimes and a 2-point lower return).
+
+### Demo wallet costs
+
+Round 11 also made the app consistent with the backtests: the demo wallet, auto-trade and plan sizing now charge the per-asset-class NSE costs of `ifit/costs.py` (stocks about 0.17% to buy and 0.15% to sell, plus Rs 15.93 per security sold) instead of a flat 0.10%, and auto-trade skips rebalancing trades below Rs 1,000. The Rs 1 lakh sample plan now pays about Rs 156 in buying costs and still invests 99%.

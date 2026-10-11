@@ -23,11 +23,11 @@
    "2025",
    "2026"
   ],
-  "2017-20 (validation years)": [
+  "2017-20 (model-selection years)": [
    "2017",
    "2020"
   ],
-  "2021-26 (test years)": [
+  "2021-26 (evaluation years, inspected repeatedly)": [
    "2021",
    "2026"
   ],
@@ -97,14 +97,14 @@
      "max_drawdown": -0.06986349717513218,
      "total_return": 0.1617298081213534
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1561064604440181,
      "vol": 0.08434400954693531,
      "sharpe": 1.1394580475870937,
      "max_drawdown": -0.15529029414154782,
      "total_return": 0.7407712288960928
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.1086297330458672,
      "vol": 0.058174992630156484,
      "sharpe": 0.8359216021741058,
@@ -157,14 +157,14 @@
      "max_drawdown": -0.06032082643434333,
      "total_return": 0.11644670665919232
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15053982319122539,
      "vol": 0.08741904225247606,
      "sharpe": 1.0356990977976648,
      "max_drawdown": -0.16711239225728602,
      "total_return": 0.708957749213087
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10625783693308577,
      "vol": 0.05469472223852295,
      "sharpe": 0.8457458972248906,
@@ -217,14 +217,14 @@
      "max_drawdown": -0.05119466777440773,
      "total_return": 0.10745651102251008
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.12513565634555435,
      "vol": 0.05820465765152001,
      "sharpe": 1.1190797948770914,
      "max_drawdown": -0.0953234731647492,
      "total_return": 0.5691910484820952
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.09778523392106897,
      "vol": 0.04568325529783443,
      "sharpe": 0.8271134286452687,
@@ -277,14 +277,14 @@
      "max_drawdown": -0.08494685674821723,
      "total_return": 0.06878602595493288
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1995618867799589,
      "vol": 0.15112914445973719,
      "sharpe": 0.9234611052611367,
      "max_drawdown": -0.2873068364337312,
      "total_return": 1.004377160968862
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11327893626689978,
      "vol": 0.1147644668944208,
      "sharpe": 0.4642459265367781,
@@ -337,14 +337,14 @@
      "max_drawdown": -0.12778532753671512,
      "total_return": 0.07532394887906846
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19596864084778276,
      "vol": 0.15572724168429103,
      "sharpe": 0.8731204597037346,
      "max_drawdown": -0.3098906484069317,
      "total_return": 0.9815299222718585
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13265029176498833,
      "vol": 0.11393575599660967,
      "sharpe": 0.6376426006876204,
@@ -397,14 +397,14 @@
      "max_drawdown": -0.07904784638757256,
      "total_return": 0.09565150497286812
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18484754809628856,
      "vol": 0.1538711942351593,
      "sharpe": 0.8113770008536212,
      "max_drawdown": -0.3196311023059476,
      "total_return": 0.9120352006752226
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13664394644753308,
      "vol": 0.10467248625950244,
      "sharpe": 0.7322262916113272,
@@ -457,14 +457,14 @@
      "max_drawdown": -0.06528087651271375,
      "total_return": 0.0927686543216315
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.16609675992630568,
      "vol": 0.1050381089129737,
      "sharpe": 1.0100787326075062,
      "max_drawdown": -0.17980587640806645,
      "total_return": 0.7989598212129816
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12404330459239254,
      "vol": 0.08670224124685828,
      "sharpe": 0.7386580055070169,
@@ -480,6 +480,66 @@
     },
     "turnover_ann": 6.918368476487323,
     "costs_pct_of_start": 0.145780057157201
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.1707490176578923,
+     "vol": 0.0975639810378857,
+     "sharpe": 1.1351424622052542,
+     "max_drawdown": -0.12567666061629712,
+     "total_return": 0.3434879885154265
+    },
+    "2019-20": {
+     "cagr": 0.1708481133289308,
+     "vol": 0.11503814433745091,
+     "sharpe": 0.9635770288833142,
+     "max_drawdown": -0.1748448509887831,
+     "total_return": 0.3589251434955891
+    },
+    "2021-22": {
+     "cagr": 0.1185572678482234,
+     "vol": 0.10925847252122035,
+     "sharpe": 0.5359517344236193,
+     "max_drawdown": -0.1163039821084636,
+     "total_return": 0.24617390908867742
+    },
+    "2023-24": {
+     "cagr": 0.19757169512329398,
+     "vol": 0.07917926041349636,
+     "sharpe": 1.7374713328320561,
+     "max_drawdown": -0.06798167095186214,
+     "total_return": 0.41988431275075233
+    },
+    "2025-26": {
+     "cagr": 0.04463513198822877,
+     "vol": 0.09629687599456445,
+     "sharpe": -0.1595572842117797,
+     "max_drawdown": -0.10465004648833054,
+     "total_return": 0.07791879960508497
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.1690911792955876,
+     "vol": 0.1067498927678437,
+     "sharpe": 1.0219324485209147,
+     "max_drawdown": -0.174844850988783,
+     "total_return": 0.8166771445314158
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.12242335614495059,
+     "vol": 0.09567012243406363,
+     "sharpe": 0.6524853795182829,
+     "max_drawdown": -0.1163039821084636,
+     "total_return": 0.9170303862829645
+    },
+    "2017-26 (all)": {
+     "cagr": 0.1411626123860883,
+     "vol": 0.10026085024918373,
+     "sharpe": 0.8095145032619457,
+     "max_drawdown": -0.174844850988783,
+     "total_return": 2.487593682674717
+    },
+    "turnover_ann": 4.911241288735355,
+    "costs_pct_of_start": 0.1055620495131387
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -517,14 +577,14 @@
      "max_drawdown": -0.14824394945784247,
      "total_return": -0.034225672891405545
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15054193620433076,
      "vol": 0.17025358715743077,
      "sharpe": 0.5318063349855183,
      "max_drawdown": -0.36336614765771336,
      "total_return": 0.7089697430663884
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603918,
      "vol": 0.12865925788321542,
      "sharpe": 0.3143873597713021,
@@ -577,14 +637,14 @@
      "max_drawdown": -0.11269073562933674,
      "total_return": -0.004361082016982931
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19133711353599336,
      "vol": 0.17618453762570763,
      "sharpe": 0.7454519863429239,
      "max_drawdown": -0.33124106918101337,
      "total_return": 0.9523652365831528
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.15984554181986166,
      "vol": 0.130933648839416,
      "sharpe": 0.7625659462245458,
@@ -639,14 +699,14 @@
      "max_drawdown": -0.06991612933771674,
      "total_return": 0.1614709982290219
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15585126937366267,
      "vol": 0.08434144978920274,
      "sharpe": 1.1364669401963896,
      "max_drawdown": -0.15530296122262333,
      "total_return": 0.7393033174619905
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.1084900023148534,
      "vol": 0.058179191487779995,
      "sharpe": 0.8334595424042336,
@@ -699,14 +759,14 @@
      "max_drawdown": -0.06040570052619765,
      "total_return": 0.11563878966995489
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.14974047858071393,
      "vol": 0.08742191031096402,
      "sharpe": 1.026521592373155,
      "max_drawdown": -0.1671934108465859,
      "total_return": 0.7044249781386083
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10586142799020637,
      "vol": 0.05470995147506821,
      "sharpe": 0.8382648266669697,
@@ -759,14 +819,14 @@
      "max_drawdown": -0.05115540601171664,
      "total_return": 0.10747674659798978
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1251475769298087,
      "vol": 0.05820178199006394,
      "sharpe": 1.1193399016705459,
      "max_drawdown": -0.0951916812856044,
      "total_return": 0.5692545816795962
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.09792159956206548,
      "vol": 0.045688692905977484,
      "sharpe": 0.8299996596554893,
@@ -819,14 +879,14 @@
      "max_drawdown": -0.08521271575960465,
      "total_return": 0.06665500455938855
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19887272621109853,
      "vol": 0.15112479511030957,
      "sharpe": 0.9189274738783403,
      "max_drawdown": -0.2873644347743468,
      "total_return": 0.9999802167949019
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11176619426203671,
      "vol": 0.1147720041226046,
      "sharpe": 0.4510350294723245,
@@ -879,14 +939,14 @@
      "max_drawdown": -0.12909865348759664,
      "total_return": 0.07099574183118951
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19557418993435638,
      "vol": 0.1557342160835093,
      "sharpe": 0.8705485110713082,
      "max_drawdown": -0.30998299032306975,
      "total_return": 0.9790336182244188
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13055179986204446,
      "vol": 0.1139655672943977,
      "sharpe": 0.6190624197903031,
@@ -939,14 +999,14 @@
      "max_drawdown": -0.07990234458399537,
      "total_return": 0.09050209480632643
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18394810035241616,
      "vol": 0.1538777805218242,
      "sharpe": 0.8054970635272247,
      "max_drawdown": -0.31974301965900886,
      "total_return": 0.9064944326514026
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13346594946502943,
      "vol": 0.1046780960301884,
      "sharpe": 0.701827337820917,
@@ -999,14 +1059,14 @@
      "max_drawdown": -0.06582191392359227,
      "total_return": 0.08907107335985254
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1659975464437462,
      "vol": 0.10503688611616352,
      "sharpe": 1.0091459330441332,
      "max_drawdown": -0.17974301744092702,
      "total_return": 0.7983749891307774
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12188408008587692,
      "vol": 0.0867037399864815,
      "sharpe": 0.7137417612611133,
@@ -1022,6 +1082,66 @@
     },
     "turnover_ann": 6.918368476487321,
     "costs_pct_of_start": 0.17460006044372717
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.1713318327260187,
+     "vol": 0.097565889278388,
+     "sharpe": 1.141093814133666,
+     "max_drawdown": -0.12580595701621422,
+     "total_return": 0.34474094669345035
+    },
+    "2019-20": {
+     "cagr": 0.1706683449785662,
+     "vol": 0.11503350939402146,
+     "sharpe": 0.9620531057563116,
+     "max_drawdown": -0.17477074707836704,
+     "total_return": 0.35851947408872586
+    },
+    "2021-22": {
+     "cagr": 0.11749438082485919,
+     "vol": 0.10926904092808586,
+     "sharpe": 0.5261726499704381,
+     "max_drawdown": -0.11685318458153404,
+     "total_return": 0.24384896145828705
+    },
+    "2023-24": {
+     "cagr": 0.1967276002294993,
+     "vol": 0.0791645123949963,
+     "sharpe": 1.7271324750576162,
+     "max_drawdown": -0.0677659594711928,
+     "total_return": 0.4179389810062317
+    },
+    "2025-26": {
+     "cagr": 0.04301921706586209,
+     "vol": 0.09637127028866918,
+     "sharpe": -0.1762017132624059,
+     "max_drawdown": -0.10542854388482947,
+     "total_return": 0.07505537400504214
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.16928503727323863,
+     "vol": 0.10674820698873155,
+     "sharpe": 1.0237646172808772,
+     "max_drawdown": -0.17477074707836726,
+     "total_return": 0.817828582067089
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.12124906730296048,
+     "vol": 0.09569371088361557,
+     "sharpe": 0.6400532149646982,
+     "max_drawdown": -0.11685318458153404,
+     "total_return": 0.9057562798416618
+    },
+    "2017-26 (all)": {
+     "cagr": 0.14052771919519902,
+     "vol": 0.10027402175110395,
+     "sharpe": 0.803076587424424,
+     "max_drawdown": -0.17477074707836726,
+     "total_return": 2.4692805417566652
+    },
+    "turnover_ann": 4.911241288735355,
+    "costs_pct_of_start": 0.12130045781575816
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -1059,14 +1179,14 @@
      "max_drawdown": -0.14824394945784258,
      "total_return": -0.03422567289140743
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15054193620433054,
      "vol": 0.17025358715743089,
      "sharpe": 0.5318063349855167,
      "max_drawdown": -0.36336614765771424,
      "total_return": 0.7089697430663864
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603896,
      "vol": 0.12865925788321533,
      "sharpe": 0.3143873597713006,
@@ -1119,14 +1239,14 @@
      "max_drawdown": -0.11290502546695569,
      "total_return": -0.004923808788126149
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19084801622754854,
      "vol": 0.17617882591394013,
      "sharpe": 0.7427000126080147,
      "max_drawdown": -0.33128568114915447,
      "total_return": 0.9493040071733698
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.15945584262613055,
      "vol": 0.13093582446547994,
      "sharpe": 0.7595770144048789,
@@ -1181,14 +1301,14 @@
      "max_drawdown": -0.07016209649459337,
      "total_return": 0.15991644285556994
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15482028984981344,
      "vol": 0.08432855061007678,
      "sharpe": 1.1244150310165886,
      "max_drawdown": -0.15536421747415663,
      "total_return": 0.7333822142290405
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10770319587624666,
      "vol": 0.05820060518709838,
      "sharpe": 0.8196340179435327,
@@ -1241,14 +1361,14 @@
      "max_drawdown": -0.06118980028698906,
      "total_return": 0.11044768211930722
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.14399295950628033,
      "vol": 0.08745347818177221,
      "sharpe": 0.9604301767358048,
      "max_drawdown": -0.16767475401645038,
      "total_return": 0.6720939108857036
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10272794223853321,
      "vol": 0.05478939224292754,
      "sharpe": 0.7798579339789762,
@@ -1301,14 +1421,14 @@
      "max_drawdown": -0.052060731067619104,
      "total_return": 0.1023347368086307
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.11988048703140919,
      "vol": 0.05827477336822065,
      "sharpe": 1.0275541811727438,
      "max_drawdown": -0.0956596897034655,
      "total_return": 0.5413669879515155
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.094813886132741,
      "vol": 0.045761120543786137,
      "sharpe": 0.7607743367960064,
@@ -1361,14 +1481,14 @@
      "max_drawdown": -0.08601655379448236,
      "total_return": 0.05805786360390175
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19548769472126692,
      "vol": 0.15109845476964873,
      "sharpe": 0.8966848464983935,
      "max_drawdown": -0.28752076305912533,
      "total_return": 0.978486539109332
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10685185941917164,
      "vol": 0.1148260406443472,
      "sharpe": 0.40802468809567993,
@@ -1421,14 +1541,14 @@
      "max_drawdown": -0.1332725491310609,
      "total_return": 0.055062677838951135
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1903409333768522,
      "vol": 0.1557267474256624,
      "sharpe": 0.8369848823759172,
      "max_drawdown": -0.3102342954144116,
      "total_return": 0.9461339505945703
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12339352549324789,
      "vol": 0.11409596091576708,
      "sharpe": 0.5556158604076181,
@@ -1481,14 +1601,14 @@
      "max_drawdown": -0.08286642751266649,
      "total_return": 0.07221156389417627
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.17629940140593225,
      "vol": 0.15387550467028005,
      "sharpe": 0.7558019169791529,
      "max_drawdown": -0.320042491923092,
      "total_return": 0.8598547413312818
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12206347312337162,
      "vol": 0.10477684604870242,
      "sharpe": 0.5923395813472306,
@@ -1541,14 +1661,14 @@
      "max_drawdown": -0.06820847934351859,
      "total_return": 0.07224357923343305
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15858594342642696,
      "vol": 0.10509698908371284,
      "sharpe": 0.938047267442651,
      "max_drawdown": -0.180273996432481,
      "total_return": 0.7550813874887978
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11170747869522679,
      "vol": 0.08681503227852967,
      "sharpe": 0.595605131255761,
@@ -1564,6 +1684,66 @@
     },
     "turnover_ann": 6.918368476487321,
     "costs_pct_of_start": 0.33375538389322684
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.16522538226870553,
+     "vol": 0.09756956224190166,
+     "sharpe": 1.078465249314361,
+     "max_drawdown": -0.12647463126421588,
+     "total_return": 0.33164010069186634
+    },
+    "2019-20": {
+     "cagr": 0.1659489929706881,
+     "vol": 0.11509367823441707,
+     "sharpe": 0.92054572063373,
+     "max_drawdown": -0.17526572955078623,
+     "total_return": 0.34789072157489276
+    },
+    "2021-22": {
+     "cagr": 0.11270412230817861,
+     "vol": 0.10927768053633684,
+     "sharpe": 0.4822953969145925,
+     "max_drawdown": -0.11911205030526306,
+     "total_return": 0.23339725138758505
+    },
+    "2023-24": {
+     "cagr": 0.1899720667935636,
+     "vol": 0.07915239952353956,
+     "sharpe": 1.6420483469349594,
+     "max_drawdown": -0.06888067894971894,
+     "total_return": 0.40241661008770446
+    },
+    "2025-26": {
+     "cagr": 0.03474007657626377,
+     "vol": 0.09677171483380816,
+     "sharpe": -0.2610258944684054,
+     "max_drawdown": -0.1092987190465905,
+     "total_return": 0.06043459801810891
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.1638985701685809,
+     "vol": 0.10678258237619333,
+     "sharpe": 0.9729917356985046,
+     "max_drawdown": -0.17526572955078634,
+     "total_return": 0.7860350560064149
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.1146743345292709,
+     "vol": 0.09581889289463827,
+     "sharpe": 0.5706007748324788,
+     "max_drawdown": -0.11911205030526306,
+     "total_return": 0.8436362849929442
+    },
+    "2017-26 (all)": {
+     "cagr": 0.1344216889406067,
+     "vol": 0.10036048642079404,
+     "sharpe": 0.7415437249732879,
+     "max_drawdown": -0.17526572955078634,
+     "total_return": 2.2974966195013553
+    },
+    "turnover_ann": 4.911241288735355,
+    "costs_pct_of_start": 0.2351524063798092
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -1601,14 +1781,14 @@
      "max_drawdown": -0.1482439494578428,
      "total_return": -0.03422567289140721
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1505419362043301,
      "vol": 0.1702535871574309,
      "sharpe": 0.5318063349855139,
      "max_drawdown": -0.3633661476577138,
      "total_return": 0.7089697430663842
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603896,
      "vol": 0.12865925788321536,
      "sharpe": 0.31438735977130056,
@@ -1661,14 +1841,14 @@
      "max_drawdown": -0.11346969076529301,
      "total_return": -0.006405743231514993
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1895596026216344,
      "vol": 0.17616417456580163,
      "sharpe": 0.7354480724640226,
      "max_drawdown": -0.3314032736666569,
      "total_return": 0.9412568709055773
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.15842914579618572,
      "vol": 0.1309419068265232,
      "sharpe": 0.7517008739347929,
@@ -1723,14 +1903,14 @@
      "max_drawdown": -0.0704080339651022,
      "total_return": 0.1583638404414407
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1537901376700208,
      "vol": 0.08431656790543333,
      "sharpe": 1.1123571558938774,
      "max_drawdown": -0.15542547372569027,
      "total_return": 0.7274807403488075
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10691679996381365,
      "vol": 0.05822426986543563,
      "sharpe": 0.8057945607947491,
@@ -1783,14 +1963,14 @@
      "max_drawdown": -0.06213362819893964,
      "total_return": 0.10527937061539605
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.13827155324414564,
      "vol": 0.08751018359785094,
      "sharpe": 0.8944279399965493,
      "max_drawdown": -0.16815609718631486,
      "total_return": 0.6403617061221551
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.09960243559139004,
      "vol": 0.05488299780713667,
      "sharpe": 0.7215793082323277,
@@ -1843,14 +2023,14 @@
      "max_drawdown": -0.05298049808515415,
      "total_return": 0.09721533526501647
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.11463579487186415,
      "vol": 0.058380867329022125,
      "sharpe": 0.9358510308513996,
      "max_drawdown": -0.09612769812132727,
      "total_return": 0.5139632669728069
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.0917141471665841,
      "vol": 0.04584913494472515,
      "sharpe": 0.6917065546562238,
@@ -1903,14 +2083,14 @@
      "max_drawdown": -0.08682004615573358,
      "total_return": 0.04952602132662709
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19211128181353998,
      "vol": 0.15107715913095143,
      "sharpe": 0.8744623116657091,
      "max_drawdown": -0.28767709134390396,
      "total_return": 0.9572179608622371
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10195721968888471,
      "vol": 0.11489533841473419,
      "sharpe": 0.3651777371283161,
@@ -1963,14 +2143,14 @@
      "max_drawdown": -0.13742898927051916,
      "total_return": 0.03935489861232
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18512849426747957,
      "vol": 0.15573013989456433,
      "sharpe": 0.8034956775367741,
      "max_drawdown": -0.3104856005057529,
      "total_return": 0.9137683163202079
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.1162763920354386,
      "vol": 0.11425743943250495,
      "sharpe": 0.4925402872228958,
@@ -2023,14 +2203,14 @@
      "max_drawdown": -0.0889877714036833,
      "total_return": 0.05421230831904156
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.16869577252529422,
      "vol": 0.1538963496120178,
      "sharpe": 0.7062920777479321,
      "max_drawdown": -0.3203419641871751,
      "total_return": 0.8143302585260856
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11076543223843283,
      "vol": 0.10495970784159322,
      "sharpe": 0.4836659064928876,
@@ -2083,14 +2263,14 @@
      "max_drawdown": -0.0716576770946541,
      "total_return": 0.05566286879265392
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15121699583118553,
      "vol": 0.1051922940762636,
      "sharpe": 0.8671452280055221,
      "max_drawdown": -0.18080497542403462,
      "total_return": 0.7128046890550985
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10161486637541062,
      "vol": 0.08700916201435618,
      "sharpe": 0.4782814293573397,
@@ -2106,6 +2286,66 @@
     },
     "turnover_ann": 6.918368476487323,
     "costs_pct_of_start": 0.4786898012331062
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.15914779140451452,
+     "vol": 0.09759847991193414,
+     "sharpe": 1.015874340399342,
+     "max_drawdown": -0.12714306254205965,
+     "total_return": 0.31866054804245625
+    },
+    "2019-20": {
+     "cagr": 0.1612466813172584,
+     "vol": 0.11516806295744722,
+     "sharpe": 0.8791211618681773,
+     "max_drawdown": -0.1757607120232052,
+     "total_return": 0.3373406812061104
+    },
+    "2021-22": {
+     "cagr": 0.10793255323461448,
+     "vol": 0.10930090464792669,
+     "sharpe": 0.43853757102022034,
+     "max_drawdown": -0.12136594673593637,
+     "total_return": 0.22302936453788602
+    },
+    "2023-24": {
+     "cagr": 0.18325135752350685,
+     "vol": 0.07917412873449901,
+     "sharpe": 1.556712520788395,
+     "max_drawdown": -0.06999474054626065,
+     "total_return": 0.38705661803844094
+    },
+    "2025-26": {
+     "cagr": 0.026521038666089236,
+     "vol": 0.09722375689836746,
+     "sharpe": -0.3443495952219568,
+     "max_drawdown": -0.11315427414671775,
+     "total_return": 0.04600283466787514
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.15853445159814705,
+     "vol": 0.10683605878579429,
+     "sharpe": 0.9222958308084734,
+     "max_drawdown": -0.1757607120232053,
+     "total_return": 0.7547833260216517
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.10813459321011831,
+     "vol": 0.09597582711596848,
+     "sharpe": 0.5015282978698047,
+     "max_drawdown": -0.12136594673593637,
+     "total_return": 0.7835088548386695
+    },
+    "2017-26 (all)": {
+     "cagr": 0.12834521885784,
+     "vol": 0.10047324983150371,
+     "sharpe": 0.6802329871130549,
+     "max_drawdown": -0.1757607120232053,
+     "total_return": 2.1341364628538675
+    },
+    "turnover_ann": 4.911241288735355,
+    "costs_pct_of_start": 0.3419609193587459
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -2143,14 +2383,14 @@
      "max_drawdown": -0.14824394945784258,
      "total_return": -0.03422567289140599
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15054193620433032,
      "vol": 0.1702535871574309,
      "sharpe": 0.5318063349855152,
      "max_drawdown": -0.3633661476577137,
      "total_return": 0.7089697430663855
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603963,
      "vol": 0.12865925788321533,
      "sharpe": 0.3143873597713058,
@@ -2203,14 +2443,14 @@
      "max_drawdown": -0.11403404483593771,
      "total_return": -0.007885584899202547
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18827245584203123,
      "vol": 0.17615011062851063,
      "sharpe": 0.7281996893691975,
      "max_drawdown": -0.33152085584400715,
      "total_return": 0.9332421644093878
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.15740327799009224,
      "vol": 0.13094849268377073,
      "sharpe": 0.7438289360482577,
@@ -2265,14 +2505,14 @@
      "max_drawdown": -0.0699627250701843,
      "total_return": 0.16069540963378537
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15444263234897537,
      "vol": 0.08434293085935557,
      "sharpe": 1.1197456785852198,
      "max_drawdown": -0.15540582966390293,
      "total_return": 0.7312169872643428
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10788540791334822,
      "vol": 0.058181538615344114,
      "sharpe": 0.823034403231122,
@@ -2325,14 +2565,14 @@
      "max_drawdown": -0.06046038898548334,
      "total_return": 0.11486356912845963
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.14827770941346619,
      "vol": 0.0874225575450281,
      "sharpe": 1.0097818216768324,
      "max_drawdown": -0.16726022140205732,
      "total_return": 0.6961531777613852
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.1053039516608778,
      "vol": 0.05471877940229601,
      "sharpe": 0.8279415614847733,
@@ -2385,14 +2625,14 @@
      "max_drawdown": -0.051242001145209826,
      "total_return": 0.10659476901305687
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.12368033046535554,
      "vol": 0.058206939043346034,
      "sharpe": 1.0940333147897288,
      "max_drawdown": -0.09529924664449141,
      "total_return": 0.5614488487721234
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.09729239714952875,
      "vol": 0.045698196750856325,
      "sharpe": 0.8160583961954679,
@@ -2445,14 +2685,14 @@
      "max_drawdown": -0.08527079170286023,
      "total_return": 0.06595306042198135
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.19796489687965013,
      "vol": 0.1511212706864443,
      "sharpe": 0.9129416147241654,
      "max_drawdown": -0.28739165195438443,
      "total_return": 0.9941990086006993
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11122583789873186,
      "vol": 0.11477286738244039,
      "sharpe": 0.4463235873339271,
@@ -2505,14 +2745,14 @@
      "max_drawdown": -0.12927180804594562,
      "total_return": 0.07033516213785429
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1947140395460023,
      "vol": 0.15573086564093228,
      "sharpe": 0.865043926851416,
      "max_drawdown": -0.310021641119959,
      "total_return": 0.9735981624504033
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13008953798390643,
      "vol": 0.11396908322796732,
      "sharpe": 0.6149872930337558,
@@ -2565,14 +2805,14 @@
      "max_drawdown": -0.07997550803845732,
      "total_return": 0.08984745664997185
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18311064957406553,
      "vol": 0.1538737048780511,
      "sharpe": 0.8000759432655106,
      "max_drawdown": -0.3197677625197384,
      "total_return": 0.9013462431812747
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.13294106282575702,
      "vol": 0.10468016800066611,
      "sharpe": 0.6967992526081241,
@@ -2625,14 +2865,14 @@
      "max_drawdown": -0.06592779357383272,
      "total_return": 0.08827255538520373
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1651294306091997,
      "vol": 0.1050365373085005,
      "sharpe": 1.000884390356723,
      "max_drawdown": -0.179808655271115,
      "total_return": 0.7932637068924162
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12129349876862361,
      "vol": 0.08670768748239921,
      "sharpe": 0.7068980911417523,
@@ -2648,6 +2888,66 @@
     },
     "turnover_ann": 6.918368476487321,
     "costs_pct_of_start": 0.18563101542079505
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.17030690145560312,
+     "vol": 0.09755755364627454,
+     "sharpe": 1.1306853988524082,
+     "max_drawdown": -0.12590687374811016,
+     "total_return": 0.342537873288975
+    },
+    "2019-20": {
+     "cagr": 0.1699000649067226,
+     "vol": 0.11504204596664014,
+     "sharpe": 0.9553034630363876,
+     "max_drawdown": -0.17485553159402112,
+     "total_return": 0.3567864185241443
+    },
+    "2021-22": {
+     "cagr": 0.11690737393125294,
+     "vol": 0.10926896660214877,
+     "sharpe": 0.5208008797086388,
+     "max_drawdown": -0.11716849441016419,
+     "total_return": 0.24256586249612133
+    },
+    "2023-24": {
+     "cagr": 0.19612462092724403,
+     "vol": 0.07916046113101696,
+     "sharpe": 1.7196036882850743,
+     "max_drawdown": -0.06782069890843812,
+     "total_return": 0.41655012624224264
+    },
+    "2025-26": {
+     "cagr": 0.04257441267122064,
+     "vol": 0.09639245530080517,
+     "sharpe": -0.1807775024964407,
+     "max_drawdown": -0.10564601954717245,
+     "total_return": 0.07426773279961019
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.1683930936704119,
+     "vol": 0.10674911459479675,
+     "sharpe": 1.0154004001050072,
+     "max_drawdown": -0.174855531594021,
+     "total_return": 0.8125352603083567
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.1207029988023598,
+     "vol": 0.09569896502933668,
+     "sharpe": 0.6343119675719711,
+     "max_drawdown": -0.11716849441016419,
+     "total_return": 0.900532197156996
+    },
+    "2017-26 (all)": {
+     "cagr": 0.13984542399026578,
+     "vol": 0.10027728658999338,
+     "sharpe": 0.796246355535447,
+     "max_drawdown": -0.174855531594021,
+     "total_return": 2.4496960265811243
+    },
+    "turnover_ann": 4.911241288735356,
+    "costs_pct_of_start": 0.13212305948311612
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -2685,14 +2985,14 @@
      "max_drawdown": -0.14824394945784258,
      "total_return": -0.03422567289140743
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15054193620433054,
      "vol": 0.17025358715743089,
      "sharpe": 0.5318063349855167,
      "max_drawdown": -0.36336614765771424,
      "total_return": 0.7089697430663864
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603896,
      "vol": 0.12865925788321533,
      "sharpe": 0.3143873597713006,
@@ -2745,14 +3045,14 @@
      "max_drawdown": -0.1131961683278846,
      "total_return": -0.005767870387803686
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18877234102846496,
      "vol": 0.1761676958478071,
      "sharpe": 0.7309645528866574,
      "max_drawdown": -0.3314801811049214,
      "total_return": 0.9363519036122585
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.158646753219708,
      "vol": 0.13093774001859287,
      "sharpe": 0.753386710399159,
@@ -2807,14 +3107,14 @@
      "max_drawdown": -0.07041558951871763,
      "total_return": 0.15318637323065887
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.14154103601175105,
      "vol": 0.08442555555470616,
      "sharpe": 0.9658335734481962,
      "max_drawdown": -0.15636801839170988,
      "total_return": 0.6584400154855408
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10210199882760329,
      "vol": 0.05822767437881498,
      "sharpe": 0.723058224061947,
@@ -2867,14 +3167,14 @@
      "max_drawdown": -0.06114132411655371,
      "total_return": 0.10736251109260486
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.134869814023858,
      "vol": 0.08750792150941285,
      "sharpe": 0.8555775606646603,
      "max_drawdown": -0.16788635509085748,
      "total_return": 0.6217069743663406
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.09996516990077642,
      "vol": 0.05482576564926601,
      "sharpe": 0.7289486873096037,
@@ -2927,14 +3227,14 @@
      "max_drawdown": -0.052233894831690275,
      "total_return": 0.09802331488297744
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.11022512866391287,
      "vol": 0.05838387900670474,
      "sharpe": 0.8602567955127661,
      "max_drawdown": -0.09630786277866565,
      "total_return": 0.49119725260486646
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.0912485957225666,
      "vol": 0.04582328410468505,
      "sharpe": 0.6819370617605232,
@@ -2987,14 +3287,14 @@
      "max_drawdown": -0.08582077407551525,
      "total_return": 0.05930561088397712
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.189705701337336,
      "vol": 0.15110403452870136,
      "sharpe": 0.858386751498016,
      "max_drawdown": -0.28764256675933797,
      "total_return": 0.9421681348528455
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10615897546295039,
      "vol": 0.11478946119601278,
      "sharpe": 0.4021185828560516,
@@ -3047,14 +3347,14 @@
      "max_drawdown": -0.13090953330820265,
      "total_return": 0.06411449548612169
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.18689287668895327,
      "vol": 0.1557138380190715,
      "sharpe": 0.8149107253615553,
      "max_drawdown": -0.31037761745402526,
      "total_return": 0.9246790604842434
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.1257695379470809,
      "vol": 0.11400818813988675,
      "sharpe": 0.5768843362933058,
@@ -3107,14 +3407,14 @@
      "max_drawdown": -0.08066948111803018,
      "total_return": 0.08366498596843375
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.17549721745544966,
      "vol": 0.15384962064917987,
      "sharpe": 0.7507149966837786,
      "max_drawdown": -0.3199956003126304,
      "total_return": 0.8550125379501199
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.12803172104966842,
      "vol": 0.10470821527033074,
      "sharpe": 0.649726679745494,
@@ -3167,14 +3467,14 @@
      "max_drawdown": -0.06693682063878525,
      "total_return": 0.0807023119935828
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.1572329856162582,
      "vol": 0.10505611911319447,
      "sharpe": 0.9255337664957232,
      "max_drawdown": -0.1804136307932187,
      "total_return": 0.7472621667471313
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.11575303346460952,
      "vol": 0.0867583771192129,
      "sharpe": 0.6426242089337428,
@@ -3190,6 +3490,66 @@
     },
     "turnover_ann": 6.918368476487321,
     "costs_pct_of_start": 0.2849096102144045
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "2017-18": {
+     "cagr": 0.16104700112116532,
+     "vol": 0.09751393346962392,
+     "sharpe": 1.0362314135614474,
+     "max_drawdown": -0.1268266880110176,
+     "total_return": 0.32271021264870114
+    },
+    "2019-20": {
+     "cagr": 0.16284812237963986,
+     "vol": 0.11513766372900087,
+     "sharpe": 0.8932621963019255,
+     "max_drawdown": -0.17563745550832965,
+     "total_return": 0.34092913034058947
+    },
+    "2021-22": {
+     "cagr": 0.11145163235789202,
+     "vol": 0.10927765480682118,
+     "sharpe": 0.47083397286341083,
+     "max_drawdown": -0.12010346819666451,
+     "total_return": 0.23067162438665934
+    },
+    "2023-24": {
+     "cagr": 0.19046118595982908,
+     "vol": 0.07913534860219214,
+     "sharpe": 1.6485829438327029,
+     "max_drawdown": -0.06833815674415733,
+     "total_return": 0.403537685397094
+    },
+    "2025-26": {
+     "cagr": 0.038357422836210464,
+     "vol": 0.09660135474194247,
+     "sharpe": -0.22404009986821374,
+     "max_drawdown": -0.10771509975107041,
+     "total_return": 0.06681245505781841
+    },
+    "2017-20 (model-selection years)": {
+     "cagr": 0.16027776970624674,
+     "vol": 0.10678166343749541,
+     "sharpe": 0.9390916612283745,
+     "max_drawdown": -0.17563745550832965,
+     "total_return": 0.7648953644797603
+    },
+    "2021-26 (evaluation years, inspected repeatedly)": {
+     "cagr": 0.1155813184964607,
+     "vol": 0.09575886723301921,
+     "sharpe": 0.580429991524538,
+     "max_drawdown": -0.12010346819666451,
+     "total_return": 0.8521053141283801
+    },
+    "2017-26 (all)": {
+     "cagr": 0.13354383250145752,
+     "vol": 0.10032438884901212,
+     "sharpe": 0.7330603589536014,
+     "max_drawdown": -0.17563745550832965,
+     "total_return": 2.2734353900012425
+    },
+    "turnover_ann": 4.911241288735355,
+    "costs_pct_of_start": 0.2295264744893376
    },
    "NIFTY 50 ETF (buy and hold)": {
     "2017-18": {
@@ -3227,14 +3587,14 @@
      "max_drawdown": -0.14824394945784258,
      "total_return": -0.03422567289140743
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.15054193620433054,
      "vol": 0.17025358715743089,
      "sharpe": 0.5318063349855167,
      "max_drawdown": -0.36336614765771424,
      "total_return": 0.7089697430663864
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.10044884439603896,
      "vol": 0.12865925788321533,
      "sharpe": 0.3143873597713006,
@@ -3287,14 +3647,14 @@
      "max_drawdown": -0.11611470986587868,
      "total_return": -0.014180834006888188
     },
-    "2017-20 (validation years)": {
+    "2017-20 (model-selection years)": {
      "cagr": 0.16961387417172613,
      "vol": 0.17613047221756173,
      "sharpe": 0.6223447470028226,
      "max_drawdown": -0.3333251429311467,
      "total_return": 0.8197829715622267
     },
-    "2021-26 (test years)": {
+    "2021-26 (evaluation years, inspected repeatedly)": {
      "cagr": 0.15070905899609377,
      "vol": 0.13097324806436456,
      "sharpe": 0.6925769982547608,
@@ -3314,7 +3674,147 @@
   }
  },
  "bootstrap": {
-  "2021-26 (test years)": {
+  "2017-20 (model-selection years)": {
+   "A  Min-variance, trailing covariance": {
+    "lo": 0.18672264422774618,
+    "hi": 2.3790913695079943
+   },
+   "B  Min-variance + volatility model": {
+    "lo": 0.07849307520432773,
+    "hi": 2.255085354525342
+   },
+   "B+ B + regime overlay": {
+    "lo": 0.1639981104334508,
+    "hi": 2.1835616124149855
+   },
+   "C  Max-Sharpe, prior returns": {
+    "lo": -0.09365947915236161,
+    "hi": 2.3377470869251695
+   },
+   "C+ C + volatility model": {
+    "lo": -0.1874022047771098,
+    "hi": 2.331816107538314
+   },
+   "D  C+ + return tilt": {
+    "lo": -0.2601741542656963,
+    "hi": 2.3498507722289164
+   },
+   "E  Full system (D + regime overlay)": {
+    "lo": -0.10107908114693721,
+    "hi": 2.318041013277633
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "lo": -0.06539989608933824,
+    "hi": 2.295212267300688
+   },
+   "NIFTY 50 ETF (buy and hold)": {
+    "lo": -0.5833565303255948,
+    "hi": 1.9738429086534444
+   },
+   "Equal-weight stocks (monthly)": {
+    "lo": -0.30476229026129587,
+    "hi": 2.136268253025372
+   },
+   "DIFF volatility model, max-Sharpe (C+ - C)": {
+    "point": -0.04837896280703213,
+    "lo": -0.20459813660925294,
+    "hi": 0.152855226845302,
+    "share_above_0": 0.3345
+   },
+   "DIFF volatility model, min-variance (B - A)": {
+    "point": -0.10994534782323462,
+    "lo": -0.30430526654782214,
+    "hi": 0.051515662385201534,
+    "share_above_0": 0.141
+   },
+   "DIFF full system vs NIFTY ETF (E - NIFTY)": {
+    "point": 0.4773395980586166,
+    "lo": -0.3224357779510926,
+    "hi": 1.0816528842042985,
+    "share_above_0": 0.833
+   },
+   "DIFF max-Sharpe + vol model vs NIFTY ETF (C+ - NIFTY)": {
+    "point": 0.3387421760857915,
+    "lo": -0.25900417166351136,
+    "hi": 0.9086572884566209,
+    "share_above_0": 0.841
+   },
+   "DIFF full system vs equal weight (E - EW)": {
+    "point": 0.2664459204361186,
+    "lo": -0.5002238725942464,
+    "hi": 0.9000312479390999,
+    "share_above_0": 0.703
+   },
+   "DIFF return tilt, max-Sharpe + vol model (D - C+)": {
+    "point": -0.06505144754408343,
+    "lo": -0.21837880229757706,
+    "hi": 0.14947027491800427,
+    "share_above_0": 0.2975
+   },
+   "DIFF return tilt inside the full system (E - E0)": {
+    "point": -0.01461868423674395,
+    "lo": -0.1896273836137753,
+    "hi": 0.18187677930179472,
+    "share_above_0": 0.4315
+   },
+   "DEFLATED SHARPE": {
+    "E  Full system (D + regime overlay)": {
+     "sr_daily": 0.05948845473922402,
+     "sr_annual": 0.9443499427170511,
+     "T": 963,
+     "skew": -0.32768421480972854,
+     "kurtosis": 10.005493146977763,
+     "trial_sr_var": 3.17966224030256e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9656416222708137,
+     "dsr_N9": 0.9403690379238199,
+     "sr0_annual_N9": 0.13613087652317304,
+     "dsr_N30": 0.9282019536788539,
+     "sr0_annual_N30": 0.1855975539255032,
+     "dsr_N100": 0.9167658935540811,
+     "sr0_annual_N100": 0.2265242834818194,
+     "dsr_N300": 0.9066961598746419,
+     "sr0_annual_N300": 0.2591878029110753
+    },
+    "D  C+ + return tilt": {
+     "sr_daily": 0.049490780647802365,
+     "sr_annual": 0.7856417867071991,
+     "T": 963,
+     "skew": -1.0981005891549136,
+     "kurtosis": 29.058993085213874,
+     "trial_sr_var": 3.17966224030256e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9309487592453995,
+     "dsr_N9": 0.88989089835607,
+     "sr0_annual_N9": 0.13613087652317304,
+     "dsr_N30": 0.8713046725005369,
+     "sr0_annual_N30": 0.1855975539255032,
+     "dsr_N100": 0.8543630325672142,
+     "sr0_annual_N100": 0.2265242834818194,
+     "dsr_N300": 0.83981038285575,
+     "sr0_annual_N300": 0.2591878029110753
+    },
+    "C+ C + volatility model": {
+     "sr_daily": 0.05296963352848021,
+     "sr_annual": 0.8408668641275245,
+     "T": 963,
+     "skew": -0.9269893070353693,
+     "kurtosis": 26.40339071841154,
+     "trial_sr_var": 3.17966224030256e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9441449575587023,
+     "dsr_N9": 0.9087428394171164,
+     "sr0_annual_N9": 0.13613087652317304,
+     "dsr_N30": 0.8924168236293676,
+     "sr0_annual_N30": 0.1855975539255032,
+     "dsr_N100": 0.8773961497387526,
+     "sr0_annual_N100": 0.2265242834818194,
+     "dsr_N300": 0.8643956283753365,
+     "sr0_annual_N300": 0.2591878029110753
+    }
+   }
+  },
+  "2021-26 (evaluation years, inspected repeatedly)": {
    "A  Min-variance, trailing covariance": {
     "lo": 0.1669031026787845,
     "hi": 1.5809185379384476
@@ -3342,6 +3842,10 @@
    "E  Full system (D + regime overlay)": {
     "lo": -0.08909176855992888,
     "hi": 1.591387151816812
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "lo": -0.13975727973022053,
+    "hi": 1.4946460736030422
    },
    "NIFTY 50 ETF (buy and hold)": {
     "lo": -0.3914681486281137,
@@ -3380,6 +3884,74 @@
     "lo": -0.49461779031707187,
     "hi": 0.42979038553089044,
     "share_above_0": 0.4215
+   },
+   "DIFF return tilt, max-Sharpe + vol model (D - C+)": {
+    "point": 0.08276491803061392,
+    "lo": -0.11136895035107174,
+    "hi": 0.2783670780261829,
+    "share_above_0": 0.742
+   },
+   "DIFF return tilt inside the full system (E - E0)": {
+    "point": 0.07368854629641508,
+    "lo": -0.12383342411494813,
+    "hi": 0.2768859419554409,
+    "share_above_0": 0.723
+   },
+   "DEFLATED SHARPE": {
+    "E  Full system (D + regime overlay)": {
+     "sr_daily": 0.04273241334313341,
+     "sr_annual": 0.6783560317652954,
+     "T": 1420,
+     "skew": -0.3611440536824018,
+     "kurtosis": 5.319688648585781,
+     "trial_sr_var": 4.458964048574087e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9447428407545434,
+     "dsr_N9": 0.8881282992194085,
+     "sr0_annual_N9": 0.1612067162265402,
+     "dsr_N30": 0.8596667781532722,
+     "sr0_annual_N30": 0.2197853490123932,
+     "dsr_N100": 0.8326785882598222,
+     "sr0_annual_N100": 0.26825094216930145,
+     "dsr_N300": 0.8088880379736022,
+     "sr0_annual_N300": 0.30693120958604575
+    },
+    "D  C+ + return tilt": {
+     "sr_daily": 0.042617755857108315,
+     "sr_annual": 0.6765359006014497,
+     "T": 1420,
+     "skew": -0.39707952275475555,
+     "kurtosis": 5.963977411353334,
+     "trial_sr_var": 4.458964048574087e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.944107320768343,
+     "dsr_N9": 0.8871093597771492,
+     "sr0_annual_N9": 0.1612067162265402,
+     "dsr_N30": 0.8585005409355781,
+     "sr0_annual_N30": 0.2197853490123932,
+     "dsr_N100": 0.831393598855341,
+     "sr0_annual_N100": 0.26825094216930145,
+     "dsr_N300": 0.8075129034118301,
+     "sr0_annual_N300": 0.30693120958604575
+    },
+    "C+ C + volatility model": {
+     "sr_daily": 0.038280761118570525,
+     "sr_annual": 0.6076882435080503,
+     "T": 1420,
+     "skew": -0.27317606484332563,
+     "kurtosis": 5.167497987361261,
+     "trial_sr_var": 4.458964048574087e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9241364702844495,
+     "dsr_N9": 0.8538735044143321,
+     "sr0_annual_N9": 0.1612067162265402,
+     "dsr_N30": 0.8199075000266015,
+     "sr0_annual_N30": 0.2197853490123932,
+     "dsr_N100": 0.788344022206339,
+     "sr0_annual_N100": 0.26825094216930145,
+     "dsr_N300": 0.7609763866835173,
+     "sr0_annual_N300": 0.30693120958604575
+    }
    }
   },
   "2017-26 (all)": {
@@ -3410,6 +3982,10 @@
    "E  Full system (D + regime overlay)": {
     "lo": 0.2159238927342296,
     "hi": 1.567450799213701
+   },
+   "E0 Full system without the return tilt (C+ + regime overlay)": {
+    "lo": 0.191654049625296,
+    "hi": 1.5000651451604716
    },
    "NIFTY 50 ETF (buy and hold)": {
     "lo": -0.23055921764122617,
@@ -3448,6 +4024,74 @@
     "lo": -0.3130163750057538,
     "hi": 0.5036421125041105,
     "share_above_0": 0.6435
+   },
+   "DIFF return tilt, max-Sharpe + vol model (D - C+)": {
+    "point": 0.01111898237687925,
+    "lo": -0.11216059756551335,
+    "hi": 0.1627085585509986,
+    "share_above_0": 0.567
+   },
+   "DIFF return tilt inside the full system (E - E0)": {
+    "point": 0.04044100121525496,
+    "lo": -0.0917060882449317,
+    "hi": 0.18238499591505677,
+    "share_above_0": 0.6805
+   },
+   "DEFLATED SHARPE": {
+    "E  Full system (D + regime overlay)": {
+     "sr_daily": 0.050191009914773585,
+     "sr_annual": 0.7967575817140085,
+     "T": 2384,
+     "skew": -0.34028143282367956,
+     "kurtosis": 8.398493379557685,
+     "trial_sr_var": 3.006934875047493e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9923229814205766,
+     "dsr_N9": 0.9783695990007248,
+     "sr0_annual_N9": 0.13238176198570822,
+     "dsr_N30": 0.9695925492940441,
+     "sr0_annual_N30": 0.18048610158411196,
+     "dsr_N100": 0.9602641261423325,
+     "sr0_annual_N100": 0.2202856879039387,
+     "dsr_N300": 0.9512530154254735,
+     "sr0_annual_N300": 0.25204963716465795
+    },
+    "D  C+ + return tilt": {
+     "sr_daily": 0.045340539718279255,
+     "sr_annual": 0.7197587544240809,
+     "T": 2384,
+     "skew": -0.9104797081625837,
+     "kurtosis": 27.007306137227694,
+     "trial_sr_var": 3.006934875047493e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.984428340622244,
+     "dsr_N9": 0.9606971771488348,
+     "sr0_annual_N9": 0.13238176198570822,
+     "dsr_N30": 0.9468220543323886,
+     "sr0_annual_N30": 0.18048610158411196,
+     "dsr_N100": 0.9326231169846114,
+     "sr0_annual_N100": 0.2202856879039387,
+     "dsr_N300": 0.9193185326608683,
+     "sr0_annual_N300": 0.25204963716465795
+    },
+    "C+ C + volatility model": {
+     "sr_daily": 0.044866539974318546,
+     "sr_annual": 0.712234241759911,
+     "T": 2384,
+     "skew": -0.6991852167631045,
+     "kurtosis": 22.04585438189911,
+     "trial_sr_var": 3.006934875047493e-05,
+     "n_variants": 8,
+     "psr_vs_zero": 0.9840495252216684,
+     "dsr_N9": 0.9596675672199761,
+     "sr0_annual_N9": 0.13238176198570822,
+     "dsr_N30": 0.9454137961685768,
+     "sr0_annual_N30": 0.18048610158411196,
+     "dsr_N100": 0.9308332229018824,
+     "sr0_annual_N100": 0.2202856879039387,
+     "dsr_N300": 0.91717760343509,
+     "sr0_annual_N300": 0.25204963716465795
+    }
    }
   }
  }

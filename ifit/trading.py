@@ -12,14 +12,15 @@ import numpy as np
 import pandas as pd
 
 from . import config as C
+from . import costs as K
 from . import data as D
 from . import risk
 
 STOP_LOSS = 0.15          # sell a position that is down >= 15 % from its average cost
 DRIFT_TOLERANCE = 0.03    # a holding may exceed its cap by 3pp before we trim
 IDLE_CASH_FRACTION = 0.25
-MIN_TRADE_FRACTION = 0.01  # ignore rebalancing trades smaller than 1 % of the capital
-COST = C.BROKERAGE_RATE + C.SLIPPAGE_RATE
+MIN_TRADE_FRACTION = 0.01  # ignore rebalancing trades smaller than 1 % of the capital ...
+MIN_TRADE_RS = 1_000.0     # ... or smaller than Rs 1,000 (the fixed Rs 15.93 depository charge would be > 1.6 % of the trade)
 
 
 def holdings_qty(s) -> dict[str, int]:
@@ -40,16 +41,16 @@ def target_orders(s, weights: pd.Series, capital: float, min_frac: float = MIN_T
     for sym in sorted(set(cur) | set(weights[weights > 0].index)):
         w = float(weights.get(sym, 0.0))
         price = float(px[sym])
-        tgt = int(math.floor(w * capital / (1 + COST) / price))
+        tgt = int(math.floor(w * capital / (1 + K.buy_rate(sym)) / price))
         delta = tgt - cur.get(sym, 0)
         if delta == 0:
             continue
-        if abs(delta) * price < min_frac * capital and tgt > 0 and cur.get(sym, 0) > 0:
+        if abs(delta) * price < max(min_frac * capital, MIN_TRADE_RS) and tgt > 0 and cur.get(sym, 0) > 0:
             continue                                  # not worth the trading costs
         orders.append(dict(symbol=sym, side="BUY" if delta > 0 else "SELL", qty=abs(delta), price=price))
     # affordability: scale buys down if cash (+ sell proceeds) is not enough
-    cash = s.wallet.cash() + sum(o["qty"] * o["price"] * (1 - COST) for o in orders if o["side"] == "SELL")
-    need = sum(o["qty"] * o["price"] * (1 + COST) for o in orders if o["side"] == "BUY")
+    cash = s.wallet.cash() + s.wallet._sell_total(orders)
+    need = s.wallet._buy_total(orders)
     if need > cash and need > 0:
         f = cash / need
         for o in orders:

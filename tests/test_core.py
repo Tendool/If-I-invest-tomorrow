@@ -130,12 +130,16 @@ def wallet(tmp_path):
 
 
 def test_wallet_buy_sell_accounting(wallet):
+    from ifit import costs as K
     wallet.buy("TCS.NS", 10, 2000)
-    cost = 10 * 2000 * (1 + C.BROKERAGE_RATE + C.SLIPPAGE_RATE)
+    cost = 10 * 2000 * (1 + K.buy_rate("TCS.NS"))                      # STT, stamp duty, fees, spread: ~0.17 %
     assert wallet.cash() == pytest.approx(100000 - cost)
     wallet.sell("TCS.NS", 4, 2100)
     assert wallet.holdings().qty.iloc[0] == 6
-    assert wallet.cash() > 100000 - cost
+    proceeds = 4 * 2100 * (1 - K.sell_rate("TCS.NS")) - K.DP_CHARGE_RS  # plus the fixed depository charge per sale
+    assert wallet.cash() == pytest.approx(100000 - cost + proceeds)
+    wallet.buy("GOLDBEES.NS", 100, 120)
+    assert K.buy_rate("GOLDBEES.NS") < K.buy_rate("TCS.NS")             # no STT on gold ETFs
 
 
 def test_wallet_rejects_overspend_and_oversell(wallet):

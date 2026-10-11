@@ -254,7 +254,75 @@ def report(ret, vol, cal, reg, ano, port):
           "In the portfolio backtest (before the round-10 look-ahead fix) every volatility-model strategy improved slightly (max-Sharpe 0.79 -> 0.80, min-variance 0.95 -> 0.97, full system 0.75 -> 0.77).", ""]
     L += round10_sections()
     L += calibration_check_section()
+    L += evidence_section()
     (R / "evaluation.md").write_text("\n".join(L), encoding="utf-8")
+
+
+def evidence_section():
+    """Section 16: how far the headline numbers can be trusted (round 11; no model was changed)."""
+    j = lambda n: json.loads((R / n).read_text(encoding="utf-8"))
+    wf, cal, sens = j("eval_robustness_walkforward.json"), j("calibration_by_horizon.json"), j("eval_mc_sensitivity.json")
+    per = ["2017-20 (model-selection years)", "2021-26 (evaluation years, inspected repeatedly)", "2017-26 (all)"]
+    L = ["## 16. How far can the numbers be trusted? (round 11; no model changed)", "",
+         "**Which years are evidence of what.** 2014-16 is training history only. 2017-20 are the *model-selection years*: every choice since round 4 "
+         "was made there, so results on them are in-sample for the selection. 2021-26 are *evaluation years*: models never trained on them, but they were "
+         "reported in every round from 4 to 10 and one signal (round 6) was chosen after seeing them, so they carry some selection bias and are not a "
+         "fully untouched test. The only untouched evidence is prospective: `scripts/forward_test.py log` records the frozen models' forecasts (with the "
+         "git commit) from October 2026 and `score` evaluates them once the next 21 trading days have passed.", "",
+         "### Does the return signal pay after costs?", "",
+         "Same portfolios with and without the signal, realistic costs, stationary block bootstrap of daily returns (mean block 21 days, 2000 draws):", "",
+         "| Comparison | " + " | ".join(per) + " |", "|---|---|---|---|"]
+    for k in ("DIFF return tilt inside the full system (E - E0)", "DIFF return tilt, max-Sharpe + vol model (D - C+)"):
+        cells = []
+        for q in per:
+            v = wf["bootstrap"][q][k]
+            cells.append(f"{v['point']:+.2f} [{v['lo']:+.2f}, {v['hi']:+.2f}], {v['share_above_0']:.0%} > 0")
+        L.append(f"| {k[5:]} | " + " | ".join(cells) + " |")
+    L += ["", "The signal's contribution is not distinguishable from zero in any period (it helps in 2021-26, is flat over 2017-26 and slightly negative "
+          "in the selection years). It stays in production with its small 29% weight, but its net value is reported as unproven.", "",
+          "### Deflated Sharpe ratio", "",
+          "Probability that the true Sharpe ratio exceeds the best one that N skill-free trials would show by luck (Bailey & Lopez de Prado 2014). Inputs: "
+          "daily excess returns over 6% (Sharpe in this table is the arithmetic annualised one, so it differs slightly from the CAGR-based Sharpe elsewhere), "
+          "their skewness and kurtosis, the number of days T, and the variance of the Sharpe ratios of the strategy variants actually backtested. N is the "
+          "number of effectively independent trials, which is unknown: 9 counts the portfolio variants, 300 treats every model candidate of rounds 4-10 as "
+          "independent (an overstatement, as candidates were correlated).", "",
+          "| Strategy | Period | Sharpe (arith.) | P(SR > 0) | DSR, N=9 | N=30 | N=100 | N=300 |", "|---|---|---|---|---|---|---|---|"]
+    for q in per[1:]:
+        for n, v in wf["bootstrap"][q]["DEFLATED SHARPE"].items():
+            L.append(f"| {n} | {q.split(' (')[0]} | {v['sr_annual']:.2f} | {v['psr_vs_zero']:.2f} | {v['dsr_N9']:.2f} | {v['dsr_N30']:.2f} | "
+                     f"{v['dsr_N100']:.2f} | {v['dsr_N300']:.2f} |")
+    L += ["", "On 2021-26 alone the full system's DSR is 0.81-0.89, below the usual 0.95 bar; over 2017-26 it is 0.95-0.98. The evidence that the system "
+          "beats luck is good over ten years and suggestive, not conclusive, on the evaluation years alone.", "",
+          "### Calibration by horizon, portfolio and regime", "",
+          "Production simulator, monthly origins 2019-25, four reference portfolios. Intervals: moving-block bootstrap over origin dates with the block as "
+          "long as the horizon, so overlapping forecasts and the four portfolios of a date are resampled together.", "",
+          "| Horizon | outcomes | ~independent windows | 90% band held | 90% interval | below / above | Gold | Bull / Neutral / Bear regime at origin |",
+          "|---|---|---|---|---|---|---|---|"]
+    for h, v in cal.items():
+        lo, hi = v["ci"]
+        rg = v["by_regime"]
+        reg = " / ".join(f"{rg[r]['cover90']:.0%} (n {rg[r]['n']})" for r in ("Bull / Calm", "Neutral / Sideways", "Bear / Volatile") if r in rg)
+        L.append(f"| {h} | {v['n']} | {v['independent_windows']} | {v['cover90']:.0%} | {lo:.0%}-{hi:.0%} | {v['below']:.0%} / {v['above']:.0%} | "
+                 f"{v['by_portfolio']['Gold']:.0%} | {reg} |")
+    L += ["", "At 1 and 3 months, where there are many independent outcomes, the 90% band holds 89-90% with tight intervals: the simulator is well "
+          "calibrated at short horizons. The 1-year shortfall (85%) rests on about 7 independent windows, comes from outcomes above the band (gold, the "
+          "2020 rebound) and is within its interval. Bear-regime origins are too few (one episode) to judge.", "",
+          "### How much do the simulation's answers depend on its assumptions?", "",
+          f"Sample investor ({sens['profile']}), the five strategies' weights fixed; {sens['n_paths']:,} paths, so the simulation's own sampling error on "
+          f"P(target) is about +-{sens['mc_sampling_se_ptgt'] * 100:.1f} points. The spread across assumptions is an assumption-sensitivity range, not a confidence interval.", "",
+          f"| Assumption | P(target) of {sens['plan']} | 5% worst (Rs) | median (Rs) | expected max drawdown | rule would recommend |", "|---|---|---|---|---|---|"]
+    for k, v in sens["scenarios"].items():
+        L.append(f"| {k} | {v['ptgt']:.0%} | {v['p5']:,.0f} | {v['med']:,.0f} | {v['mdd']:.1%} | {v['recommended']} |")
+    L += ["", "Student-t versus normal tails, regime dynamics and volatility uncertainty barely move the answer (53%); resampling the plan's own last five "
+          "years instead raises it to 61%, because those years were calmer than the model assumes. What moves it most is the expected return (28% if returns are "
+          "CAPM-only, 80% if history-only, 44% if 2 points lower) and correlations (49% and a much worse 5% case if equity correlations rise towards 1 "
+          "in a crisis). The recommendation is stable to the simulation's structure but changes when expected returns or correlations change, so "
+          "P(target) is best quoted with its range: 53% (44-61% under alternative tails, correlations, regimes and a 2-point lower return).", "",
+          "### Demo wallet costs", "",
+          "Round 11 also made the app consistent with the backtests: the demo wallet, auto-trade and plan sizing now charge the per-asset-class NSE costs "
+          "of `ifit/costs.py` (stocks about 0.17% to buy and 0.15% to sell, plus Rs 15.93 per security sold) instead of a flat 0.10%, and auto-trade skips "
+          "rebalancing trades below Rs 1,000. The Rs 1 lakh sample plan now pays about Rs 156 in buying costs and still invests 99%.", ""]
+    return L
 
 
 def calibration_check_section():
@@ -343,11 +411,11 @@ def round10_sections():
     L += ["", "Sharpe ratio 2021-26 by cost level (calendar years; the section-6 table starts at the first rebalance, end of January 2021):", "",
           "| Strategy | " + " | ".join(wf["results"]) + " |", "|---|" + "---|" * len(wf["results"])]
     for n in show:
-        L.append(f"| {n} | " + " | ".join(f"{wf['results'][sname][n]['2021-26 (test years)']['sharpe']:.2f}" for sname in wf["results"]) + " |")
+        L.append(f"| {n} | " + " | ".join(f"{wf['results'][sname][n]['2021-26 (evaluation years, inspected repeatedly)']['sharpe']:.2f}" for sname in wf["results"]) + " |")
     L += ["", "90% intervals for Sharpe differences (stationary block bootstrap of daily returns, mean block 21 days, 2000 draws, realistic costs):", "",
           "| Difference | 2021-26 point [90% interval], share > 0 | 2017-26 point [90% interval], share > 0 |", "|---|---|---|"]
-    for k in [x for x in wf["bootstrap"]["2021-26 (test years)"] if x.startswith("DIFF ")]:
-        a, b = wf["bootstrap"]["2021-26 (test years)"][k], wf["bootstrap"]["2017-26 (all)"][k]
+    for k in [x for x in wf["bootstrap"]["2021-26 (evaluation years, inspected repeatedly)"] if x.startswith("DIFF ")]:
+        a, b = wf["bootstrap"]["2021-26 (evaluation years, inspected repeatedly)"][k], wf["bootstrap"]["2017-26 (all)"][k]
         L.append(f"| {k[5:]} | {a['point']:+.2f} [{a['lo']:+.2f}, {a['hi']:+.2f}], {a['share_above_0']:.0%} | {b['point']:+.2f} [{b['lo']:+.2f}, {b['hi']:+.2f}], {b['share_above_0']:.0%} |")
     L += ["",
           "What survives: every strategy keeps a higher Sharpe ratio than the NIFTY ETF in every cost scenario, and the full system beats NIFTY in every 2-year block; "

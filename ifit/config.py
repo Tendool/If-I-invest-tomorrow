@@ -163,6 +163,4 @@ COV_LOOKBACK_YEARS = 5
 # Demo wallet (paper trading)
 # --------------------------------------------------------------------------- #
 DEMO_STARTING_CASH = 1_000_000.0    # Rs.10 lakh of virtual money
-BROKERAGE_RATE = 0.0005             # 0.05 %
-SLIPPAGE_RATE = 0.0005              # 0.05 %
 CURRENCY = "Rs."

@@ -255,7 +255,7 @@ export default function PlannerPage() {
             <DialogTitle>Invest the {sel} plan?</DialogTitle>
             <DialogDescription>
               Buys {plan.data ? `${plan.data.plan.length} assets worth about ${inr(plan.data.plan.reduce((s, r) => s + r.invested, 0))}` : "the plan"} in your
-              demo portfolio at the latest close, including brokerage and slippage. No real money is used.
+              demo portfolio at the latest close, including realistic trading costs (STT, stamp duty, fees, spread). No real money is used.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

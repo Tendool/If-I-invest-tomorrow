@@ -95,7 +95,8 @@ def regime_overlay(w, probs):
 
 
 NAMES = ["A  Min-variance, trailing covariance", "B  Min-variance + volatility model", "B+ B + regime overlay",
-             "C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)"]
+             "C  Max-Sharpe, prior returns", "C+ C + volatility model", "D  C+ + return tilt", "E  Full system (D + regime overlay)",
+         "E0 Full system without the return tilt (C+ + regime overlay)"]
 
 
 def compute_targets(md, dates):
@@ -123,6 +124,7 @@ def compute_targets(md, dates):
         w[names[4]] = O.max_sharpe(prior, cov1, b)
         w[names[5]] = O.max_sharpe(mu_tilt, cov1, b)
         w[names[6]] = regime_overlay(w[names[5]], reg[t])
+        w[names[7]] = regime_overlay(w[names[4]], reg[t])
         for n in names:
             target_w[n][t] = w[n].reindex(md.prices.columns).fillna(0.0)
         print("rebalance", t.date(), flush=True)

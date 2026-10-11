@@ -145,6 +145,23 @@
    "info_ratio": 0.2190394140631654,
    "total_return": 0.9683524112949446
   },
+  "E0 Full system without the return tilt (C+ + regime overlay)": {
+   "cagr": 0.1305418128904816,
+   "vol": 0.09552447859399946,
+   "sharpe": 0.7384684421079146,
+   "sortino": 0.7272250704172828,
+   "max_drawdown": -0.1168531845815336,
+   "calmar": 1.1171438190406942,
+   "downside_dev": 0.09700134904590764,
+   "var95_1d": 0.009254469549650035,
+   "cvar95_1d": 0.013430866742607614,
+   "hit_rate_monthly": 0.6376811594202898,
+   "turnover_ann": 5.0138110031002405,
+   "costs_pct_of_start": 0.05555627743880309,
+   "vs_benchmark_cagr": 0.024138023091120786,
+   "info_ratio": 0.24421208266645889,
+   "total_return": 0.9781001880309694
+  },
   "B  Min-variance + volatility model (half-step rebalancing)": {
    "cagr": 0.10931605917992848,
    "vol": 0.05466159922619541,

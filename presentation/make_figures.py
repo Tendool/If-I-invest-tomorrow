@@ -237,7 +237,7 @@ def robustness():
     pl = json.loads((ROOT / "reports" / "eval_robustness_plans.json").read_text(encoding="utf-8"))["summary"]
     num = json.loads((OUT / "numbers.json").read_text(encoding="utf-8"))
     num["robust"] = dict(periods={k: {b: res[k][b]["sharpe"] for b in list(wf["periods"])} for k in show},
-                         costs={sname: {k: wf["results"][sname][k]["2021-26 (test years)"]["sharpe"] for k in show} for sname in wf["results"]},
+                         costs={sname: {k: wf["results"][sname][k]["2021-26 (evaluation years, inspected repeatedly)"]["sharpe"] for k in show} for sname in wf["results"]},
                          bootstrap=wf["bootstrap"], plans=pl)
     (OUT / "numbers.json").write_text(json.dumps(num, indent=1, default=float), encoding="utf-8")
     print("wrote robustness")
